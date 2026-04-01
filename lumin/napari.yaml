@@ -1,18 +1,25 @@
-#napari.yaml
 name: LUMIN
-#display_name: lumin
+
 contributions:
   commands:
+    - id: LUMIN.conversion_widget
+      python_name: lumin._widget:conversion_widget
+      title: ND2/LIF → TIFF conversion
+
     - id: LUMIN.segmentation_widget
       python_name: lumin._widget:segmentation_widget
       title: Segmentation and signal extraction
+
     - id: LUMIN.single_cell_widget
       python_name: lumin._widget:single_cell_widget
-      title: Single-cell data analysis 
-
+      title: Single-cell data analysis
 
   widgets:
+    - command: LUMIN.conversion_widget
+      display_name: Preprocessing (ND2/LIF conversion)
+
     - command: LUMIN.segmentation_widget
       display_name: Segmentation and signal extraction
+
     - command: LUMIN.single_cell_widget
-      display_name: Single-cell data analysis 
+      display_name: Single-cell data analysis

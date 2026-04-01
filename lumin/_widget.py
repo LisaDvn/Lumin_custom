@@ -10,7 +10,7 @@ from qtpy.QtWidgets import QComboBox, QMessageBox
 import pandas as pd
 from cellpose import models
 from stardist.models import StarDist2D
-from lumin.segmentation import run_cellpose, run_stardist, run_manual_selection
+from lumin.segmentation import run_cellpose, run_stardist, refine_segmentation, run_manual_selection
 from lumin import plot
 from lumin import activity
 import os
@@ -35,9 +35,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 # List of pre-trained cellpose models
-CP_models = ['-- Select --', "cyto3", "cyto2", "cyto", "nuclei", "tissuenet_cp3", 
-             "livecell_cp3", "yeast_PhC_cp3", "yeast_BF_cp3", "bact_phase_cp3", 
-             "bact_fluor_cp3", "deepbacs_cp3", "cyto2_cp3"]
+CP_models = ['-- Select --', "cyto3", "cyto2", "cyto"]
 
 # Takes widget name as input and it removes
 def remove_widget_if_exists(viewer, widget_name):
@@ -74,6 +72,111 @@ def disable_placeholder(widget):
         combo_box.model().item(0).setEnabled(False)
 
 
+def conversion_widget():
+
+    import imagej
+    import tifffile as tiff
+    import csv
+    from scyjava import jimport
+
+    viewer = napari.current_viewer()
+
+    @magicgui(
+        layout='vertical',
+
+        input_dir=dict(widget_type='FileEdit', mode='d', label='Input folder (ND2/LIF)'),
+        project_dir=dict(widget_type='FileEdit', mode='d', label='Project directory'),
+
+        plate_id=dict(widget_type='LineEdit', label='Plate ID'),
+        biological_replicate=dict(widget_type='LineEdit', label='Biological replicate'),
+        stimulation=dict(widget_type='LineEdit', label='Stimulation'),
+
+    )
+    def widget(input_dir, project_dir, plate_id, biological_replicate, stimulation):
+        pass
+
+    widget.native.setObjectName('Preprocessing')
+
+    @widget.call_button.clicked.connect
+    def _run_conversion():
+
+        msg = QMessageBox()
+        msg.setText("Run conversion?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+
+        if msg.exec_() != QMessageBox.Yes:
+            return
+
+        try:
+            # --------------------------
+            # GET VALUES
+            # --------------------------
+            input_dir = widget.input_dir.value
+            project_dir = widget.project_dir.value
+            plate_id = widget.plate_id.value
+            biological_replicate = widget.biological_replicate.value
+            stimulation = widget.stimulation.value
+
+            output_dir = os.path.join(project_dir, "Preprocessing", "TIFF")
+            os.makedirs(output_dir, exist_ok=True)
+
+            csv_path = os.path.join(project_dir, "_input_data.csv")
+
+            # --------------------------
+            # INIT BIOFORMATS (ONCE)
+            # --------------------------
+            print("Initializing Bio-Formats...")
+            ij = imagej.init('sc.fiji:fiji', mode='headless')
+            BF = jimport('loci.plugins.BF')
+
+            # --------------------------
+            # CSV helper
+            # --------------------------
+            def append_row(row):
+                file_exists = os.path.isfile(csv_path)
+                with open(csv_path, "a", newline="") as f:
+                    writer = csv.DictWriter(f, fieldnames=row.keys())
+                    if not file_exists:
+                        writer.writeheader()
+                    writer.writerow(row)
+
+            # --------------------------
+            # LOOP FILES
+            # --------------------------
+            files = [f for f in os.listdir(input_dir) if f.lower().endswith((".nd2", ".lif"))]
+
+            for i, fname in enumerate(files):
+                fpath = os.path.join(input_dir, fname)
+
+                print(f"[{i+1}/{len(files)}] Processing {fname}...")
+
+                # Load
+                img = BF.openImagePlus(fpath)
+                data = ij.py.from_java(img[0])
+
+                # Save TIFF
+                out_name = os.path.splitext(fname)[0] + ".tif"
+                out_path = os.path.join(output_dir, out_name)
+                tiff.imwrite(out_path, np.asarray(data))
+
+                # CSV row
+                row = {
+                    "plate_id": plate_id,
+                    "filename": out_name,
+                    "filepath": out_path,
+                    "biological_replicate": biological_replicate,
+                    "stimulation": stimulation
+                }
+
+                append_row(row)
+
+            print(f"\nDone. CSV saved at: {csv_path}")
+
+        except Exception as e:
+            print("ERROR:", e)
+            traceback.print_exc()
+
+    return widget
 
 def segmentation_widget():
 
@@ -87,10 +190,11 @@ def segmentation_widget():
     # Widget layout
     @magicgui(
         layout='vertical',
-        input_file=dict(widget_type='FileEdit', label='Input file:',value='' , tooltip='Specify image stack metadata file.'),
+        input_file=dict(widget_type='FileEdit', label='Input file:',value='' , tooltip='Specify image stack data file.'),
+        metadata_file=dict(widget_type='FileEdit', label='Metadata file (optional):',value='' , tooltip='Specify image stack metadata file.'),
         project_dir=dict(widget_type='FileEdit',value='', label='Project directory:', mode='d', tooltip='Specify project directory for pipeline output.'),
         seg_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Segmentation settings———</b></div>'),
-        selection_mode = dict(widget_type='ComboBox',name = 'selection_mode', label='ROI segmentation mode', value='-- Select --', choices=['-- Select --','Automated', 'Manual selection'],  tooltip='Specify segmentation method.'),
+        selection_mode = dict(widget_type='ComboBox',name = 'selection_mode', label='ROI segmentation mode', value='-- Select --', choices=['-- Select --','Automated', 'Manual selection','Hybrid (automated + refinement)'],  tooltip='Specify segmentation method.'),
 
         # nuclear channel first channel of image
         nuclear_stain = dict(widget_type='ComboBox',name='nuclear_stain',  label='Nuclear stain', value='-- Select --', choices=['-- Select --', 'First frame', 'None'],  tooltip='Specify whether the stack contains nuclear stain as first frame.'),
@@ -125,7 +229,7 @@ def segmentation_widget():
 
     )
 
-    def widget(input_file, project_dir,  seg_label, selection_mode, nuclear_stain, co_stain, marker_name, stain_to_segment,label_sd,  prob_thresh_sd, overlap_thresh_sd ,label_cp, model_cp,diameter_cp,  cellprob_threshold_cp, flow_threshold_cp, optimize_button, optimize_button_previous, nuclear_overlap,nuclear_area,cell_area,  ca_intensity, filters_checkbox, annotation_point_size):
+    def widget(input_file, metadata_file, project_dir,  seg_label, selection_mode, nuclear_stain, co_stain, marker_name, stain_to_segment,label_sd,  prob_thresh_sd, overlap_thresh_sd ,label_cp, model_cp,diameter_cp,  cellprob_threshold_cp, flow_threshold_cp, optimize_button, optimize_button_previous, nuclear_overlap,nuclear_area,cell_area,  ca_intensity, filters_checkbox, annotation_point_size):
         pass
 
     widget.call_button.enabled = False
@@ -193,10 +297,11 @@ def segmentation_widget():
 
                 # Extract values from widgets
                 input_file = widget.input_file.value
+                metadata_file = widget.metadata_file.value
                 selection_mode = widget.selection_mode.value
                 co_stain = widget.co_stain.value
                 if co_stain == '-- Select --': co_stain = False
-                image_df, annotated_image_df = utils.parse_input_output(input_file = input_file, project_dir = widget.project_dir.value, selection_mode = selection_mode, co_stain = co_stain)
+                image_df, annotated_image_df = utils.parse_input_output(input_file = input_file, metadata_file = metadata_file, project_dir = widget.project_dir.value, selection_mode = selection_mode, co_stain = co_stain)
                 project_dir = widget.project_dir.value
                 nuclear_stain = widget.nuclear_stain.value
                 stain_to_segment = widget.stain_to_segment.value
@@ -214,7 +319,7 @@ def segmentation_widget():
                 nuclear_overlap = widget.nuclear_overlap.value
 
                 # Generate parameter list to be written to file
-                parameter_list = [f'Input file: {input_file}', f'Project directory: {project_dir}', f'ROI selection mode: {selection_mode}',
+                parameter_list = [f'Input file: {input_file}',f'Metadata file: {metadata_file}', f'Project directory: {project_dir}', f'ROI selection mode: {selection_mode}',
                                   f'Segmentation - Nuclear stain: {nuclear_stain}']
 
                 # Determine if first frame of stack is nuclear channel or part of the CA video
@@ -345,7 +450,7 @@ def segmentation_widget():
 
                         del image_stack, image_projected, mask, filtered_mask, first_frame_image
 
-                    elif selection_mode == 'Automated' and stain_to_segment == 'Cytoplasmic (Cellpose)' and nuclear_stain == 'None':
+                    elif selection_mode in ['Automated', 'Hybrid (automated + refinement)'] and stain_to_segment == 'Cytoplasmic (Cellpose)' and nuclear_stain == 'None':
                         if index == 0:
                             parameter_list.extend([f'Segmentation - Stain to segment: {stain_to_segment}', f'Cellpose - Model: {model_cp}', f'Cellpose - Diameter: {diameter_cp}', 
                                                 f'Cellpose - Cell probability threshold: {cellprob_threshold_cp}', f'Cellpose - Flow threshold: {flow_threshold_cp}', 
@@ -362,8 +467,21 @@ def segmentation_widget():
                         cell_properties_df = cell_properties_df.rename(columns={'area': 'cell_area'})
 
                         # Filtering
-                        filtered_mask, cell_properties_df = utils.filter_labels(mask = mask, cell_properties_df=cell_properties_df, cell_area_min = cell_area_min, cell_area_max=cell_area_max, intensity_min = intensity_min, intensity_max = intensity_max)
+                        #filtered_mask, cell_properties_df = utils.filter_labels(mask = mask, cell_properties_df=cell_properties_df, cell_area_min = cell_area_min, cell_area_max=cell_area_max, intensity_min = intensity_min, intensity_max = intensity_max)
 
+                        # Refinement in napari if hybrid mode selected
+                        if selection_mode == 'Hybrid (automated + refinement)':
+                            print("Refining mask in Napari before signal extraction...")
+                            print("(Close the Napari window when you are done refining to continue the pipeline)")
+                            filtered_mask = refine_segmentation(image_projected, mask)
+
+                            # Update cell properties after refinement
+                            cell_properties_df = utils.get_cell_properties(mask=filtered_mask, image=image_projected)
+                            
+                            # Update parameter list to indicate manual refinement was applied
+                            parameter_list.append("Manual refinement applied: YES")
+
+                        # Extract raw traces
                         cell_properties_df = utils.extract_raw_traces(image_stack = image_stack, mask = filtered_mask, cell_properties_df = cell_properties_df)
 
                     
@@ -517,6 +635,7 @@ def segmentation_widget():
 
                 # Reset settings
                 widget.input_file.value = ''
+                widget.metadata_file.value = ''
                 widget.project_dir.value = ''
                 widget.selection_mode.value = '-- Select --'
                 widget.nuclear_stain.value = '-- Select --'
@@ -601,7 +720,7 @@ def segmentation_widget():
         widget.annotation_point_size.value = 20
 
         disable_placeholder(widget.selection_mode)
-        if widget.selection_mode.value == 'Automated' :
+        if widget.selection_mode.value in ['Automated', 'Hybrid (automated + refinement)']:
             widget.stain_to_segment.visible = True
             widget.annotation_point_size.visible = False
             widget.co_stain.visible = False
@@ -792,7 +911,7 @@ def segmentation_widget():
             # Extract values from widgets
             selection_mode = widget.selection_mode.value
 
-            image_df, _ = utils.parse_input_output(input_file = widget.input_file.value, project_dir = widget.project_dir.value, selection_mode = selection_mode)
+            image_df, _ = utils.parse_input_output(input_file = widget.input_file.value, metadata_file = widget.metadata_file.value, project_dir = widget.project_dir.value, selection_mode = selection_mode)
             nuclear_stain = widget.nuclear_stain.value
             stain_to_segment = widget.stain_to_segment.value
             prob_thresh_sd = widget.prob_thresh_sd.value
@@ -802,11 +921,32 @@ def segmentation_widget():
             cellprob_threshold_cp = widget.cellprob_threshold_cp.value
             flow_threshold_cp = widget.flow_threshold_cp.value
 
-            # Reads the scalers from the settings file
-            config_df = pd.read_csv('configs/settings.csv', sep=None)
-            nuclear_area_scaler = float(config_df[config_df.parameter == 'nuclear_area_scaler'].value.values[0])
-            cell_area_scaler = float(config_df[config_df.parameter == 'cell_area_scaler'].value.values[0])
-            intensity_scaler = float(config_df[config_df.parameter == 'intensity_scaler'].value.values[0])
+            
+            # Default values for scalers to set the range of post-processing settings sliders based on the properties of the segmented objects in the original image
+            # These can be overwritten if metadata file is provided with specific values for these scalers.
+            nuclear_area_scaler = 2
+            cell_area_scaler = 2
+            intensity_scaler = 2
+
+            # only use metadata values if it exists and is not empty
+            def load_scalers(metadata_file):
+                if metadata_file is not None and metadata_file != '' and os.path.exists(metadata_file):
+                    try:
+                        config_df = pd.read_csv(metadata_file, sep=None, engine='python')
+
+                        def get_param(df, name, default):
+                            if name in df['parameter'].values:
+                                return float(df[df.parameter == name].value.values[0])
+                            else:
+                                print(f"Warning: {name} not found in metadata, using default {default}")
+                                return default
+
+                        nuclear_area_scaler = get_param(config_df, 'nuclear_area_scaler', nuclear_area_scaler)
+                        cell_area_scaler = get_param(config_df, 'cell_area_scaler', cell_area_scaler)
+                        intensity_scaler = get_param(config_df, 'intensity_scaler', intensity_scaler)
+
+                    except Exception as e:
+                        print(f"Warning: could not read metadata file ({e}), using default scalers")
 
             viewer = napari.current_viewer()
 
@@ -857,7 +997,7 @@ def segmentation_widget():
                 set_slider_range('ca_intensity', intensity_scaler )
                 
 
-            elif selection_mode == 'Automated' and stain_to_segment == 'Cytoplasmic (Cellpose)':
+            elif selection_mode in ['Automated', 'Hybrid (automated + refinement)'] and stain_to_segment == 'Cytoplasmic (Cellpose)':
 
                 widget.nuclear_overlap.visible = False
                 widget.cell_area.visible = True
@@ -884,7 +1024,7 @@ def segmentation_widget():
 
 
             
-            elif selection_mode == 'Automated' and stain_to_segment == 'Nuclear (StarDist) and cytoplasmic (Cellpose)':
+            elif selection_mode in ['Automated', 'Hybrid (automated + refinement)'] and stain_to_segment == 'Nuclear (StarDist) and cytoplasmic (Cellpose)':
 
                 widget.nuclear_overlap.visible = True
                 widget.cell_area.visible = True
@@ -2036,7 +2176,7 @@ def single_cell_widget():
 
 
 def napari_experimental_provide_dock_widget():
-    return segmentation_widget, single_cell_widget, {"name": "My Pipeline Launcher"}
+    return conversion_widget, segmentation_widget, single_cell_widget, {"name": "My Pipeline Launcher"}
 
 
 

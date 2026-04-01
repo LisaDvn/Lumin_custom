@@ -27,13 +27,17 @@ def read_and_project_image(filepath: str = None, first_frame: int = 0):
 
 
 
-def parse_input_output(input_file: str = None, project_dir: str = None, selection_mode: str = None, co_stain: bool = False):
+def parse_input_output(input_file: str = None, metadata_file: str = None, project_dir: str = None, selection_mode: str = None, co_stain: bool = False):
     try:
-
         image_df = pd.read_csv(input_file,  index_col=None, sep=None)
         image_df['image_id'] = image_df['filename'].astype(str) + '_' + image_df['plate_id'].astype(str) 
 
+        annotated_image_df = pd.DataFrame()
 
+        # Read metadata (is its included)
+        if (metadata_file is not None and metadata_file != '' and metadata_file != '.' and os.path.isfile(metadata_file)):
+            metadata_df = pd.read_csv(metadata_file, index_col=None, sep=None)
+            
         # Parse output
         if (not os.path.isdir(project_dir) or not os.path.exists(f'{project_dir}/annotated_images.csv')) or (selection_mode == 'Automated' or selection_mode is None):
             if os.path.exists(os.path.join(project_dir, 'Segmentation')): shutil.rmtree(os.path.join(project_dir, 'Segmentation'), ignore_errors=True)
