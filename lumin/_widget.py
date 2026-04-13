@@ -11,7 +11,9 @@ import pandas as pd
 from cellpose import models
 from stardist.models import StarDist2D
 from lumin.segmentation import run_cellpose, run_stardist, refine_segmentation, run_manual_selection
-from lumin import plot
+
+from lumin import plot_2 as plot
+#from lumin import plot
 from lumin import activity
 import os
 import shutil
@@ -35,7 +37,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 # List of pre-trained cellpose models
-CP_models = ['-- Select --', "cyto3", "cyto2", "cyto"]
+CP_models = ['-- Select --', "cyto3", "cyto2", "cyto", "trained_model"]
 
 # Takes widget name as input and it removes
 def remove_widget_if_exists(viewer, widget_name):
@@ -106,6 +108,9 @@ def conversion_widget():
 
         if msg.exec_() != QMessageBox.Yes:
             return
+        
+        start_time = perf_counter()
+        print("Running conversion...")
 
         try:
             # --------------------------
@@ -211,6 +216,7 @@ def segmentation_widget():
         diameter_cp = dict(widget_type='SpinBox', name='diameter_cp',label='Diameter', value=30, min=0, max=100,step=5, tooltip='Approximate diameter of cells in pixels to be segmented.'),
         cellprob_threshold_cp = dict(widget_type='FloatSpinBox', name='cellprob_threshold_cp',label='Cell probability threshold', value=0.0, min=-8.0, max=8.0, step=0.5, tooltip='Cell probability threshold (set lower to get more cells and larger cells).'),
         flow_threshold_cp = dict(widget_type='FloatSpinBox', name='flow_threshold_cp',label='Flow threshold', value=0.4, min=0.0, max=5.0, step=0.2, tooltip='Threshold on maximum allowed error (set higher to get more cells, or to zero to turn off).'),
+        trained_cp_model_path = dict(widget_type='FileEdit', name='trained_cp_model_path', label='Trained Model Path', value='', tooltip='Path to the custom trained Cellpose model.'),
 
         # Manual segmentation settings
         co_stain = dict(widget_type='ComboBox',name='co_stain',  label='Co-stain', value='-- Select --', choices=['-- Select --', True, False],  tooltip='Specify whether annotating immunolabelled cells.'),
@@ -229,7 +235,7 @@ def segmentation_widget():
 
     )
 
-    def widget(input_file, metadata_file, project_dir,  seg_label, selection_mode, nuclear_stain, co_stain, marker_name, stain_to_segment,label_sd,  prob_thresh_sd, overlap_thresh_sd ,label_cp, model_cp,diameter_cp,  cellprob_threshold_cp, flow_threshold_cp, optimize_button, optimize_button_previous, nuclear_overlap,nuclear_area,cell_area,  ca_intensity, filters_checkbox, annotation_point_size):
+    def widget(input_file, metadata_file, project_dir,  seg_label, selection_mode, nuclear_stain, co_stain, marker_name, stain_to_segment,label_sd,  prob_thresh_sd, overlap_thresh_sd ,label_cp, model_cp,diameter_cp,  cellprob_threshold_cp, flow_threshold_cp, trained_cp_model_path, optimize_button, optimize_button_previous, nuclear_overlap,nuclear_area,cell_area,  ca_intensity, filters_checkbox, annotation_point_size):
         pass
 
     widget.call_button.enabled = False
@@ -258,19 +264,68 @@ def segmentation_widget():
         return widget_state.model_sd
 
     def _get_cellpose_model(model_name_cp):
+        """
+        Load Cellpose model:
+        - Pretrained (cyto, cyto2, cyto3)
+        - Custom trained model (trained_model)
+        """
+
         if model_name_cp == '-- Select --':
             QMessageBox.warning(None, "Cellpose Model", "Please select a Cellpose model.")
             return None
+
+        # ---------------- CUSTOM MODEL ----------------
+        if model_name_cp == "trained_model":
+
+            model_path = widget.trained_cp_model_path.value
+
+            if model_path is None or model_path == '' or not os.path.exists(model_path):
+                QMessageBox.critical(
+                    None,
+                    "Custom Model Error",
+                    "Custom Cellpose model path not set or does not exist."
+                )
+                return None
+
+            # caching
+            if model_path not in widget_state.cp_model_dict:
+                try:
+                    print(f"Loading custom Cellpose model from: {model_path}")
+
+                    widget_state.cp_model_dict[model_path] = models.CellposeModel(
+                        pretrained_model=model_path,
+                        gpu=True
+                    )
+
+                except Exception as e:
+                    QMessageBox.critical(
+                        None,
+                        "Custom Model Error",
+                        f"Failed to load trained model:\n{e}"
+                    )
+                    return None
+
+            return widget_state.cp_model_dict[model_path]
+
+        # ---------------- STANDARD MODELS ----------------
         if model_name_cp not in widget_state.cp_model_dict:
             try:
-                widget_state.cp_model_dict[model_name_cp] = models.CellposeModel(model_type=model_name_cp, gpu=True)
-            except Exception as e:
-                QMessageBox.critical(None, "Cellpose Model Error", f"Failed to load Cellpose model {model_name_cp}: {e}")
-                del widget_state.cp_model_dict[model_name_cp] # Ensure partially loaded model is removed
-                return None
-        return widget_state.cp_model_dict[model_name_cp]
-    
+                print(f"Loading Cellpose model: {model_name_cp}")
 
+                widget_state.cp_model_dict[model_name_cp] = models.CellposeModel(
+                    model_type=model_name_cp,
+                    gpu=True
+                )
+
+            except Exception as e:
+                QMessageBox.critical(
+                    None,
+                    "Cellpose Model Error",
+                    f"Failed to load model {model_name_cp}:\n{e}"
+                )
+                return None
+
+        return widget_state.cp_model_dict[model_name_cp]
 
 
     # Function that loops the input folders and feeds the images to the pipeline functions
@@ -467,13 +522,13 @@ def segmentation_widget():
                         cell_properties_df = cell_properties_df.rename(columns={'area': 'cell_area'})
 
                         # Filtering
-                        #filtered_mask, cell_properties_df = utils.filter_labels(mask = mask, cell_properties_df=cell_properties_df, cell_area_min = cell_area_min, cell_area_max=cell_area_max, intensity_min = intensity_min, intensity_max = intensity_max)
+                        filtered_mask, cell_properties_df = utils.filter_labels(mask = mask, cell_properties_df=cell_properties_df, cell_area_min = cell_area_min, cell_area_max=cell_area_max, intensity_min = intensity_min, intensity_max = intensity_max)
 
                         # Refinement in napari if hybrid mode selected
                         if selection_mode == 'Hybrid (automated + refinement)':
                             print("Refining mask in Napari before signal extraction...")
                             print("(Close the Napari window when you are done refining to continue the pipeline)")
-                            filtered_mask = refine_segmentation(image_projected, mask)
+                            filtered_mask = refine_segmentation(image_projected, filtered_mask)
 
                             # Update cell properties after refinement
                             cell_properties_df = utils.get_cell_properties(mask=filtered_mask, image=image_projected)
@@ -689,6 +744,8 @@ def segmentation_widget():
     widget.annotation_point_size.visible = False
     widget.co_stain.visible = False
     widget.marker_name.visible = False
+    widget.trained_cp_model_path.visible = False
+    widget.trained_cp_model_path.enabled = False
 
 
     '''    # Sets defg
@@ -703,7 +760,7 @@ def segmentation_widget():
         widget.prob_thresh_sd.value = 0.48
         widget.overlap_thresh_sd.value = 0.3
         widget.model_cp.value = '-- Select --'
-        widget.diameter_cp.value = 30
+        widget.diameter_cp.value = 15
         widget.cellprob_threshold_cp.value = 0
         widget.flow_threshold_cp.value = 0.4
         if boolean_reset_stain_to_segment == True:
@@ -804,7 +861,13 @@ def segmentation_widget():
         disable_placeholder(widget.model_cp)
         widget.optimize_button.enabled = True
         widget.call_button.enabled = True
-        
+        # Show cellpose trained model path if trained model selected
+        if widget.model_cp.value == "trained_model":
+            widget.trained_cp_model_path.visible = True
+            widget.trained_cp_model_path.enabled = True
+        else:
+            widget.trained_cp_model_path.visible = False
+            widget.trained_cp_model_path.enabled = False
 
     # Controls image frame to segment
     # Resets post processing settings if changed
@@ -1246,6 +1309,7 @@ class PlotViewerBaseline(QWidget):
         self.layout.addWidget(self.canvas)
 
 def get_colors(cell_properties_df, project_dir):
+    cell_properties_df["stimulation"] = cell_properties_df["stimulation"].astype("category")
     unique_stimulations = cell_properties_df["stimulation"].cat.categories
 
     # Read user specified palette
@@ -1583,7 +1647,7 @@ def single_cell_widget():
                     cell_properties_filtered_df = utils.k_means_clustering(cell_properties_df = cell_properties_filtered_df, array=array, n_clusters = n_clusters)
 
                     ax_pca, cell_properties_filtered_df = plot.biplot(cell_properties_df = cell_properties_filtered_df, palette = palette)
-
+                    
                     if 'marker' not in cell_properties_df.columns:
 
                         # PCA
@@ -2174,9 +2238,25 @@ def single_cell_widget():
 
     return widget
 
+def network_activity_widget():
+    widget = QWidget()
+    layout = QVBoxLayout()
+    widget.setLayout(layout)
+
+    label = QLabel("This is the network activity widget.")
+    layout.addWidget(label)
+
+
+    analysis_mode = [
+    "Morphology (Peak detection)",
+    "Temporal (OASIS)",
+    "Network analysis (OASIS-based)",
+    "Combined"]
+
+    return widget
 
 def napari_experimental_provide_dock_widget():
-    return conversion_widget, segmentation_widget, single_cell_widget, {"name": "My Pipeline Launcher"}
+    return conversion_widget, segmentation_widget, single_cell_widget, network_activity_widget, {"name": "My Pipeline Launcher"}
 
 
 

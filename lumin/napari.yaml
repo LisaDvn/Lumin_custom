@@ -4,7 +4,7 @@ contributions:
   commands:
     - id: LUMIN.conversion_widget
       python_name: lumin._widget:conversion_widget
-      title: ND2/LIF → TIFF conversion
+      title: ND2 → TIFF conversion
 
     - id: LUMIN.segmentation_widget
       python_name: lumin._widget:segmentation_widget
@@ -12,7 +12,11 @@ contributions:
 
     - id: LUMIN.single_cell_widget
       python_name: lumin._widget:single_cell_widget
-      title: Single-cell data analysis
+      title: Event detection and data analysis
+
+    - id: LUMIN.network_activity_widget
+      python_name: lumin._widget:network_activity_widget
+      title: Network activity analysis
 
   widgets:
     - command: LUMIN.conversion_widget
@@ -22,4 +26,7 @@ contributions:
       display_name: Segmentation and signal extraction
 
     - command: LUMIN.single_cell_widget
-      display_name: Single-cell data analysis
+      display_name: Event detection and data analysis
+
+    - command: LUMIN.network_activity_widget
+      display_name: Deconvolution-based network activity analysis

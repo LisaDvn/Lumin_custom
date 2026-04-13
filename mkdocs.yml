@@ -1,0 +1,63 @@
+site_name: CALCIUM IMAGING ANALYSIS TOOL (based on LUMIN)
+site_url: http://127.0.0.1:8000/Lumin_custom/
+
+theme:
+  name: material
+  logo: assets/images/tool_icon.png
+  favicon: assets/images/tool_icon.png
+
+  features:
+    - navigation.footer
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - content.code.annotate
+
+  palette:
+    # Light mode
+    - scheme: default
+      primary: celestial-blue
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+    # Dark mode
+    - scheme: slate
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Getting Started: gettingstarted.md
+  - Workflow Overview: workflow.md
+  - Data Input & Metadata: input.md
+  - Segmentation & ROI Detection: segmentation.md
+  - Signal Extraction: signalextraction.md
+  - Event & Spike Detection: eventdetection.md
+  - Feature Extraction: features.md
+  - GUI Usage: gui.md
+  - FAIR Principles: fair.md
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+extra:
+  homepage: index.md
+
+plugins:
+  - search
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+watch:
+  - docs
