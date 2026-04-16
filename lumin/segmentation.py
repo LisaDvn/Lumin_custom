@@ -1,20 +1,16 @@
 # -------------------- IMPORTS --------------------
 import warnings
-warnings.filterwarnings("ignore")  # Suppress all warnings (can hide useful debug info!)
-
-import sys                          # for exiting program
-from skimage import util, segmentation  # image processing tools
-import numpy as np                  # numerical operations
-import napari                       # interactive viewer (GUI)
+warnings.filterwarnings("ignore")                   # Suppress all warnings
+import sys                                          # for exiting program
+from skimage import util, segmentation              # image processing tools
+import numpy as np                                  # numerical operations
+import napari                                       # interactive viewer (GUI)
 from napari_blob_detection import points_to_labels  # convert points → mask
-from scipy import ndimage as ndi    # distance transforms
-from csbdeep.utils import normalize # image normalization (for StarDist)
+from scipy import ndimage as ndi                    # distance transforms
+from csbdeep.utils import normalize                 # image normalization (for StarDist)
 
 # -------------------- STARDIST SEGMENTATION --------------------
-def run_stardist(image=None,
-                 model_sd=None,
-                 prob_thresh_sd=None,
-                 overlap_thresh_sd=None):
+def run_stardist(image=None, model_sd=None, prob_thresh_sd=None, overlap_thresh_sd=None):
 
     """
     Run StarDist segmentation on an image.
@@ -31,32 +27,25 @@ def run_stardist(image=None,
         prob_thresh=prob_thresh_sd               # probability threshold
     )
 
-    del model_sd  # free memory (important for GPU usage)
+    del model_sd  # free memory 
 
     return mask
 
 
 # -------------------- CELLPOSE SEGMENTATION --------------------
-def run_cellpose(image=None,
-                 model_cp=None,
-                 diameter_cp=None,
-                 cellprob_threshold_cp=None,
-                 flow_threshold_cp=None):
+def run_cellpose(image=None, model_cp=None, diameter_cp=None, cellprob_threshold_cp=None, flow_threshold_cp=None):
 
     """
-    Run Cellpose segmentation.
-
-    Uses a pretrained deep learning model to detect cells.
+    Run Cellpose segmentation: Uses a pretrained deep learning model to detect cells.
     """
 
-    # Parameters passed to Cellpose
     segmentation_params = {
-        'diameter': int(diameter_cp),              # expected cell size
-        'cellprob_threshold': cellprob_threshold_cp,
-        'flow_threshold': flow_threshold_cp,
-        'resample': False,  
-        'do_3D': False,  
-        'stitch_threshold': 0.0,
+        'diameter': int(diameter_cp),                   # expected cell size
+        'cellprob_threshold': cellprob_threshold_cp,    # threshold for cell probability map
+        'flow_threshold': flow_threshold_cp,            # threshold for flow map (cell boundaries)
+        'resample': False,                              # don't resample image (keep original resolution)
+        'do_3D': False,                                 # 2D segmentation (not 3D)
+        'stitch_threshold': 0.0,                        # no stitching of small objects (keep all detections)
     }
 
     # Run model
@@ -147,7 +136,6 @@ def run_manual_selection(image: np.ndarray,
 
     all_labels = set()  # keep track of used labels
 
-    # -------------------- START NAPARI VIEWER --------------------
     viewer, image_layer = napari.imshow(image)
 
     # Hide unnecessary UI buttons
@@ -165,7 +153,6 @@ def run_manual_selection(image: np.ndarray,
         text=label_text
     )
 
-    # -------------------- AUTO-INCREMENT LABELS --------------------
     @points_layer.events.data.connect
     def update_points_layer():
         """
@@ -180,15 +167,12 @@ def run_manual_selection(image: np.ndarray,
 
     update_points_layer()  # run once at start
 
-    # -------------------- START INTERACTIVE SESSION --------------------
     viewer.show(block=True)  # pauses code until user closes viewer
 
-    # -------------------- SAFETY CHECK --------------------
     if len(vars(points_layer)['_data']) == 0:
         # User didn't annotate anything → stop pipeline
-        sys.exit("❌ Stopping program: User saved image without masking.")
+        sys.exit("Stopping program: User saved image without masking.")
 
-    # -------------------- NORMALIZE IMAGE FOR VISUALIZATION --------------------
     layer = viewer.layers['image']
     m, M = layer.contrast_limits
 
@@ -196,8 +180,7 @@ def run_manual_selection(image: np.ndarray,
     rescaled = (layer.data - m) / (M - m)
     image = np.clip(rescaled, 0, 1)
 
-    # -------------------- POINTS → MASK --------------------
-    mask, _, layer_type = points_to_labels(points_layer, image_layer)
+    mask, _, layer_type = points_to_labels(points_layer, image_layer) 
 
     assert layer_type == 'Labels'  # ensure correct output type
 
@@ -205,7 +188,6 @@ def run_manual_selection(image: np.ndarray,
     points_layer_data = points_layer.data
     points_layer_label = points_layer.properties["label"]
 
-    # -------------------- CLEAN INVALID POINTS --------------------
     # Remove points outside image boundaries
     indices_to_remove = np.where(
         (points_layer_data[:, 0] >= image_layer.data.shape[0]) |
@@ -217,7 +199,6 @@ def run_manual_selection(image: np.ndarray,
     points_layer_data = np.delete(points_layer_data, indices_to_remove, axis=0)
     points_layer_label = np.delete(points_layer_label, indices_to_remove)
 
-    # -------------------- WATERSHED SEGMENTATION --------------------
     # Convert points into seeds
     seeds = util.label_points(points_layer_data, image_layer.data.shape)
 
@@ -227,7 +208,6 @@ def run_manual_selection(image: np.ndarray,
     # Watershed grows regions from seeds inside mask
     mask = segmentation.watershed(distances, seeds, mask=mask)
 
-    # -------------------- FIX LABEL VALUES --------------------
     features = {'label': np.array(points_layer_label, dtype=int)}
 
     # Map internal labels → user-defined labels

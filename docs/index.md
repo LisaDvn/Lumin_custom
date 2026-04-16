@@ -1,4 +1,4 @@
-# ~Calcium imaging analysis tool~
+# **Calcium imaging analysis tool**
 
 ## Overview
 
@@ -30,4 +30,4 @@ Input → Segmentation → Signal extraction → Events → Features → Output
 
 ## Getting started
 
-See the Installation and Getting Started pages.
+See the [Installation](installation.md#dbnpy) and [Getting started](gettingstarted.md#dbnpy) pages.

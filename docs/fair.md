@@ -4,7 +4,7 @@ To ensure that the developed calcium imaging analysis tool is reusable and align
 
 ## 1. Findable
 
-The analysis workflow, codebase, and documentation are structured ~and version-controlled~ to ensure that they can be easily located and referenced.
+The analysis workflow, codebase, and documentation are structured *and version-controlled* to ensure that they can be easily located and referenced.
 
 * The full analysis pipeline is documented using structured documentation (MkDocs), including:
 
@@ -39,7 +39,7 @@ To ensure compatibility with other tools and workflows, the pipeline uses open a
 
   * `.tiff` (standard format for microscopy data)
   * `.nd2` (converted to `.tiff` using Bio-Formats)
-  * ~`.avi` (converted to `.tiff` using Bio-Formats)~
+  * *`.avi` (converted to `.tiff` using Bio-Formats)*
 * Metadata:
 
   * `.csv` files (structured tabular format)

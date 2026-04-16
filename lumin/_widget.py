@@ -30,8 +30,12 @@ import seaborn as sns
 import traceback
 import pickle
 import gc
+import json
 from datetime import datetime
 from time import perf_counter
+from lumin.logging import RunManager
+#from lumin.Z_conversion import run_conversion_pipeline
+from lumin.conversion import run_conversion_pipeline
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -83,18 +87,21 @@ def conversion_widget():
 
     viewer = napari.current_viewer()
 
+    remove_widget_if_exists(viewer, 'Cell segmentation')
+    remove_widget_if_exists(viewer, 'Trace quantification')
+    
     @magicgui(
         layout='vertical',
 
-        input_dir=dict(widget_type='FileEdit', mode='d', label='Input folder (ND2/LIF)'),
-        project_dir=dict(widget_type='FileEdit', mode='d', label='Project directory'),
+        input_dir=dict(widget_type='FileEdit', mode='d', label='Input folder (ND2/TIFF)', tooltip='Select the folder containing the raw ND2 or TIFF files for preprocessing.'),
+        project_dir=dict(widget_type='FileEdit', mode='d', label='Project directory', tooltip='Specify the project directory for pipeline output.'),
 
-        plate_id=dict(widget_type='LineEdit', label='Plate ID'),
-        biological_replicate=dict(widget_type='LineEdit', label='Biological replicate'),
-        stimulation=dict(widget_type='LineEdit', label='Stimulation'),
+        plate_id=dict(widget_type='LineEdit', label='Plate ID', tooltip='Specify the plate ID for this dataset. This will be used to organize the output files.'),
+        cell_line=dict(widget_type='LineEdit', label='Cell line', tooltip='Specify the cell line or biological replicate.'),
+        condition=dict(widget_type='LineEdit', label='Condition', tooltip='Specify the experimental condition.'),
 
     )
-    def widget(input_dir, project_dir, plate_id, biological_replicate, stimulation):
+    def widget(input_dir, project_dir, plate_id, cell_line, condition):
         pass
 
     widget.native.setObjectName('Preprocessing')
@@ -116,66 +123,14 @@ def conversion_widget():
             # --------------------------
             # GET VALUES
             # --------------------------
-            input_dir = widget.input_dir.value
-            project_dir = widget.project_dir.value
-            plate_id = widget.plate_id.value
-            biological_replicate = widget.biological_replicate.value
-            stimulation = widget.stimulation.value
+            run_conversion_pipeline(
+                input_dir = widget.input_dir.value,
+                project_dir = widget.project_dir.value,
+                plate_id = widget.plate_id.value,
+                cell_line = widget.cell_line.value,
+                condition = widget.condition.value)
 
-            output_dir = os.path.join(project_dir, "Preprocessing", "TIFF")
-            os.makedirs(output_dir, exist_ok=True)
-
-            csv_path = os.path.join(project_dir, "_input_data.csv")
-
-            # --------------------------
-            # INIT BIOFORMATS (ONCE)
-            # --------------------------
-            print("Initializing Bio-Formats...")
-            ij = imagej.init('sc.fiji:fiji', mode='headless')
-            BF = jimport('loci.plugins.BF')
-
-            # --------------------------
-            # CSV helper
-            # --------------------------
-            def append_row(row):
-                file_exists = os.path.isfile(csv_path)
-                with open(csv_path, "a", newline="") as f:
-                    writer = csv.DictWriter(f, fieldnames=row.keys())
-                    if not file_exists:
-                        writer.writeheader()
-                    writer.writerow(row)
-
-            # --------------------------
-            # LOOP FILES
-            # --------------------------
-            files = [f for f in os.listdir(input_dir) if f.lower().endswith((".nd2", ".lif"))]
-
-            for i, fname in enumerate(files):
-                fpath = os.path.join(input_dir, fname)
-
-                print(f"[{i+1}/{len(files)}] Processing {fname}...")
-
-                # Load
-                img = BF.openImagePlus(fpath)
-                data = ij.py.from_java(img[0])
-
-                # Save TIFF
-                out_name = os.path.splitext(fname)[0] + ".tif"
-                out_path = os.path.join(output_dir, out_name)
-                tiff.imwrite(out_path, np.asarray(data))
-
-                # CSV row
-                row = {
-                    "plate_id": plate_id,
-                    "filename": out_name,
-                    "filepath": out_path,
-                    "biological_replicate": biological_replicate,
-                    "stimulation": stimulation
-                }
-
-                append_row(row)
-
-            print(f"\nDone. CSV saved at: {csv_path}")
+            print(f"Finished in {perf_counter() - start_time:.2f} seconds")
 
         except Exception as e:
             print("ERROR:", e)
@@ -376,7 +331,18 @@ def segmentation_widget():
                 # Generate parameter list to be written to file
                 parameter_list = [f'Input file: {input_file}',f'Metadata file: {metadata_file}', f'Project directory: {project_dir}', f'ROI selection mode: {selection_mode}',
                                   f'Segmentation - Nuclear stain: {nuclear_stain}']
+                
+                #set up logger
+                run = RunManager(project_dir, stage="segmentation")
+                run_info_path = os.path.join(project_dir, "run_info.json")
+                
+                run.log("----------------Segmentation pipeline started----------------")
+                
+                start_time_run = perf_counter()
 
+                # sla run_id op
+                json.dump({"run_id": run.run_id}, open(run_info_path, "w"), indent=4)
+                
                 # Determine if first frame of stack is nuclear channel or part of the CA video
                 if nuclear_stain == 'None':
                     first_frame = 0
@@ -388,8 +354,8 @@ def segmentation_widget():
                     # Try except to catch if required columns not there
                     try:
                         image_id = row['image_id']
-                        biological_replicate = row['biological_replicate']
-                        stimulation = row['stimulation']
+                        cell_line = row['cell_line']
+                        condition = row['condition']
                         filename = row['filename']
                         plate_id = row['plate_id']
                         filepath = row['filepath']
@@ -397,11 +363,11 @@ def segmentation_widget():
                     except Exception as e: 
                         traceback.print_exc()
 
-                    plots_output_dir = os.path.join(project_dir, f'Segmentation/Plots/{plate_id}/{filename}_{stimulation}_{biological_replicate}')
+                    plots_output_dir = os.path.join(project_dir, f'Segmentation/Plots/{plate_id}/{filename}_{condition}_{cell_line}')
                     mask_output_dir = os.path.join(project_dir, f'Segmentation/Masks/{plate_id}')
                     max_projection_output_dir = os.path.join(project_dir, f'Segmentation/Masks/{plate_id}')
-                    mask_name = f'{filename}_{stimulation}_{biological_replicate}_final_mask.tiff'
-                    projected_name = f'{filename}_{stimulation}_{biological_replicate}_projected.tiff'
+                    mask_name = f'{filename}_{condition}_{cell_line}_final_mask.tiff'
+                    projected_name = f'{filename}_{condition}_{cell_line}_projected.tiff'
 
 
 
@@ -417,7 +383,7 @@ def segmentation_widget():
 
                     
                     print(f'Processing image {index+1}/{len(image_df)}: Reading from {filepath} and projecting to its max intensity...')
-
+                    run.log(f"Processing image {index+1}/{len(image_df)}: Reading from {filepath} and using cellpose model {model_cp} with diameter {diameter_cp}, cellprobality threshold {cellprob_threshold_cp} and flow threshold {flow_threshold_cp}.")
                     # Get image
                     image_projected, image_stack = utils.read_and_project_image(filepath = filepath, first_frame=first_frame)
 
@@ -445,8 +411,8 @@ def segmentation_widget():
                             if co_stain: cell_properties_df['marker'] = marker_name 
                             
                             # Save results
-                            if co_stain: annotated_image_df.loc[len(annotated_image_df.index)] = [image_id,filename, biological_replicate,stimulation,plate_id, marker_name, cell_properties_df.label.max(), filepath,  os.path.join(mask_output_dir,  mask_name)]
-                            else: annotated_image_df.loc[len(annotated_image_df.index)] = [image_id,filename, biological_replicate,stimulation,plate_id, cell_properties_df.label.max(), filepath,  os.path.join(mask_output_dir,  mask_name)]
+                            if co_stain: annotated_image_df.loc[len(annotated_image_df.index)] = [image_id,filename, cell_line,condition,plate_id, marker_name, cell_properties_df.label.max(), filepath,  os.path.join(mask_output_dir,  mask_name)]
+                            else: annotated_image_df.loc[len(annotated_image_df.index)] = [image_id,filename, cell_line,condition,plate_id, cell_properties_df.label.max(), filepath,  os.path.join(mask_output_dir,  mask_name)]
                             annotated_image_df.to_csv(f'{project_dir}/annotated_images.csv', sep=';')
 
                             io.imsave(os.path.join(mask_output_dir,  mask_name), mask)
@@ -614,8 +580,8 @@ def segmentation_widget():
 
                     # Add metadata
                     cell_properties_df['image_id'] = image_id
-                    cell_properties_df['biological_replicate'] = biological_replicate
-                    cell_properties_df['stimulation'] = stimulation
+                    cell_properties_df['cell_line'] = cell_line
+                    cell_properties_df['condition'] = condition
                     cell_properties_df['filename'] = filename
                     cell_properties_df['plate_id'] = plate_id
                     cell_properties_df['mask_path'] = os.path.join(mask_output_dir,  mask_name)
@@ -624,7 +590,11 @@ def segmentation_widget():
 
                     for column in columns:
                         cell_properties_df[column] = row[column]
-
+                    
+                    # ensure file will still be made to avoid issues with concatenation later on
+                    table_dir = f'{project_dir}/Segmentation/Tables'
+                    if not os.path.exists(table_dir): os.makedirs(table_dir)
+                    
                     if len(cell_properties_df) > 0:
 
                         # Plot traces
@@ -634,18 +604,16 @@ def segmentation_widget():
 
                         #for img in cell_properties_df.image_id.unique():
                         #    plot.cellwise_traces(cell_properties_df = cell_properties_df[cell_properties_df.image_id == img].copy(), trace='raw', baseline=False, spikes = True, spikes_mode = 'all', output_path = os.path.join(output_dir, 'Raw_traces'))
-
-                        table_dir = f'{project_dir}/Segmentation/Tables'
-                        if not os.path.exists(table_dir): os.makedirs(table_dir)
-
+                        
                         with open(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'), 'ab') as f:
                             pickle.dump(cell_properties_df, f)
+                    else:
+                        print(f'Warning: No cells detected in {filepath}\n')
 
-                        del cell_properties_df
+                    del cell_properties_df
 
-                        gc.collect()
-                    
-                    
+                    gc.collect()
+                     
 
                 df_list = []
                 with open(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'), 'rb') as f:
@@ -658,13 +626,13 @@ def segmentation_widget():
                 cell_properties_df = pd.concat(df_list, ignore_index=True)
 
                 cell_properties_df['plate_id'] = cell_properties_df['plate_id'].astype('category')
-                cell_properties_df['stimulation'] = cell_properties_df['stimulation'].astype('category')
-                cell_properties_df['biological_replicate'] = cell_properties_df['biological_replicate'].astype('category')
+                cell_properties_df['condition'] = cell_properties_df['condition'].astype('category')
+                cell_properties_df['cell_line'] = cell_properties_df['cell_line'].astype('category')
                 
                 if 'marker' in cell_properties_df.columns:
                     cell_properties_df['marker'] = cell_properties_df['marker'].astype('category')
 
-                # cell_properties_df['plate_id_biological_replicate'] = cell_properties_df['plate_id'].astype(str) + '_' + cell_properties_df['biological_replicate'].astype(str)
+                # cell_properties_df['plate_id_cell_line'] = cell_properties_df['plate_id'].astype(str) + '_' + cell_properties_df['cell_line'].astype(str)
 
 
                 if 'Unnamed: 0' in cell_properties_df.columns:
@@ -684,8 +652,45 @@ def segmentation_widget():
                     for line in parameter_list:
                         f.write(f'{line}\n')
 
-                print('All images annotated... Stopping the pipeline...\n')
+                parameters = {"input": {
+                                     "input_file": str(input_file),
+                                    "metadata_file": str(metadata_file),
+                                    "project_dir": str(project_dir)
+                                    },
+                                "segmentation": {
+                                    "selection_mode": selection_mode,
+                                    "nuclear_stain": nuclear_stain,
+                                    "method": stain_to_segment,
+                                        "cellpose": {
+                                            "model": model_cp,
+                                            "diameter": diameter_cp,
+                                            "cellprob_threshold": cellprob_threshold_cp,
+                                            "flow_threshold": flow_threshold_cp
+                                        },
+                                        "stardist": {
+                                            "prob_thresh": prob_thresh_sd,
+                                            "overlap_thresh": overlap_thresh_sd
+                                        }
+                                    },
+                                    "filters": {
+                                        "cell_area": [cell_area_min, cell_area_max],
+                                        "nuclear_area": [nuclear_area_min, nuclear_area_max],
+                                        "intensity": [intensity_min, intensity_max],
+                                        "nuclear_overlap": nuclear_overlap
+                                    },
+                                    "provenance": {
+                                        'Date and time': [time], 
+                                        'Pipeline runtime (s)': [runtime_seconds]
+                                    }
+                                }
 
+                run.save_json("parameters_segmentation.json", parameters)
+                
+                flat_params = pd.json_normalize(parameters)
+                flat_params.to_csv(os.path.join(table_dir, "parameters.csv"), index=False)
+
+                print('All images annotated... Stopping the pipeline...\n')
+                run.log(f"Segmentation done in {perf_counter() - start_time_run:.2f} sec")
                 widget.call_button.enabled = True
 
                 # Reset settings
@@ -1309,26 +1314,26 @@ class PlotViewerBaseline(QWidget):
         self.layout.addWidget(self.canvas)
 
 def get_colors(cell_properties_df, project_dir):
-    cell_properties_df["stimulation"] = cell_properties_df["stimulation"].astype("category")
-    unique_stimulations = cell_properties_df["stimulation"].cat.categories
+    cell_properties_df["condition"] = cell_properties_df["condition"].astype("category")
+    unique_conditions = cell_properties_df["condition"].cat.categories
 
     # Read user specified palette
     if os.path.isfile(os.path.join(project_dir, 'colors.csv')):
         colors = pd.read_csv(os.path.join(project_dir, 'colors.csv'), sep=None)
-        palette = dict(zip(colors['stimulation'], colors['color']))
+        palette = dict(zip(colors['condition'], colors['color']))
         
         # Check all categories has color specified
-        for cond in unique_stimulations:
+        for cond in unique_conditions:
             if cond not in palette.keys():
                 raise ValueError(f'Color group {cond} is not present in color table')
 
     else:
-        colors = sns.color_palette(n_colors=len(unique_stimulations))
+        colors = sns.color_palette(n_colors=len(unique_conditions))
         hex_colors = ["#{:02X}{:02X}{:02X}".format(int(color[0]*255), int(color[1]*255), int(color[2]*255)) for color in colors]
-        palette = dict(zip(unique_stimulations, hex_colors))
+        palette = dict(zip(unique_conditions, hex_colors))
 
-    palette = {k: v for k, v in palette.items() if k in cell_properties_df['stimulation'].cat.categories} 
-    #palette = {cat:palette[cat] for cat in cell_properties_df.stimulation.cat.categories} # Reorder palette according to the categories
+    palette = {k: v for k, v in palette.items() if k in cell_properties_df['condition'].cat.categories} 
+    #palette = {cat:palette[cat] for cat in cell_properties_df.condition.cat.categories} # Reorder palette according to the categories
 
     return palette
 
@@ -1343,7 +1348,7 @@ def get_cell_properties_df(project_dir):
 # Reset settings
 def reset_settings_sc_analysis(widget):
     # project_dir analysis_mode activity_type control_condition 
-    widget.stimulation_frame.value = 0
+    widget.condition_frame.value = 0
     widget.kcl_frame.value = -1
     widget.sliding_window_size.value = 75
     widget.percentile_threshold.value = 15
@@ -1369,10 +1374,10 @@ def single_cell_widget():
         def __init__(self):
             self.cell_properties_df = None
             self.previous_image_id = None
-            self.sampled_stimulation = ['All']
+            self.sampled_condition = ['All']
 
-        def get_stimulation_choices(self, *args):
-            return self.sampled_stimulation
+        def get_condition_choices(self, *args):
+            return self.sampled_condition
 
 
             #self.control_condition = None
@@ -1387,11 +1392,15 @@ def single_cell_widget():
         project_dir=dict(widget_type='FileEdit',value='', label='Project directory:', mode='d', tooltip='Specify project directory for pipeline output'),
         analysis_mode = dict(widget_type='ComboBox', name = 'analysis_mode', label='Analysis mode', value='-- Select --', choices=['-- Select --','Compound-evoked activity', 'Spontaneous activity'],  tooltip='Experimental type.'),
         activity_type = dict(widget_type='ComboBox', name = 'activity_type', label='Activity type', value='-- Select --', choices=['-- Select --','Spontaneous', 'Baseline shift'],  tooltip='Type of anticipated cellular activity.'),
-        control_condition = dict(widget_type='LineEdit',name = 'control_condition', label='Control condition', value='',  tooltip='Name of stimulation to be used as control'),
+        detection_method = dict(widget_type='ComboBox', name = 'detection_method', label='Detection method', value='-- Select --', choices=['-- Select --','Peak detection', 'OASIS'],  tooltip='Method to detect cellular activity.'),
+        control_condition = dict(widget_type='LineEdit',name = 'control_condition', label='Control condition', value='',  tooltip='Name of condition to be used as control'),
         norm_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Normalization settings———</b></div>'),
         normalization_mode = dict(widget_type='ComboBox',name = 'normalization_mode', label='Normalization', value='-- Select --', choices=['-- Select --','Sliding window', 'Pre-stimulus window'],  tooltip='Normalization method (use pre-stimulus window only when recording contains a stable baseline signal).'),
-        stimulation_frame = dict(widget_type="SpinBox",label="Stimulation frame",value=0, step = 1, tooltip='Image frame for stimulation administration.'),
-        kcl_frame = dict(widget_type="SpinBox",label="KCl stimulation frame",value=-1, step=1, tooltip='Image frame for KCl administration. If no KCl was added specify -1.'), # make dynamic
+        deconv_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Deconvolution settings———</b></div>'),
+        deconv_taud = dict(widget_type='FloatSpinBox', name='deconv_taud', label='Ca timescale', value=0, step=0.1, tooltip='Tau d parameter for OASIS deconvolution. Specify the decay time constant of the fluorescence signal in seconds.'),
+        deconv_fr = dict(widget_type='FloatSpinBox', name='deconv_frame_rate', label='Frame rate', value=0, step=0.1, tooltip='Frame rate of the recording in Hz.'),
+        condition_frame = dict(widget_type="SpinBox",label="condition frame",value=0, step = 1, tooltip='Image frame for condition administration.'),
+        kcl_frame = dict(widget_type="SpinBox",label="KCl condition frame",value=-1, step=1, tooltip='Image frame for KCl administration. If no KCl was added specify -1.'), # make dynamic
         sliding_window_size = dict(widget_type="SpinBox",label="Sliding window size",value=75, step=1, min=1, tooltip='Sliding window size in frames'), # make dynamic
         percentile_threshold = dict(widget_type='IntSlider', name='percentile_threshold',label='Percentile threshold', value=15, min=1, max=50, step=1, tooltip='Percentile of fluorescence values classified as baseline. Increase the percentile threshold for low activity recordings.'),
         spike_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Trace quantification———</b></div>'),
@@ -1405,13 +1414,13 @@ def single_cell_widget():
         downstream_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Downstream analysis———</b></div>'),
         n_clusters = dict(widget_type='IntSlider', name='n_clusters',label='Number of clusters', value=5, min=1, max=10, step=1, tooltip='Number of clusters for k-means clustering.'),
         optimization_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Parameter optimization———</b></div>'),
-        stimulation_selection = dict(widget_type='ComboBox', name = 'stimulation_selection', label='Stimulation to test', choices=widget_state.get_stimulation_choices,  tooltip='Stimulation(s) from where the recording is sampled for parameter optimization'),
+        condition_selection = dict(widget_type='ComboBox', name = 'condition_selection', label='condition to test', choices=widget_state.get_condition_choices,  tooltip='condition(s) from where the recording is sampled for parameter optimization'),
         optimize_button  = dict(widget_type='PushButton', text='Test settings on random recording', tooltip='Samples a random recording from input to test quantification parameters.', enabled=True),
         optimize_button_previous  = dict(widget_type='PushButton', text='Test settings on the same recording', tooltip='Uses the same recording to test quantification parameters.', enabled=False),
 
     )
 
-    def widget(project_dir, analysis_mode, activity_type, control_condition,  norm_label, normalization_mode, stimulation_frame,  sliding_window_size, percentile_threshold  , spike_label,smoothing_cb, spike_prominence_threshold, spike_amplitude_width_ratio, analysis_window_start, analysis_window_end, baseline_std_threshold, imaging_interval,kcl_frame, downstream_label, n_clusters, optimization_label,stimulation_selection, optimize_button,optimize_button_previous):
+    def widget(project_dir, analysis_mode, activity_type, detection_method, control_condition,  norm_label, normalization_mode, condition_frame,  sliding_window_size, percentile_threshold, deconv_label, deconv_taud, deconv_fr , spike_label,smoothing_cb, spike_prominence_threshold, spike_amplitude_width_ratio, analysis_window_start, analysis_window_end, baseline_std_threshold, imaging_interval,kcl_frame, downstream_label, n_clusters, optimization_label,condition_selection, optimize_button,optimize_button_previous):
 
         pass
 
@@ -1438,13 +1447,16 @@ def single_cell_widget():
                 project_dir = widget.project_dir.value
                 analysis_mode = widget.analysis_mode.value
                 activity_type = widget.activity_type.value
+                detection_method = widget.detection_method.value
                 normalization_mode = widget.normalization_mode.value    
                 control_condition =  widget.control_condition.value
                 #analysis_setup = widget.analysis_setup.value
-                stimulation_frame = widget.stimulation_frame.value    
+                condition_frame = widget.condition_frame.value    
                 kcl_frame = widget.kcl_frame.value
                 sliding_window_size = widget.sliding_window_size.value
                 percentile_threshold = widget.percentile_threshold.value
+                deconv_taud = widget.deconv_taud.value
+                deconv_fr = widget.deconv_frame_rate.value
                 smoothing = widget.smoothing_cb.value
                 spike_prominence_threshold = widget.spike_prominence_threshold.value
                 spike_amplitude_width_ratio = widget.spike_amplitude_width_ratio.value
@@ -1460,7 +1472,7 @@ def single_cell_widget():
                 widget_state.cell_properties_df = get_cell_properties_df(project_dir)
                 cell_properties_df = widget_state.cell_properties_df.copy()
 
-                if control_condition not in cell_properties_df.stimulation.tolist():
+                if control_condition not in cell_properties_df.condition.tolist():
                     raise ValueError(f"Condition '{control_condition}' not in input data")
                 
                 if not imaging_interval > 0:
@@ -1470,9 +1482,17 @@ def single_cell_widget():
                     cell_properties_df[col] = cell_properties_df[col].cat.remove_unused_categories()
 
                 # Generate parameter list to be written to file
-                parameter_list = [f'Project directory: {project_dir}', f'Analysis mode: {analysis_mode}',f'Activity type: {analysis_mode}',
+                parameter_list = [f'Project directory: {project_dir}', f'Analysis mode: {analysis_mode}',f'Activity type: {analysis_mode}', f'Detection method: {detection_method}',
                                 f'Control condition: {control_condition}', f'Normalization mode: {normalization_mode}']
                 
+                run_info_path = os.path.join(project_dir, "run_info.json")
+
+                with open(run_info_path, "r") as f:
+                    run_info = json.load(f)
+
+                existing_run_id = run_info["run_id"]
+                run = RunManager(project_dir, parent_run_id=existing_run_id, stage="quantification")
+                run.log("--------------Signal quantification pipeline started--------------")
 
                 if os.path.exists(os.path.join(project_dir, 'Quantification')): shutil.rmtree(os.path.join(project_dir, 'Quantification'), ignore_errors=True)
 
@@ -1487,51 +1507,61 @@ def single_cell_widget():
 
                 print('Starting signal quantification...')
                 
-                # Normalization
-                if normalization_mode == 'Sliding window':
-                    print('Running sliding window normalization...')
-                    parameter_list.extend([f'Normalization - Sliding window size: {sliding_window_size}', f'Normalization - Percentile threshold: {percentile_threshold}'])
-                    cell_properties_df = preprocess.sliding_window(cell_properties_df = cell_properties_df, sliding_window_size = sliding_window_size, percentile_threshold = percentile_threshold)
+                if detection_method == 'peak detection' and activity_type == 'Spontaneous':
+                    print('Running peak detection...')
+                    parameter_list.extend([f'Spike detection method: Peak detection', f'Spike prominence threshold: {spike_prominence_threshold}', f'Spike amplitude width ratio: {spike_amplitude_width_ratio}'])
+                
 
-                elif normalization_mode == 'Pre-stimulus window':
-                    print('Running pre-stimulus window normalization...')
-                    parameter_list.extend([f'Normalization - Stimulation frame: {stimulation_frame}'])
-                    cell_properties_df = preprocess.pre_stimulation(cell_properties_df = cell_properties_df, stimulation_frame = stimulation_frame)
+                    # Normalization
+                    if normalization_mode == 'Sliding window':
+                        print('Running sliding window normalization...')
+                        parameter_list.extend([f'Normalization - Sliding window size: {sliding_window_size}', f'Normalization - Percentile threshold: {percentile_threshold}'])
+                        cell_properties_df = preprocess.sliding_window(cell_properties_df = cell_properties_df, sliding_window_size = sliding_window_size, percentile_threshold = percentile_threshold)
 
-                palette = get_colors(cell_properties_df, project_dir)
+                    elif normalization_mode == 'Pre-stimulus window':
+                        print('Running pre-stimulus window normalization...')
+                        parameter_list.extend([f'Normalization - condition frame: {condition_frame}'])
+                        cell_properties_df = preprocess.pre_condition(cell_properties_df = cell_properties_df, condition_frame = condition_frame)
 
-                # Sort the df for plotting
-                stimulations = [control_condition] + [c for c in palette.keys() if c != control_condition]
-                cell_properties_df['stimulation'] = pd.Categorical(cell_properties_df['stimulation'], categories=stimulations, ordered=True)
-                cell_properties_df = cell_properties_df.sort_values('stimulation')
+                    palette = get_colors(cell_properties_df, project_dir)
 
-                palette = {cat:palette[cat] for cat in cell_properties_df.stimulation.cat.categories} # Order the palette
-                cell_properties_df['colors'] = cell_properties_df['stimulation'].map(palette) # Map colors to stimulation groups
+                    # Sort the df for plotting
+                    conditions = [control_condition] + [c for c in palette.keys() if c != control_condition]
+                    cell_properties_df['condition'] = pd.Categorical(cell_properties_df['condition'], categories=conditions, ordered=True)
+                    cell_properties_df = cell_properties_df.sort_values('condition')
 
-                if 'marker' not in cell_properties_df.columns:
+                    palette = {cat:palette[cat] for cat in cell_properties_df.condition.cat.categories} # Order the palette
+                    cell_properties_df['colors'] = cell_properties_df['condition'].map(palette) # Map colors to condition groups
 
-                    # Plot number of cells
-                    cell_count_df = cell_properties_df.groupby(['biological_replicate',  'image_id', 'stimulation'], observed=True).size().reset_index(name='count') 
-                    ax_barplot = plot.all_conditions_barplot(dataframe = cell_count_df, palette = palette, xcolumn='biological_replicate', ycolumn='count', hue='stimulation' )  
-                    plt.ylabel('Cells per image', fontsize='xx-large')
-                    plt.xlabel('')
-                    plt.title('')
-                    plt.savefig(os.path.join(plot_dir, 'barplot_cell_count_per_well.pdf'), bbox_inches='tight')
-                    plt.close()              
+                    if 'marker' not in cell_properties_df.columns:
 
-                    # Quantify and plot KCL response
-                    if kcl_frame > 0:
-                        cell_properties_df = utils.compute_auc(cell_properties_df = cell_properties_df,  start_frame = kcl_frame, column = 'AUC_kcl')
-                        mean_kcl_df = cell_properties_df.groupby(['image_id', 'stimulation', 'biological_replicate'], observed=True)['AUC_kcl'].mean().reset_index() 
-                        ax_barplot = plot.all_conditions_barplot(dataframe = mean_kcl_df, palette = palette, xcolumn='biological_replicate', ycolumn='AUC_kcl', hue='stimulation' )  
-                        plt.ylabel('Mean KCl AUC', size='xx-large')
+                        # Plot number of cells
+                        cell_count_df = cell_properties_df.groupby(['cell_line',  'image_id', 'condition'], observed=True).size().reset_index(name='count') 
+                        ax_barplot = plot.all_conditions_barplot(dataframe = cell_count_df, palette = palette, xcolumn='cell_line', ycolumn='count', hue='condition' )  
+                        plt.ylabel('Cells per image', fontsize='xx-large')
                         plt.xlabel('')
-                        plt.savefig(os.path.join(plot_dir, 'barplot_kcl_auc_per_well.pdf'), bbox_inches='tight')
-                        plt.close()   
+                        plt.title('')
+                        plt.savefig(os.path.join(plot_dir, 'barplot_cell_count_per_well.pdf'), bbox_inches='tight')
+                        plt.close()              
 
-                        mean_kcl_df.to_csv(os.path.join(table_dir, 'kcl_auc_per_well.csv'), sep=';')
-                        mean_kcl_df.to_pickle(os.path.join(table_dir, 'kcl_auc_per_well.pkl'))
+                        # Quantify and plot KCL response
+                        if kcl_frame > 0:
+                            cell_properties_df = utils.compute_auc(cell_properties_df = cell_properties_df,  start_frame = kcl_frame, column = 'AUC_kcl')
+                            mean_kcl_df = cell_properties_df.groupby(['image_id', 'condition', 'cell_line'], observed=True)['AUC_kcl'].mean().reset_index() 
+                            ax_barplot = plot.all_conditions_barplot(dataframe = mean_kcl_df, palette = palette, xcolumn='cell_line', ycolumn='AUC_kcl', hue='condition' )  
+                            plt.ylabel('Mean KCl AUC', size='xx-large')
+                            plt.xlabel('')
+                            plt.savefig(os.path.join(plot_dir, 'barplot_kcl_auc_per_well.pdf'), bbox_inches='tight')
+                            plt.close()   
 
+                            mean_kcl_df.to_csv(os.path.join(table_dir, 'kcl_auc_per_well.csv'), sep=';')
+                            mean_kcl_df.to_pickle(os.path.join(table_dir, 'kcl_auc_per_well.pkl'))
+                
+                elif detection_method == 'OASIS':
+                    print('Running OASIS deconvolution and spike detection...')
+                    parameter_list.extend([f'Detection method: OASIS', f'OASIS - Tau d: {deconv_taud}', f'OASIS - Frame rate: {deconv_fr}', f'Smoothing: {smoothing}'])
+                    cell_properties_df = preprocess.deconvolve_trace(cell_properties_df = cell_properties_df, tau_d = deconv_taud, frame_rate = deconv_fr, smoothing = smoothing)
+                
 
                 def spontaneous_activity_output():
                     # Visualize baseline estimation and peak detection
@@ -1542,7 +1572,7 @@ def single_cell_widget():
                     #output_dir_quantification = os.path.join(project_dir, 'Quantification_output')
 
                     
-                    #category_string = '_'.join(cell_properties_df.stimulation.cat.categories.tolist())
+                    #category_string = '_'.join(cell_properties_df.condition.cat.categories.tolist())
                     #category_string = category_string.replace('_', '_vs_', 1)
                     #output_dir_quantification = os.path.join(project_dir, 'Quantification', f'{category_string}_output')
 
@@ -1563,13 +1593,13 @@ def single_cell_widget():
                     title_dict = {'amplitude': 'Amplitude','prominence':'Prominence', 'frequency':'Frequency', 'width':'Width','rise_time':'Rise time','decay_time':'Decay time', 'cluster':'Cluster'}
 
                     print('Plotting and saving output...')
-                    for replicate in cell_properties_df.biological_replicate.unique():
+                    for replicate in cell_properties_df.cell_line.unique():
 
                         output_dir_replicate = os.path.join(plot_dir,replicate)
                         os.makedirs(output_dir_replicate)
 
-                        subset_df = cell_properties_df[cell_properties_df.biological_replicate == replicate].copy()
-                        subset_df["stimulation"] = subset_df["stimulation"].cat.remove_unused_categories()
+                        subset_df = cell_properties_df[cell_properties_df.cell_line == replicate].copy()
+                        subset_df["condition"] = subset_df["condition"].cat.remove_unused_categories()
 
                         # Heatmap
                         '''if 'marker' not in cell_properties_df.columns:
@@ -1580,10 +1610,10 @@ def single_cell_widget():
                         # Plot properties for each plate
                         for property in ['amplitude', 'width', 'rise_time', 'decay_time', 'frequency', 'prominence']:
                             if 'marker' in cell_properties_df.columns:
-                                ax_beeswarm = plot.beeswarm(cell_properties_df = subset_df[subset_df.frequency > 0].copy(), control_condition = control_condition, palette=palette, y=property, x='marker', hue='stimulation',hue_separation=0.3, separation_between_plots=2, max_plot_width=0.3)
+                                ax_beeswarm = plot.beeswarm(cell_properties_df = subset_df[subset_df.frequency > 0].copy(), control_condition = control_condition, palette=palette, y=property, x='marker', hue='condition',hue_separation=0.3, separation_between_plots=2, max_plot_width=0.3)
 
                             else:
-                                ax_beeswarm = plot.beeswarm(cell_properties_df = subset_df[subset_df.frequency > 0].copy(), control_condition = control_condition, palette=palette, y=property, x='stimulation')
+                                ax_beeswarm = plot.beeswarm(cell_properties_df = subset_df[subset_df.frequency > 0].copy(), control_condition = control_condition, palette=palette, y=property, x='condition')
                             plt.ylabel(ylabel_dict[property])
                             plt.title(title_dict[property])
                             plt.savefig(os.path.join(output_dir_replicate, f'beeswarm_{property}.pdf'),  bbox_inches='tight')
@@ -1594,7 +1624,7 @@ def single_cell_widget():
                     #response_perc_well_df, response_perc_rep_df = utils.percentage_responding_spontaneous(cell_properties_df = cell_properties_df)
 
                     if 'marker' not in cell_properties_df.columns:
-                        ax_barplot_well = plot.all_conditions_barplot(dataframe=response_perc_well_df, palette=palette, ycolumn="proportion_responding", xcolumn='biological_replicate', hue = 'stimulation')
+                        ax_barplot_well = plot.all_conditions_barplot(dataframe=response_perc_well_df, palette=palette, ycolumn="proportion_responding", xcolumn='cell_line', hue = 'condition')
                         ax_barplot_well.set_ylabel(r"% active cells (Ca$^{2+}$)", fontsize='xx-large')
                         plt.xlabel('')
                         plt.title('')
@@ -1602,9 +1632,9 @@ def single_cell_widget():
                         plt.close()
                     
                     if 'marker' in cell_properties_df.columns:
-                        ax_barplot_rep = plot.all_conditions_barplot(dataframe=response_perc_rep_df, palette=palette, ycolumn="proportion_responding", xcolumn='marker', hue='stimulation')
+                        ax_barplot_rep = plot.all_conditions_barplot(dataframe=response_perc_rep_df, palette=palette, ycolumn="proportion_responding", xcolumn='marker', hue='condition')
                     else: 
-                        ax_barplot_rep = plot.all_conditions_barplot(dataframe=response_perc_rep_df, palette=palette, ycolumn="proportion_responding", xcolumn='stimulation')
+                        ax_barplot_rep = plot.all_conditions_barplot(dataframe=response_perc_rep_df, palette=palette, ycolumn="proportion_responding", xcolumn='condition')
                     ax_barplot_rep.set_ylabel(r"% active cells (Ca$^{2+}$)", fontsize='xx-large')
                     plt.xlabel('')
                     plt.title('')
@@ -1613,8 +1643,8 @@ def single_cell_widget():
 
                     response_perc_well_df.to_csv(os.path.join(table_dir, 'active_cells_per_well.csv'), sep=';')
                     response_perc_well_df.to_pickle(os.path.join(table_dir, 'active_cells_per_well.pkl'))
-                    response_perc_rep_df.to_csv(os.path.join(table_dir, 'active_cells_per_biological_replicate.csv'), sep=';')
-                    response_perc_rep_df.to_pickle(os.path.join(table_dir, 'active_cells_per_biological_replicate.pkl'))
+                    response_perc_rep_df.to_csv(os.path.join(table_dir, 'active_cells_per_cell_line.csv'), sep=';')
+                    response_perc_rep_df.to_pickle(os.path.join(table_dir, 'active_cells_per_cell_line.pkl'))
 
                 
                     # Plot traces one by one
@@ -1622,11 +1652,11 @@ def single_cell_widget():
 
                         plate = cell_properties_df[cell_properties_df.image_id == img]['plate_id'].iloc[0]
                         filename = cell_properties_df[cell_properties_df.image_id == img]['filename'].iloc[0]
-                        stimulation = cell_properties_df[cell_properties_df.image_id == img]['stimulation'].iloc[0]
-                        biological_replicate = cell_properties_df[cell_properties_df.image_id == img]['biological_replicate'].iloc[0]
+                        condition = cell_properties_df[cell_properties_df.image_id == img]['condition'].iloc[0]
+                        cell_line = cell_properties_df[cell_properties_df.image_id == img]['cell_line'].iloc[0]
 
-                        output_norm_dir = os.path.join(project_dir, 'Per_image_output', plate, f'{filename}_{stimulation}_{biological_replicate}', 'Baseline_traces' )
-                        output_spikes_dir = os.path.join(project_dir, 'Per_image_output', plate, f'{filename}_{stimulation}_{biological_replicate}', 'Spikes_traces' )
+                        output_norm_dir = os.path.join(project_dir, 'Per_image_output', plate, f'{filename}_{condition}_{cell_line}', 'Baseline_traces' )
+                        output_spikes_dir = os.path.join(project_dir, 'Per_image_output', plate, f'{filename}_{condition}_{cell_line}', 'Spikes_traces' )
                         
                         if os.path.exists(output_norm_dir): shutil.rmtree(output_norm_dir, ignore_errors=True)
                         os.makedirs(output_norm_dir)
@@ -1659,20 +1689,20 @@ def single_cell_widget():
                         plt.savefig(os.path.join(plot_dir, 'cluster_heatmap.pdf'), bbox_inches='tight')
                         plt.close()        
                         
-                        valid_combinations = cell_properties_filtered_df[['stimulation', 'biological_replicate']].drop_duplicates().assign(combined=lambda d: d['stimulation'].astype(str) + "_" + d['biological_replicate'].astype(str))['combined'].values
+                        valid_combinations = cell_properties_filtered_df[['condition', 'cell_line']].drop_duplicates().assign(combined=lambda d: d['condition'].astype(str) + "_" + d['cell_line'].astype(str))['combined'].values
 
                         cluster_percentages_df = (
                             cell_properties_filtered_df
-                            .groupby(['stimulation', 'biological_replicate'])['cluster']
+                            .groupby(['condition', 'cell_line'])['cluster']
                             .value_counts(normalize=True)   
                             .mul(100)                       
                             .rename('percentage')
                             .reset_index()
-                            .assign(combined=lambda d: d['stimulation'].astype(str) + "_" + d['biological_replicate'].astype(str))
+                            .assign(combined=lambda d: d['condition'].astype(str) + "_" + d['cell_line'].astype(str))
                         )
                         cluster_percentages_df = cluster_percentages_df[cluster_percentages_df.combined.isin(valid_combinations)]
                         
-                        ax_barplot = plot.all_conditions_barplot(dataframe = cluster_percentages_df, palette = palette, ycolumn='cluster', xcolumn='percentage', hue='stimulation')
+                        ax_barplot = plot.all_conditions_barplot(dataframe = cluster_percentages_df, palette = palette, ycolumn='cluster', xcolumn='percentage', hue='condition')
                         ax_barplot.set_ylabel(r"% of cells", fontsize='xx-large')
                         plt.xlabel('')
                         plt.title('')
@@ -1686,9 +1716,9 @@ def single_cell_widget():
                     for property in ['cluster','amplitude', 'width', 'rise_time', 'decay_time', 'frequency']:
                         if property != 'cluster':
                             if 'marker' in cell_properties_df.columns:   
-                                ax_beeswarm = plot.beeswarm(cell_properties_df = cell_properties_filtered_df, control_condition = control_condition, palette=palette, y=property, x='marker', hue='stimulation',hue_separation=0.3, separation_between_plots=2, max_plot_width=0.3)
+                                ax_beeswarm = plot.beeswarm(cell_properties_df = cell_properties_filtered_df, control_condition = control_condition, palette=palette, y=property, x='marker', hue='condition',hue_separation=0.3, separation_between_plots=2, max_plot_width=0.3)
                             else:   
-                                ax_beeswarm = plot.beeswarm(cell_properties_df = cell_properties_filtered_df, control_condition = control_condition, palette=palette, y=property, x='stimulation')
+                                ax_beeswarm = plot.beeswarm(cell_properties_df = cell_properties_filtered_df, control_condition = control_condition, palette=palette, y=property, x='condition')
                             plt.ylabel(ylabel_dict[property])
                             plt.title(title_dict[property])
                             plt.savefig(os.path.join(plot_dir, f'beeswarm_{property}_pooled.pdf'),  bbox_inches='tight')
@@ -1714,7 +1744,7 @@ def single_cell_widget():
                 if analysis_mode == 'Compound-evoked activity':
                     if activity_type == 'Baseline shift':
                         print('Running baseline shift analysis...')
-                        parameter_list.extend([f'Quantification - Analysis window start: {analysis_window_start}', f'Quantification - Analysis window end: {analysis_window_end}', f'Quantification - Standard deviation threshold: {baseline_std_threshold}' , f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl stimulation frame: {kcl_frame}'])
+                        parameter_list.extend([f'Quantification - Analysis window start: {analysis_window_start}', f'Quantification - Analysis window end: {analysis_window_end}', f'Quantification - Standard deviation threshold: {baseline_std_threshold}' , f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl condition frame: {kcl_frame}'])
 
                         cell_properties_df = utils.compute_auc(cell_properties_df = cell_properties_df,  start_frame = analysis_window_start, end_frame = analysis_window_end, column='AUC')
 
@@ -1753,14 +1783,14 @@ def single_cell_widget():
                         if 'marker' not in cell_properties_df.columns:
 
                             # Plot overview of the data
-                            ax_barplot = plot.all_conditions_barplot(dataframe=response_perc_well_df, palette=palette, ycolumn="proportion_positive_cells", xcolumn='biological_replicate', hue = 'stimulation')
+                            ax_barplot = plot.all_conditions_barplot(dataframe=response_perc_well_df, palette=palette, ycolumn="proportion_positive_cells", xcolumn='cell_line', hue = 'condition')
                             ax_barplot.set_ylabel(r"% responding cells (Ca$^{2+}$)", fontsize='xx-large')
                             plt.xlabel('')
                             plt.title('')
                             plt.savefig(os.path.join(plot_dir, 'barplot_responding_cells_per_well.pdf'), bbox_inches='tight')
                             plt.close()
 
-                            ax_barplot = plot.all_conditions_barplot(dataframe=response_perc_rep_df, palette=palette, ycolumn="proportion_positive_cells", xcolumn='stimulation')
+                            ax_barplot = plot.all_conditions_barplot(dataframe=response_perc_rep_df, palette=palette, ycolumn="proportion_positive_cells", xcolumn='condition')
                             ax_barplot.set_ylabel(r"% responding cells (Ca$^{2+}$)", fontsize='xx-large')
                             plt.xlabel('')
                             plt.title('')
@@ -1773,22 +1803,22 @@ def single_cell_widget():
                             plt.close()
 
                             # Plot cluster-to-treatment barplot
-                            cluster_df = cell_properties_df.groupby(['stimulation','biological_replicate'])['cluster'].value_counts(normalize=True).mul(100).reset_index()
-                            ax_cluster_barplot = plot.all_conditions_barplot(dataframe=cluster_df, palette=colors_dict, ycolumn='proportion',xcolumn='stimulation',hue='cluster')
-                            plt.savefig(os.path.join(plot_dir, 'stimulation_to_cluster.pdf'), bbox_inches='tight')
+                            cluster_df = cell_properties_df.groupby(['condition','cell_line'])['cluster'].value_counts(normalize=True).mul(100).reset_index()
+                            ax_cluster_barplot = plot.all_conditions_barplot(dataframe=cluster_df, palette=colors_dict, ycolumn='proportion',xcolumn='condition',hue='cluster')
+                            plt.savefig(os.path.join(plot_dir, 'condition_to_cluster.pdf'), bbox_inches='tight')
                             plt.close()
                             cluster_df['cluster_color'] = cluster_df['cluster'].astype(int).map(colors_dict)
-                            cluster_df.to_csv(os.path.join(table_dir, 'stimulation_to_cluster.csv'), sep=';')
-                            cluster_df.to_pickle(os.path.join(table_dir, 'stimulation_to_cluster.pkl'))
+                            cluster_df.to_csv(os.path.join(table_dir, 'condition_to_cluster.csv'), sep=';')
+                            cluster_df.to_pickle(os.path.join(table_dir, 'condition_to_cluster.pkl'))
 
                         
                         # Valid diffs
-                        for treatment_condition in cell_properties_df.stimulation.cat.categories.tolist():
+                        for treatment_condition in cell_properties_df.condition.cat.categories.tolist():
                             if treatment_condition != control_condition:
-                                valid_comparisons = cell_properties_df[cell_properties_df.stimulation.isin([treatment_condition, control_condition])].groupby(['biological_replicate']).stimulation.nunique()
+                                valid_comparisons = cell_properties_df[cell_properties_df.condition.isin([treatment_condition, control_condition])].groupby(['cell_line']).condition.nunique()
                                 valid_comparisons = valid_comparisons[valid_comparisons == 2].index  
-                                comparison_df = cell_properties_df[(cell_properties_df['biological_replicate'].isin(valid_comparisons)) & (cell_properties_df.stimulation.isin([treatment_condition, control_condition]))]
-                                comparison_df["stimulation"] = comparison_df["stimulation"].cat.remove_unused_categories()
+                                comparison_df = cell_properties_df[(cell_properties_df['cell_line'].isin(valid_comparisons)) & (cell_properties_df.condition.isin([treatment_condition, control_condition]))]
+                                comparison_df["condition"] = comparison_df["condition"].cat.remove_unused_categories()
                                 # Generate output folder
                                 if 'marker' in comparison_df.columns:
                                     comparison_table_dir = os.path.join(project_dir, 'Quantification',f'{control_condition}_vs_{treatment_condition}','Tables')
@@ -1803,14 +1833,14 @@ def single_cell_widget():
 
                                 if 'marker' not in comparison_df.columns:
 
-                                    for exp_replicate in comparison_df.biological_replicate.unique():
-                                        subset_df = comparison_df[comparison_df.biological_replicate == exp_replicate].copy()
-                                        subset_df["stimulation"] = subset_df["stimulation"].cat.remove_unused_categories()
+                                    for exp_replicate in comparison_df.cell_line.unique():
+                                        subset_df = comparison_df[comparison_df.cell_line == exp_replicate].copy()
+                                        subset_df["condition"] = subset_df["condition"].cat.remove_unused_categories()
 
                                         # Beeswarm
                                         with plt.rc_context({"figure.dpi": 350, "figure.figsize": (1.8, 2.2)}):
 
-                                            ax_beeswarm = plot.beeswarm(cell_properties_df=subset_df, control_condition=control_condition,  std_threshold=baseline_std_threshold,  palette = palette, brace=True, x='stimulation', y='AUC', control_condition_mean=True)
+                                            ax_beeswarm = plot.beeswarm(cell_properties_df=subset_df, control_condition=control_condition,  std_threshold=baseline_std_threshold,  palette = palette, brace=True, x='condition', y='AUC', control_condition_mean=True)
                                             plt.ylabel(r"Ca$^{2+}$ response (AUC)")
                                             plt.savefig(os.path.join(comparison_plot_dir, f'beeswarm_{exp_replicate}.pdf'),  bbox_inches='tight')
                                             plt.close()              
@@ -1822,28 +1852,28 @@ def single_cell_widget():
                                         plt.close()       
 
                                         # Trace
-                                        ax_trace = plot.overlaid_traces_two_groups(cell_properties_df = subset_df,  control_condition = control_condition, treatment_condition= treatment_condition, trace='dff', mean=True, start_frame= analysis_window_start, end_frame = analysis_window_end, stimulation_frame = stimulation_frame,  palette=palette, imaging_interval=imaging_interval)
+                                        ax_trace = plot.overlaid_traces_two_groups(cell_properties_df = subset_df,  control_condition = control_condition, treatment_condition= treatment_condition, trace='dff', mean=True, start_frame= analysis_window_start, end_frame = analysis_window_end, condition_frame = condition_frame,  palette=palette, imaging_interval=imaging_interval)
                                         plt.savefig(os.path.join(comparison_plot_dir, f'trace_{exp_replicate}.pdf'),  bbox_inches='tight')
                                         plt.close()              
 
                                 # barplot
                                 filtered_response_perc_df = response_perc_well_df[response_perc_well_df.image_id.isin(comparison_df.image_id.unique())].copy()
-                                filtered_response_perc_df["stimulation"] = filtered_response_perc_df["stimulation"].cat.remove_unused_categories()
+                                filtered_response_perc_df["condition"] = filtered_response_perc_df["condition"].cat.remove_unused_categories()
                                 
                                 if 'marker' in filtered_response_perc_df.columns:
-                                    response_perc_mean_df = filtered_response_perc_df.groupby(['stimulation', 'biological_replicate', 'marker'])['proportion_positive_cells'].mean().reset_index()
+                                    response_perc_mean_df = filtered_response_perc_df.groupby(['condition', 'cell_line', 'marker'])['proportion_positive_cells'].mean().reset_index()
                                 else:
-                                    response_perc_mean_df = filtered_response_perc_df.groupby(['stimulation', 'biological_replicate'])['proportion_positive_cells'].mean().reset_index()
+                                    response_perc_mean_df = filtered_response_perc_df.groupby(['condition', 'cell_line'])['proportion_positive_cells'].mean().reset_index()
 
 
                                 if 'marker' in response_perc_mean_df.columns:
-                                    ax_two_conditions_barplot = plot.two_conditions_barplot(response_perc_mean_df = response_perc_mean_df, palette=palette, x = 'marker', y = 'proportion_positive_cells', hue = 'stimulation')
+                                    ax_two_conditions_barplot = plot.two_conditions_barplot(response_perc_mean_df = response_perc_mean_df, palette=palette, x = 'marker', y = 'proportion_positive_cells', hue = 'condition')
                                     plt.ylabel(r"% responding (Ca$^{2+}$)", fontsize='large')
                                     #plt.title(marker, fontsize='large')
                                     plt.savefig(os.path.join(comparison_plot_dir, f'barplot_responding_cells_per_replicate.pdf'),  bbox_inches='tight')
                                     plt.close()              
 
-                                    ax_swarmplot = plot.beeswarm(comparison_df, x="marker", y='AUC',hue='stimulation',  palette=palette, ax=None, separation_between_plots=1.8, max_plot_width=0.5)
+                                    ax_swarmplot = plot.beeswarm(comparison_df, x="marker", y='AUC',hue='condition',  palette=palette, ax=None, separation_between_plots=1.8, max_plot_width=0.5)
                                     plt.savefig(os.path.join(comparison_plot_dir, 'beeswarm_plot_auc.pdf'),  bbox_inches='tight')
                                     plt.close()              
 
@@ -1851,7 +1881,7 @@ def single_cell_widget():
 
                                 else:
                                     with plt.rc_context({"figure.dpi": 350, "figure.figsize": (1.8, 2.2)}):
-                                        ax_two_conditions_barplot = plot.two_conditions_barplot(response_perc_mean_df = response_perc_mean_df, palette=palette, x='stimulation', y='proportion_positive_cells')
+                                        ax_two_conditions_barplot = plot.two_conditions_barplot(response_perc_mean_df = response_perc_mean_df, palette=palette, x='condition', y='proportion_positive_cells')
                                         plt.ylabel(r"% responding (Ca$^{2+}$)", fontsize='large')
                                         plt.savefig(os.path.join(comparison_plot_dir, 'barplot_responding_cells_per_replicate.pdf'),  bbox_inches='tight')
                                         plt.close()              
@@ -1873,7 +1903,7 @@ def single_cell_widget():
 
 
                     elif activity_type == 'Spontaneous':
-                        parameter_list.extend([f'Quantification - Smoothing: {smoothing}','Quantification - Prominence threshold: {spike_prominence_threshold}', f'Quantification - Amplitude width ratio: {spike_amplitude_width_ratio}',   f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl stimulation frame: {kcl_frame}'])
+                        parameter_list.extend([f'Quantification - Smoothing: {smoothing}','Quantification - Prominence threshold: {spike_prominence_threshold}', f'Quantification - Amplitude width ratio: {spike_amplitude_width_ratio}',   f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl condition frame: {kcl_frame}'])
 
                         cell_properties_df, start_frame, end_frame = activity.spike(cell_properties_df = cell_properties_df, prominence = spike_prominence_threshold,  amplitude_width_ratio=spike_amplitude_width_ratio, imaging_interval=imaging_interval, start_frame=analysis_window_start, end_frame = analysis_window_end, smoothing=smoothing)
                         spontaneous_activity_output()
@@ -1881,11 +1911,27 @@ def single_cell_widget():
 
                 elif analysis_mode == 'Spontaneous activity':
                     print('Running spontaneous activity analysis...')
-                    parameter_list.extend([f'Quantification - Smoothing: {smoothing}', 'Quantification - Prominence threshold: {spike_prominence_threshold}', f'Quantification - Amplitude width ratio: {spike_amplitude_width_ratio}',   f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl stimulation frame: {kcl_frame}'])
+                    parameter_list.extend([f'Quantification - Smoothing: {smoothing}', 'Quantification - Prominence threshold: {spike_prominence_threshold}', f'Quantification - Amplitude width ratio: {spike_amplitude_width_ratio}',   f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl condition frame: {kcl_frame}'])
+                    
+                    run_spikes = True
 
-                    # Detect events
-                    cell_properties_df, start_frame, end_frame = activity.spike(cell_properties_df = cell_properties_df, prominence = spike_prominence_threshold,  amplitude_width_ratio=spike_amplitude_width_ratio, imaging_interval=imaging_interval, end_frame = kcl_frame, smoothing = smoothing)
-                    spontaneous_activity_output()
+                    if cell_properties_df is None:
+                        print("Warning: cell_properties_df is None.")
+                        run_spikes = False
+                    elif len(cell_properties_df) == 0:
+                        print("Warning: No cells found for this recording.")
+                        run_spikes = False
+                    elif 'dff' not in cell_properties_df.columns:
+                        print("Warning: 'dff' column missing. Skipping spike detection.")
+                        run_spikes = False
+
+                    if run_spikes:
+                        # Detect events
+                        cell_properties_df, start_frame, end_frame = activity.spike(cell_properties_df = cell_properties_df, prominence = spike_prominence_threshold,  amplitude_width_ratio=spike_amplitude_width_ratio, imaging_interval=imaging_interval, end_frame = kcl_frame, smoothing = smoothing)
+                        spontaneous_activity_output()
+
+                    else:
+                        print("Spike detection skipped due to issues with the data. Please check the warnings above.")
                     
                 time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                 end_time = perf_counter()
@@ -1918,7 +1964,7 @@ def single_cell_widget():
 
 
     # Hiding widgets
-    widget.stimulation_frame.visible = False
+    widget.condition_frame.visible = False
     widget.kcl_frame.visible = False
     widget.sliding_window_size.visible = False
     widget.spike_label.visible = False
@@ -1940,8 +1986,8 @@ def single_cell_widget():
 
         widget.analysis_mode.value = '-- Select --'
         disable_enable_value(widget.analysis_mode, 'disable', '-- Select --')
-        widget_state.sampled_stimulation.extend(get_cell_properties_df(widget.project_dir.value).stimulation.unique().tolist())
-        widget.stimulation_selection.choices = widget_state.sampled_stimulation
+        widget_state.sampled_condition.extend(get_cell_properties_df(widget.project_dir.value).condition.unique().tolist())
+        widget.condition_selection.choices = widget_state.sampled_condition
 
 
     @widget.analysis_mode.changed.connect
@@ -1959,7 +2005,7 @@ def single_cell_widget():
 
         widget.sliding_window_size.visible = False
         widget.percentile_threshold.visible = False
-        widget.stimulation_frame.visible = False
+        widget.condition_frame.visible = False
 
 
         if widget.analysis_mode.value == 'Compound-evoked activity':
@@ -1969,6 +2015,7 @@ def single_cell_widget():
             disable_enable_value(widget.normalization_mode, 'enable', 'Sliding window')
             disable_enable_value(widget.normalization_mode, 'disable', 'Pre-stimulus window')
             widget.activity_type.visible = False
+            widget.detection_method.visible = True
             widget.smoothing_cb.visible = True
             widget.spike_prominence_threshold.visible = True
             widget.spike_amplitude_width_ratio.visible = True
@@ -1988,7 +2035,7 @@ def single_cell_widget():
         disable_enable_value(widget.normalization_mode, 'enable', '-- Select --')
         widget.sliding_window_size.visible = False
         widget.percentile_threshold.visible = False
-        widget.stimulation_frame.visible = False
+        widget.condition_frame.visible = False
 
         if widget.activity_type.value == 'Baseline shift':
             disable_enable_value(widget.normalization_mode, 'disable', 'Sliding window')
@@ -2020,6 +2067,19 @@ def single_cell_widget():
             widget.downstream_label.visible = True
             widget.n_clusters.visible = True
 
+    @widget.detection_method.changed.connect
+    def _detection_method_changed():
+        if widget.activity_type.value == 'Peak detection':
+            widget.deconv_label.visible = False
+            widget.deconv_taud.visible = False
+            widget.deconv_fr.visible = False
+
+        if widget.activity_type.value == 'Peak detection':
+            widget.normalization_label.visible = False
+            widget.normalization_mode.visible = False
+            widget.deconv_label.visible = True
+            widget.deconv_taud.visible = True
+            widget.deconv_fr.visible = True
 
     @widget.normalization_mode.changed.connect
     def _normalization_mode_changed():
@@ -2029,12 +2089,12 @@ def single_cell_widget():
         if widget.normalization_mode.value == 'Sliding window':
             widget.sliding_window_size.visible = True
             widget.percentile_threshold.visible = True
-            widget.stimulation_frame.visible = False
+            widget.condition_frame.visible = False
 
         if widget.normalization_mode.value == 'Pre-stimulus window':
             widget.sliding_window_size.visible = False
             widget.percentile_threshold.visible = False
-            widget.stimulation_frame.visible = True
+            widget.condition_frame.visible = True
 
         reset_settings_sc_analysis(widget)
 
@@ -2050,7 +2110,7 @@ def single_cell_widget():
             normalization_mode = widget.normalization_mode.value    
             control_condition =  widget.control_condition.value
             #analysis_setup = widget.analysis_setup.value
-            stimulation_frame = widget.stimulation_frame.value    
+            condition_frame = widget.condition_frame.value    
             kcl_frame = widget.kcl_frame.value
             sliding_window_size = widget.sliding_window_size.value
             percentile_threshold = widget.percentile_threshold.value
@@ -2062,14 +2122,14 @@ def single_cell_widget():
             analysis_window_end = widget.analysis_window_end.value  
             activity_type = widget.activity_type.value
             imaging_interval = widget.imaging_interval.value
-            stimulation_to_sample = widget.stimulation_selection.value
+            condition_to_sample = widget.condition_selection.value
 
 
             widget_state.cell_properties_df = get_cell_properties_df(project_dir)
             cell_properties_df = widget_state.cell_properties_df.copy()
 
 
-            if control_condition not in cell_properties_df.stimulation.tolist():
+            if control_condition not in cell_properties_df.condition.tolist():
                 raise ValueError(f"Condition '{control_condition}' not in input data")
             
             if not imaging_interval > 0:
@@ -2080,12 +2140,12 @@ def single_cell_widget():
 
             if (analysis_mode == 'Spontaneous activity') or (analysis_mode == 'Compound-evoked activity' and activity_type == 'Spontaneous'):
                 if sample_to_use == 'random':
-                    if stimulation_to_sample == 'All':
+                    if condition_to_sample == 'All':
                         samples = cell_properties_df['image_id'].unique().tolist()
-                        print('Sampling from all stimulations')
+                        print('Sampling from all conditions')
                     else:
-                        samples = cell_properties_df[cell_properties_df.stimulation == stimulation_to_sample]['image_id'].unique().tolist()
-                        print(f'Sampling from {stimulation_to_sample} stimulation')
+                        samples = cell_properties_df[cell_properties_df.condition == condition_to_sample]['image_id'].unique().tolist()
+                        print(f'Sampling from {condition_to_sample} condition')
                         
                     sample = random.choice(samples)
                     print(f"Sampled {cell_properties_df[cell_properties_df['image_id'] == sample].filename.values[0]} from {cell_properties_df[cell_properties_df['image_id'] == sample].plate_id.values[0]}")
@@ -2105,10 +2165,10 @@ def single_cell_widget():
             elif analysis_mode == 'Compound-evoked activity' and activity_type == 'Baseline shift':
 
                 temp_df = cell_properties_df.copy()
-                #temp_df['plate_id_biological_replicate'] = temp_df['plate_id'].astype(str) + '_' + temp_df['biological_replicate'].astype(str)
+                #temp_df['plate_id_cell_line'] = temp_df['plate_id'].astype(str) + '_' + temp_df['cell_line'].astype(str)
 
                 if sample_to_use == 'random':
-                    samples = temp_df['biological_replicate'].unique().tolist()
+                    samples = temp_df['cell_line'].unique().tolist()
                     sample = random.choice(samples)
 
                 elif sample_to_use == 'previous':
@@ -2116,15 +2176,15 @@ def single_cell_widget():
                 
                 widget.optimize_button_previous.enabled = True
                 widget_state.previous_image_id = sample
-                temp_df = temp_df[temp_df['biological_replicate'] == sample].copy()
-                treatment_condition = random.choice([c for c in set(temp_df.stimulation.tolist()) if c != control_condition])
-                temp_df = temp_df[temp_df['stimulation'].isin([treatment_condition, control_condition])].copy()
+                temp_df = temp_df[temp_df['cell_line'] == sample].copy()
+                treatment_condition = random.choice([c for c in set(temp_df.condition.tolist()) if c != control_condition])
+                temp_df = temp_df[temp_df['condition'].isin([treatment_condition, control_condition])].copy()
 
                 # Sort the df for plotting
-                stimulations = sorted(temp_df['stimulation'].unique())
-                stimulations = [control_condition] + [c for c in stimulations if c != control_condition]
-                temp_df['stimulation'] = pd.Categorical(temp_df['stimulation'], categories=stimulations, ordered=True)
-                temp_df = temp_df.sort_values('stimulation')
+                conditions = sorted(temp_df['condition'].unique())
+                conditions = [control_condition] + [c for c in conditions if c != control_condition]
+                temp_df['condition'] = pd.Categorical(temp_df['condition'], categories=conditions, ordered=True)
+                temp_df = temp_df.sort_values('condition')
 
 
             if normalization_mode == 'Sliding window':
@@ -2133,7 +2193,7 @@ def single_cell_widget():
 
             elif normalization_mode == 'Pre-stimulus window':
                 
-                temp_df = preprocess.pre_stimulation(cell_properties_df = temp_df, stimulation_frame = stimulation_frame)
+                temp_df = preprocess.pre_condition(cell_properties_df = temp_df, condition_frame = condition_frame)
                 
                 #plot_list = plot.cellwise_traces(cell_properties_df = temp_df, trace='raw',baseline=False)
             palette = get_colors(cell_properties_df, project_dir)
@@ -2154,13 +2214,13 @@ def single_cell_widget():
 
                 fig, ax = plt.subplots(2, 1, figsize=(6, 10))
                 if kcl_frame > 0:
-                    ax[0] = plot.overlaid_traces_two_groups(cell_properties_df = temp_df,  control_condition = control_condition, treatment_condition= treatment_condition, trace='dff', mean=True, start_frame= analysis_window_start, end_frame = analysis_window_end, stimulation_frame = stimulation_frame, ax=ax[0], palette=palette, imaging_interval=1, kcl_frame=kcl_frame)
+                    ax[0] = plot.overlaid_traces_two_groups(cell_properties_df = temp_df,  control_condition = control_condition, treatment_condition= treatment_condition, trace='dff', mean=True, start_frame= analysis_window_start, end_frame = analysis_window_end, condition_frame = condition_frame, ax=ax[0], palette=palette, imaging_interval=1, kcl_frame=kcl_frame)
                 else:
-                    ax[0] = plot.overlaid_traces_two_groups(cell_properties_df = temp_df,  control_condition = control_condition, treatment_condition= treatment_condition, trace='dff', mean=True, start_frame= analysis_window_start, end_frame = analysis_window_end, stimulation_frame = stimulation_frame, ax=ax[0], palette=palette, imaging_interval=1)
+                    ax[0] = plot.overlaid_traces_two_groups(cell_properties_df = temp_df,  control_condition = control_condition, treatment_condition= treatment_condition, trace='dff', mean=True, start_frame= analysis_window_start, end_frame = analysis_window_end, condition_frame = condition_frame, ax=ax[0], palette=palette, imaging_interval=1)
                 ax[0].set_xlabel('')  # Adjust labels  
                 
 
-                ax = plot.beeswarm(cell_properties_df = temp_df, control_condition = control_condition,  std_threshold=baseline_std_threshold, ax=ax[1], palette=palette, y='AUC',x='stimulation', control_condition_mean=True, brace=True,)
+                ax = plot.beeswarm(cell_properties_df = temp_df, control_condition = control_condition,  std_threshold=baseline_std_threshold, ax=ax[1], palette=palette, y='AUC',x='condition', control_condition_mean=True, brace=True,)
                 plt.ylabel(r"Ca$^{2+}$ response (AUC)")
                 plt.tight_layout()
             

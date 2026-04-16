@@ -1,10 +1,10 @@
-site_name: CALCIUM IMAGING ANALYSIS TOOL (based on LUMIN)
+site_name: Calcium imaging analysis tool (based on LUMIN)
 site_url: http://127.0.0.1:8000/Lumin_custom/
 
 theme:
   name: material
-  logo: assets/images/tool_icon.png
-  favicon: assets/images/tool_icon.png
+  logo: 
+  favicon: 
 
   features:
     - navigation.footer
