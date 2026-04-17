@@ -2,14 +2,15 @@
 import numpy as np          # numerical operations (arrays, mean, etc.)
 import statistics           # basic statistics (used for mean here)
 import pandas as pd         # dataframe handling
-
+from scipy.signal import savgol_filter  # for optional smoothing of deconvolved trace
+import lumin.Z_deconv_oasis as oasis
 
 # -------------------- METHOD 1: PRE-STIMULATION BASELINE --------------------
 def pre_stimulation(cell_properties_df: pd.DataFrame = None,
                     stimulation_frame: int = None):
 
     """
-    Calculate ΔF/F using a FIXED baseline.
+    Calculate ΔF/F using a fixed baseline.
     
     Baseline (F0) = mean fluorescence BEFORE stimulation.
     
@@ -51,7 +52,7 @@ def sliding_window(cell_properties_df: pd.DataFrame = None,
                    percentile_threshold: int = None):
 
     """
-    Calculate ΔF/F using a DYNAMIC baseline (sliding window).
+    Calculate ΔF/F using a dynamic baseline (sliding window).
 
     Idea:
     - Baseline (F0) changes over time
@@ -70,7 +71,7 @@ def sliding_window(cell_properties_df: pd.DataFrame = None,
         raw_trace = cell['raw']   # fluorescence signal
         f0_trace = []             # dynamic baseline per frame
 
-        # -------------------- INITIAL WINDOW --------------------
+        # initial window (for first few frames, use the first 'sliding_window_size' frames)
         sliding_window = raw_trace[:sliding_window_size]
 
         # Threshold to exclude high values (spikes)
@@ -85,7 +86,7 @@ def sliding_window(cell_properties_df: pd.DataFrame = None,
         # Compute ΔF/F for initial window
         dff = [(value - f0) / f0 for value in sliding_window]
 
-        # -------------------- SLIDING THROUGH TIME --------------------
+        # sliding window for the rest of the trace
         for location, value in enumerate(raw_trace[sliding_window_size:], 
                                          start=sliding_window_size + 1):
 
@@ -110,6 +111,45 @@ def sliding_window(cell_properties_df: pd.DataFrame = None,
 
     # Add results to dataframe
     cell_properties_df['baseline'] = f0_list
+    cell_properties_df['dff'] = dff_traces_list
+
+    return cell_properties_df
+
+# --------------------  METHOD 3: DECONVOLUTION-BASED BASELINE --------------------
+def deconvolve_trace(cell_properties_df: pd.DataFrame = None, tau_d = None, frame_rate = None, smoothing = False):
+    """
+    Calculate ΔF/F using a dynamic baseline based on OASIS deconvolution.
+
+    Idea:
+    - Deconvolve fluorescence signal to estimate underlying neural activity
+    - Use deconvolved trace as a dynamic baseline for ΔF/F calculation
+    """
+
+    dff_traces_list = []   # store ΔF/F traces
+
+    # Loop over each cell
+    for _, cell in cell_properties_df.iterrows():
+
+        raw_trace = cell['raw']   # fluorescence signal
+
+        # Reshape trace for OASIS (expects 2D array)
+        F = np.expand_dims(raw_trace, axis=0)
+
+        # Run OASIS deconvolution to get spike estimates
+        S = oasis(F, batch_size=1, tau=tau_d, fs=frame_rate)
+
+        spike_trace = S[0]  # get the deconvolved trace for this cell
+
+        if smoothing:
+            spike_trace = savgol_filter(spike_trace, window_length=5, polyorder=2)
+
+        # Compute ΔF/F using deconvolved trace as baseline
+        dff = [(value - spike) / spike if spike != 0 else 0 
+               for value, spike in zip(raw_trace, spike_trace)]
+
+        dff_traces_list.append(dff)
+
+    # Add results to dataframe
     cell_properties_df['dff'] = dff_traces_list
 
     return cell_properties_df

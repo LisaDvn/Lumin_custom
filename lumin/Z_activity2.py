@@ -3,8 +3,8 @@ import numpy as np
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 
-import deconv_oasis as oasis
-from deconv_oasis import preprocess
+import lumin.Z_deconv_oasis as oasis
+from lumin.Z_deconv_oasis import preprocess
 
 
 
