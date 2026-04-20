@@ -1,5 +1,5 @@
 site_name: Calcium imaging analysis tool (based on LUMIN)
-site_url: http://127.0.0.1:8000/Lumin_custom/
+site_url: http://lisadvn.github.io
 
 theme:
   name: material

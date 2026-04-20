@@ -2,9 +2,9 @@ name: LUMIN
 
 contributions:
   commands:
-    - id: LUMIN.conversion_widget
-      python_name: lumin._widget:conversion_widget
-      title: ND2 → TIFF conversion
+    - id: LUMIN.preprocessing_widget
+      python_name: lumin._widget:preprocessing_widget
+      title: Preprocessing
 
     - id: LUMIN.segmentation_widget
       python_name: lumin._widget:segmentation_widget
@@ -19,8 +19,8 @@ contributions:
       title: Network activity analysis
 
   widgets:
-    - command: LUMIN.conversion_widget
-      display_name: Preprocessing (ND2/LIF conversion)
+    - command: LUMIN.preprocessing_widget
+      display_name: Preprocessing
 
     - command: LUMIN.segmentation_widget
       display_name: Segmentation and signal extraction

@@ -7,9 +7,6 @@ from numba import njit, prange
 from scipy.ndimage import maximum_filter1d, minimum_filter1d, gaussian_filter
 import torch
 from torch.nn.functional import conv1d, max_pool1d, pad
-#from ..logger import TqdmToLogger
-import logging 
-#logger = logging.getLogger(__name__)
 
 @njit([
     "float32[:], float32[:], float32[:], int64[:], float32[:], float32[:], float32, float32"
@@ -116,25 +113,28 @@ def oasis(F, batch_size, tau, fs):
     S : numpy.ndarray
         Deconvolved fluorescence, shape (n_neurons, n_frames).
     """
-
     NN, NT = F.shape
     F = F.astype(np.float32)
     S = np.zeros((NN, NT), dtype=np.float32)
+
     n_batches = int(np.ceil(NN / batch_size))
-"""logger.info(f"Deconvolving {NN} neurons in {n_batches} batches")
-    tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-    for n in trange(n_batches, file=tqdm_out):
+    print(f"Deconvolving {NN} neurons in {n_batches} batches")
+
+    for n in trange(n_batches):
         i = n * batch_size
         f = F[i:i + batch_size]
+
         v = np.zeros((f.shape[0], NT), dtype=np.float32)
         w = np.zeros((f.shape[0], NT), dtype=np.float32)
         t = np.zeros((f.shape[0], NT), dtype=np.int64)
         l = np.zeros((f.shape[0], NT), dtype=np.float32)
         s = np.zeros((f.shape[0], NT), dtype=np.float32)
+
         oasis_matrix(f, v, w, t, l, s, tau, fs)
         S[i:i + batch_size] = s
+
     return S
-"""
+
 def preprocess(F, baseline, win_baseline, sig_baseline,
                fs, prctile_baseline=8, batch_size=100, 
                device=torch.device('cuda')):

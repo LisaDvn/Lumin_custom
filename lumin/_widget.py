@@ -34,8 +34,7 @@ import json
 from datetime import datetime
 from time import perf_counter
 from lumin.logging import RunManager
-#from lumin.Z_conversion import run_conversion_pipeline
-from lumin.conversion import run_conversion_pipeline
+from lumin.preprocessing import run_preprocessing_pipeline
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -78,7 +77,7 @@ def disable_placeholder(widget):
         combo_box.model().item(0).setEnabled(False)
 
 
-def conversion_widget():
+def preprocessing_widget():
 
     import imagej
     import tifffile as tiff
@@ -100,35 +99,48 @@ def conversion_widget():
         cell_line=dict(widget_type='LineEdit', label='Cell line', tooltip='Specify the cell line or biological replicate.'),
         condition=dict(widget_type='LineEdit', label='Condition', tooltip='Specify the experimental condition.'),
 
+        Optional_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Optional metadata ———</b></div>'),
+        Researcher_ID=dict(widget_type='LineEdit', label='Researcher ID', tooltip='Specify the researcher ID or initials. This is optional and can be left blank.'),
+        Experiment_ID=dict(widget_type='LineEdit', label='Experiment ID', tooltip='Specify the experiment ID. This is optional and can be left blank.'),
+        Maturation=dict(widget_type='LineEdit', label='Days in vitro (DIV)', tooltip='Specify the days in vitro (DIV) for the recordings. This is optional and can be left blank.'),
+        Cell_density=dict(widget_type='LineEdit', label='Cell density', tooltip='Specify the cell density for the recordings. This is optional and can be left blank.'),
+        
     )
-    def widget(input_dir, project_dir, plate_id, cell_line, condition):
+    def widget(input_dir, project_dir, plate_id, cell_line, condition, Optional_label, Researcher_ID, Experiment_ID, Maturation, Cell_density):
         pass
 
     widget.native.setObjectName('Preprocessing')
 
     @widget.call_button.clicked.connect
-    def _run_conversion():
+    def _run_preprocessing():
 
         msg = QMessageBox()
-        msg.setText("Run conversion?")
+        msg.setText("Run preprocessing?")
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
 
         if msg.exec_() != QMessageBox.Yes:
             return
         
         start_time = perf_counter()
-        print("Running conversion...")
+        print("Running preprocessing...")
 
         try:
             # --------------------------
             # GET VALUES
             # --------------------------
-            run_conversion_pipeline(
+            run_preprocessing_pipeline(
                 input_dir = widget.input_dir.value,
                 project_dir = widget.project_dir.value,
                 plate_id = widget.plate_id.value,
                 cell_line = widget.cell_line.value,
-                condition = widget.condition.value)
+                condition = widget.condition.value,
+                extra_metadata={
+                    "Researcher_ID": widget.Researcher_ID.value,
+                    "Experiment_ID": widget.Experiment_ID.value,
+                    "Maturation": widget.Maturation.value,
+                    "Cell_density": widget.Cell_density.value
+                }
+            )
 
             print(f"Finished in {perf_counter() - start_time:.2f} seconds")
 
@@ -1515,17 +1527,24 @@ def single_cell_widget():
                         print('Running sliding window normalization...')
                         parameter_list.extend([f'Normalization - Sliding window size: {sliding_window_size}', f'Normalization - Percentile threshold: {percentile_threshold}'])
                         cell_properties_df = preprocess.sliding_window(cell_properties_df = cell_properties_df, sliding_window_size = sliding_window_size, percentile_threshold = percentile_threshold)
+                        print('Sliding window normalization done.')
+                        run.log('Sliding window normalization done.')
 
                     elif normalization_mode == 'Pre-stimulus window':
                         print('Running pre-stimulus window normalization...')
                         parameter_list.extend([f'Normalization - Stimulation frame: {stimulation_frame}'])
                         cell_properties_df = preprocess.pre_stimulation(cell_properties_df = cell_properties_df, stimulation_frame = stimulation_frame)
+                        print('Pre-stimulus window normalization done.')
+                        run.log('Pre-stimulus window normalization done.')
 
                     elif normalization_mode == 'Deconvolved':
                         print('Running OASIS deconvolved trace normalization...')
                         parameter_list.extend([f'Normalization - Deconvolved with OASIS parameters: Tau d: {deconv_taud}, Frame rate: {deconv_fr}, Smoothing: {smoothing}'])
-                        cell_properties_df = preprocess.deconvolve_trace(cell_properties_df = cell_properties_df, tau_d = deconv_taud, frame_rate = deconv_fr, smoothing = smoothing)
-
+                        cell_properties_df = preprocess.deconvolution(cell_properties_df = cell_properties_df, tau_d = deconv_taud, frame_rate = deconv_fr, smoothing = smoothing)
+                        print('Deconvolution and normalization done.')
+                        run.log('Deconvolution and normalization done, using .')
+                    else:
+                        raise ValueError(f'Invalid normalization mode: {normalization_mode}')
                     palette = get_colors(cell_properties_df, project_dir)
 
                     # Sort the df for plotting
@@ -2105,6 +2124,8 @@ def single_cell_widget():
             stimulation_frame = widget.stimulation_frame.value    
             kcl_frame = widget.kcl_frame.value
             sliding_window_size = widget.sliding_window_size.value
+            deconv_taud = widget.deconv_taud.value
+            deconv_fr = widget.deconv_fr.value
             percentile_threshold = widget.percentile_threshold.value
             smoothing = widget.smoothing_cb.value
             spike_prominence_threshold = widget.spike_prominence_threshold.value
@@ -2182,11 +2203,18 @@ def single_cell_widget():
             if normalization_mode == 'Sliding window':
 
                 temp_df = preprocess.sliding_window(cell_properties_df = temp_df, sliding_window_size = sliding_window_size, percentile_threshold = percentile_threshold)
-
+                print("Columns after normalization:", cell_properties_df.columns)
             elif normalization_mode == 'Pre-stimulus window':
                 
-                temp_df = preprocess.pre_condition(cell_properties_df = temp_df, stimulation_frame = stimulation_frame)
-                
+                temp_df = preprocess.pre_stimulation(cell_properties_df = temp_df, stimulation_frame = stimulation_frame)
+                print("Columns after normalization:", cell_properties_df.columns)
+
+            elif normalization_mode == 'Deconvolved':
+                temp_df = preprocess.deconvolution(cell_properties_df = temp_df, tau_d = deconv_taud, frame_rate = deconv_fr)
+                print("Columns after normalization:", cell_properties_df.columns)
+
+            else:   
+                raise ValueError(f"Invalid normalization mode: {normalization_mode}")
                 #plot_list = plot.cellwise_traces(cell_properties_df = temp_df, trace='raw',baseline=False)
             palette = get_colors(cell_properties_df, project_dir)
 
@@ -2308,7 +2336,7 @@ def network_activity_widget():
     return widget
 
 def napari_experimental_provide_dock_widget():
-    return conversion_widget, segmentation_widget, single_cell_widget, network_activity_widget, {"name": "My Pipeline Launcher"}
+    return preprocessing_widget, segmentation_widget, single_cell_widget, network_activity_widget, {"name": "My Pipeline Launcher"}
 
 
 

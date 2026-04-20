@@ -3,7 +3,7 @@ import numpy as np          # numerical operations (arrays, mean, etc.)
 import statistics           # basic statistics (used for mean here)
 import pandas as pd         # dataframe handling
 from scipy.signal import savgol_filter  # for optional smoothing of deconvolved trace
-import lumin.Z_deconv_oasis as oasis
+import lumin.Z_deconv_oasis as oasis  # OASIS deconvolution function
 
 # -------------------- METHOD 1: PRE-STIMULATION BASELINE --------------------
 def pre_stimulation(cell_properties_df: pd.DataFrame = None,
@@ -116,7 +116,7 @@ def sliding_window(cell_properties_df: pd.DataFrame = None,
     return cell_properties_df
 
 # --------------------  METHOD 3: DECONVOLUTION-BASED BASELINE --------------------
-def deconvolve_trace(cell_properties_df: pd.DataFrame = None, tau_d = None, frame_rate = None, smoothing = False):
+def deconvolution(cell_properties_df: pd.DataFrame = None, tau_d = None, frame_rate = None):
     """
     Calculate ΔF/F using a dynamic baseline based on OASIS deconvolution.
 
@@ -136,12 +136,9 @@ def deconvolve_trace(cell_properties_df: pd.DataFrame = None, tau_d = None, fram
         F = np.expand_dims(raw_trace, axis=0)
 
         # Run OASIS deconvolution to get spike estimates
-        S = oasis(F, batch_size=1, tau=tau_d, fs=frame_rate)
+        S = oasis.oasis(F, batch_size=1, tau=tau_d, fs=frame_rate)
 
         spike_trace = S[0]  # get the deconvolved trace for this cell
-
-        if smoothing:
-            spike_trace = savgol_filter(spike_trace, window_length=5, polyorder=2)
 
         # Compute ΔF/F using deconvolved trace as baseline
         dff = [(value - spike) / spike if spike != 0 else 0 
