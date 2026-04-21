@@ -36,6 +36,10 @@ from time import perf_counter
 from lumin.logging import RunManager
 from lumin.preprocessing import run_preprocessing_pipeline
 
+from qtpy.QtCore import QThread, Signal, Qt, QTimer
+from qtpy.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar, QProgressDialog, QApplication
+
+
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
@@ -101,9 +105,6 @@ def preprocessing_widget():
         pass
 
     widget.native.setObjectName('Preprocessing')
-
-    from qtpy.QtCore import QThread, Signal, Qt, QTimer
-    from qtpy.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar
 
     # ── progress dialog ───────────────────────────────────────────────
     class ProgressDialog(QDialog):
@@ -399,7 +400,7 @@ def segmentation_widget():
                 selection_mode = widget.selection_mode.value
                 co_stain = widget.co_stain.value
                 if co_stain == '-- Select --': co_stain = False
-                image_df, annotated_image_df = utils.parse_input_output(input_file = input_file, metadata_file = metadata_file, project_dir = widget.project_dir.value, selection_mode = selection_mode, co_stain = co_stain)
+                image_df, annotated_image_df = utils.parse_input_output(input_file=input_file, metadata_file=metadata_file, project_dir=widget.project_dir.value, selection_mode=selection_mode, co_stain=co_stain)
                 project_dir = widget.project_dir.value
                 nuclear_stain = widget.nuclear_stain.value
                 stain_to_segment = widget.stain_to_segment.value
@@ -423,32 +424,52 @@ def segmentation_widget():
                 #set up logger
                 run = RunManager(project_dir, stage="segmentation")
                 run_info_path = os.path.join(project_dir, "run_info.json")
-                
                 run.log("----------------Segmentation pipeline started----------------")
-                
                 start_time_run = perf_counter()
-
-                # sla run_id op
                 json.dump({"run_id": run.run_id}, open(run_info_path, "w"), indent=4)
-                
+
                 # Determine if first frame of stack is nuclear channel or part of the CA video
                 if nuclear_stain == 'None':
                     first_frame = 0
-                else: 
+                else:
                     first_frame = 1
 
+                # Define table_dir once, outside the loop
+                table_dir = os.path.join(project_dir, 'Segmentation', 'Tables')
+                os.makedirs(table_dir, exist_ok=True)
+
+                # ── Progress dialog ──────────────────────────────────────────────
+                progress = QProgressDialog("Starting pipeline...", "Cancel", 0, len(image_df))
+                progress.setWindowTitle("Segmentation pipeline")
+                progress.setWindowModality(Qt.WindowModal)
+                progress.setMinimumDuration(0)
+                progress.setValue(0)
+                # ────────────────────────────────────────────────────────────────
+
                 for index, row in image_df.iterrows():
+
+                    # ── Cancellation check ───────────────────────────────────────
+                    if progress.wasCanceled():
+                        print("Pipeline cancelled by user.")
+                        run.log("Pipeline cancelled by user.")
+                        break
+                    # ────────────────────────────────────────────────────────────
+
+                    # ── Update progress label and step ───────────────────────────
+                    progress.setLabelText(f"Processing image {index + 1} / {len(image_df)}\n{row.get('filename', '')}")
+                    progress.setValue(index)
+                    QApplication.processEvents()
+                    # ────────────────────────────────────────────────────────────
 
                     # Try except to catch if required columns not there
                     try:
                         image_id = row['image_id']
                         cell_line = row['cell_line']
-                        stimulation = row['condition'] # switch to stimulation to avoid confusion with previous versions
+                        stimulation = row['condition']
                         filename = row['filename']
                         plate_id = row['plate_id']
                         filepath = row['filepath']
-                    
-                    except Exception as e: 
+                    except Exception as e:
                         traceback.print_exc()
 
                     plots_output_dir = os.path.join(project_dir, f'Segmentation/Plots/{plate_id}/{filename}_{stimulation}_{cell_line}')
@@ -457,23 +478,15 @@ def segmentation_widget():
                     mask_name = f'{filename}_{stimulation}_{cell_line}_final_mask.tiff'
                     projected_name = f'{filename}_{stimulation}_{cell_line}_projected.tiff'
 
+                    os.makedirs(plots_output_dir, exist_ok=True)
+                    os.makedirs(mask_output_dir, exist_ok=True)
+                    os.makedirs(max_projection_output_dir, exist_ok=True)
 
-
-
-                    if not os.path.exists(plots_output_dir):
-                        os.makedirs(plots_output_dir)
-                    
-                    if not os.path.exists(mask_output_dir):
-                        os.makedirs(mask_output_dir)
-
-                    if not os.path.exists(max_projection_output_dir):
-                        os.makedirs(max_projection_output_dir)
-
-                    
                     print(f'Processing image {index+1}/{len(image_df)}: Reading from {filepath} and projecting to its max intensity...')
-                    run.log(f"Processing image {index+1}/{len(image_df)}: Reading from {filepath} and using cellpose model {model_cp} with diameter {diameter_cp}, cellprobality threshold {cellprob_threshold_cp} and flow threshold {flow_threshold_cp}.")
+                    run.log(f"Processing image {index+1}/{len(image_df)}: Reading from {filepath} and using cellpose model {model_cp} with diameter {diameter_cp}, cellprobability threshold {cellprob_threshold_cp} and flow threshold {flow_threshold_cp}.")
+
                     # Get image
-                    image_projected, image_stack = utils.read_and_project_image(filepath = filepath, first_frame=first_frame)
+                    image_projected, image_stack = utils.read_and_project_image(filepath=filepath, first_frame=first_frame)
 
                     if selection_mode == 'Manual selection':
                         print(f'Running manual segmentation...')
@@ -481,307 +494,303 @@ def segmentation_widget():
                         if index == 0:
                             parameter_list.extend([
                                 f"Segmentation - Co-stain: {co_stain}",
-                                *( [f"Segmentation - Marker: {marker_name}"] if co_stain else [] ),
+                                *([f"Segmentation - Marker: {marker_name}"] if co_stain else []),
                                 f"Segmentation - Point size: {annotation_point_size}"
                             ])
+
                         if co_stain == True:
                             markers = annotated_image_df.loc[annotated_image_df['image_id'] == image_id, 'marker_name'].tolist()
-                        else: markers = []
+                        else:
+                            markers = []
 
                         if (image_id not in annotated_image_df['image_id'].to_list() or (co_stain == True and marker_name not in markers)):
-                            if image_id  in annotated_image_df['image_id'].to_list():
+                            if image_id in annotated_image_df['image_id'].to_list():
                                 max_label = annotated_image_df[annotated_image_df.image_id == image_id].max_label.values[0]
-                            else: max_label = 0
+                            else:
+                                max_label = 0
 
-                            image_projected, mask = run_manual_selection(image = image_projected, point_size = annotation_point_size, first_label=max_label) # Segment
-                            cell_properties_df = utils.get_cell_properties(mask = mask, image = image_projected) # Get properties of projected image
-                            cell_properties_df = utils.extract_raw_traces(image_stack = image_stack[first_frame:], mask = mask, cell_properties_df = cell_properties_df) # Get raw traces
-                            if co_stain: cell_properties_df['marker'] = marker_name 
-                            
+                            image_projected, mask = run_manual_selection(image=image_projected, point_size=annotation_point_size, first_label=max_label)
+                            cell_properties_df = utils.get_cell_properties(mask=mask, image=image_projected)
+                            cell_properties_df = utils.extract_raw_traces(image_stack=image_stack[first_frame:], mask=mask, cell_properties_df=cell_properties_df)
+                            if co_stain:
+                                cell_properties_df['marker'] = marker_name
+
                             # Save results
-                            if co_stain: annotated_image_df.loc[len(annotated_image_df.index)] = [image_id,filename, cell_line,stimulation,plate_id, marker_name, cell_properties_df.label.max(), filepath,  os.path.join(mask_output_dir,  mask_name)]
-                            else: annotated_image_df.loc[len(annotated_image_df.index)] = [image_id,filename, cell_line,stimulation,plate_id, cell_properties_df.label.max(), filepath,  os.path.join(mask_output_dir,  mask_name)]
+                            if co_stain:
+                                annotated_image_df.loc[len(annotated_image_df.index)] = [image_id, filename, cell_line, stimulation, plate_id, marker_name, cell_properties_df.label.max(), filepath, os.path.join(mask_output_dir, mask_name)]
+                            else:
+                                annotated_image_df.loc[len(annotated_image_df.index)] = [image_id, filename, cell_line, stimulation, plate_id, cell_properties_df.label.max(), filepath, os.path.join(mask_output_dir, mask_name)]
                             annotated_image_df.to_csv(f'{project_dir}/annotated_images.csv', sep=';')
 
-                            io.imsave(os.path.join(mask_output_dir,  mask_name), mask)
-                            io.imsave(os.path.join(max_projection_output_dir,  projected_name), image_projected)
+                            io.imsave(os.path.join(mask_output_dir, mask_name), mask)
+                            io.imsave(os.path.join(max_projection_output_dir, projected_name), image_projected)
 
-                            plot.segmentation(image = image_projected, mask = mask,  title_image = 'Calcium image', title_mask = 'Mask outline', output_path = plots_output_dir, file_name = 'calcium_mask')
-                            plot.overlay_labels(image = image_projected, mask = mask, cell_properties_df = cell_properties_df, output_path = plots_output_dir, file_name = 'labelled_mask')
+                            plot.segmentation(image=image_projected, mask=mask, title_image='Calcium image', title_mask='Mask outline', output_path=plots_output_dir, file_name='calcium_mask')
+                            plot.overlay_labels(image=image_projected, mask=mask, cell_properties_df=cell_properties_df, output_path=plots_output_dir, file_name='labelled_mask')
 
-                        else: # if image is annotated, skip it and move to the next one
+                        else:
                             print(f'\nOmitting {image_id}: Image is already annotated.\n')
+                            del image_stack, image_projected
                             continue
 
-                        del image_stack, image_projected, mask # Clean memory
-                        
-    
+                        del image_stack, image_projected, mask
+
                     elif selection_mode == 'Automated' and stain_to_segment == 'Nuclear (StarDist)' and nuclear_stain == 'First frame':
 
                         if index == 0:
-                            parameter_list.extend([f'Segmentation - Stain to segment: {stain_to_segment}', f'Stardist - Probability/Score Threshold: {prob_thresh_sd}', 
-                                                f'Stardist - Overlap threshold: {overlap_thresh_sd}', f'Filtering - Nuclear area: {nuclear_area_min} - {nuclear_area_max}',
-                                                f'Filtering - Fluorescence intensity: {intensity_min} - {intensity_max}'])
+                            parameter_list.extend([
+                                f'Segmentation - Stain to segment: {stain_to_segment}',
+                                f'Stardist - Probability/Score Threshold: {prob_thresh_sd}',
+                                f'Stardist - Overlap threshold: {overlap_thresh_sd}',
+                                f'Filtering - Nuclear area: {nuclear_area_min} - {nuclear_area_max}',
+                                f'Filtering - Fluorescence intensity: {intensity_min} - {intensity_max}'
+                            ])
 
                         first_frame_image = image_stack[:1][0]
-
                         print(f'Running StarDist segmentation...')
 
+                        mask = run_stardist(image=first_frame_image, model_sd=_get_stardist_model(), prob_thresh_sd=prob_thresh_sd, overlap_thresh_sd=overlap_thresh_sd)
 
-                        # Run segmentation and get label properties
-                        mask = run_stardist(image = first_frame_image, model_sd = _get_stardist_model(), prob_thresh_sd = prob_thresh_sd, overlap_thresh_sd = overlap_thresh_sd)
-
-                        cell_properties_df = utils.get_cell_properties(mask = mask, image = image_projected)
+                        cell_properties_df = utils.get_cell_properties(mask=mask, image=image_projected)
                         cell_properties_df = cell_properties_df.rename(columns={'area': 'nuclear_area'})
 
                         # Filtering
-                        filtered_mask, cell_properties_df = utils.filter_labels(mask = mask, cell_properties_df = cell_properties_df, nuclear_area_min = nuclear_area_min, nuclear_area_max = nuclear_area_max, intensity_min = intensity_min, intensity_max = intensity_max)
+                        filtered_mask, cell_properties_df = utils.filter_labels(mask=mask, cell_properties_df=cell_properties_df, nuclear_area_min=nuclear_area_min, nuclear_area_max=nuclear_area_max, intensity_min=intensity_min, intensity_max=intensity_max)
 
-                        cell_properties_df = utils.extract_raw_traces(image_stack = image_stack[first_frame:], mask = filtered_mask, cell_properties_df = cell_properties_df)
+                        cell_properties_df = utils.extract_raw_traces(image_stack=image_stack[first_frame:], mask=filtered_mask, cell_properties_df=cell_properties_df)
 
-                        io.imsave(os.path.join(mask_output_dir,  mask_name), filtered_mask)
-                        io.imsave(os.path.join(max_projection_output_dir,  projected_name), image_projected)
+                        io.imsave(os.path.join(mask_output_dir, mask_name), filtered_mask)
+                        io.imsave(os.path.join(max_projection_output_dir, projected_name), image_projected)
 
-
-                        # Visualization 
-                        if exposure.is_low_contrast(first_frame_image): 
+                        # Visualization
+                        if exposure.is_low_contrast(first_frame_image):
                             first_frame_image = exposure.equalize_adapthist(first_frame_image, clip_limit=0.03)
 
-                        if exposure.is_low_contrast(image_projected): 
+                        if exposure.is_low_contrast(image_projected):
                             image_projected = exposure.equalize_adapthist(image_projected, clip_limit=0.03)
 
-                        # Visualization 
-                        plot.segmentation(image = first_frame_image, mask = mask,  title_image = 'Nuclear image', title_mask = 'Mask outline', output_path = plots_output_dir, file_name = 'nuclear_mask')
-
-                        plot.segmentation(image = image_projected, mask = filtered_mask,  title_image = 'Calcium image', title_mask = 'Filtered mask outline', output_path = plots_output_dir, file_name = 'calcium_mask_filtered')
-
-                        plot.overlay_labels(image = image_projected, mask = filtered_mask, cell_properties_df = cell_properties_df, output_path = plots_output_dir, file_name = 'labelled_mask_filtered')
+                        plot.segmentation(image=first_frame_image, mask=mask, title_image='Nuclear image', title_mask='Mask outline', output_path=plots_output_dir, file_name='nuclear_mask')
+                        plot.segmentation(image=image_projected, mask=filtered_mask, title_image='Calcium image', title_mask='Filtered mask outline', output_path=plots_output_dir, file_name='calcium_mask_filtered')
+                        plot.overlay_labels(image=image_projected, mask=filtered_mask, cell_properties_df=cell_properties_df, output_path=plots_output_dir, file_name='labelled_mask_filtered')
 
                         del image_stack, image_projected, mask, filtered_mask, first_frame_image
 
                     elif selection_mode in ['Automated', 'Hybrid (automated + refinement)'] and stain_to_segment == 'Cytoplasmic (Cellpose)' and nuclear_stain == 'None':
+
                         if index == 0:
-                            parameter_list.extend([f'Segmentation - Stain to segment: {stain_to_segment}', f'Cellpose - Model: {model_cp}', f'Cellpose - Diameter: {diameter_cp}', 
-                                                f'Cellpose - Cell probability threshold: {cellprob_threshold_cp}', f'Cellpose - Flow threshold: {flow_threshold_cp}', 
-                                                f'Filtering - Cell area: {cell_area_min} - {cell_area_max}',f'Filtering - Fluorescence intensity: {intensity_min} - {intensity_max}'])
+                            parameter_list.extend([
+                                f'Segmentation - Stain to segment: {stain_to_segment}',
+                                f'Cellpose - Model: {model_cp}',
+                                f'Cellpose - Diameter: {diameter_cp}',
+                                f'Cellpose - Cell probability threshold: {cellprob_threshold_cp}',
+                                f'Cellpose - Flow threshold: {flow_threshold_cp}',
+                                f'Filtering - Cell area: {cell_area_min} - {cell_area_max}',
+                                f'Filtering - Fluorescence intensity: {intensity_min} - {intensity_max}'
+                            ])
 
-                        # Run segmentation and get label properties
                         cp_model_obj = _get_cellpose_model(model_cp)
-
                         print(f'Running Cellpose segmentation...')
 
-                        mask = run_cellpose(image = image_projected, model_cp = cp_model_obj, diameter_cp = diameter_cp, cellprob_threshold_cp = cellprob_threshold_cp, flow_threshold_cp = flow_threshold_cp)
-                        cell_properties_df = utils.get_cell_properties(mask = mask, image = image_projected)
-
+                        mask = run_cellpose(image=image_projected, model_cp=cp_model_obj, diameter_cp=diameter_cp, cellprob_threshold_cp=cellprob_threshold_cp, flow_threshold_cp=flow_threshold_cp)
+                        cell_properties_df = utils.get_cell_properties(mask=mask, image=image_projected)
                         cell_properties_df = cell_properties_df.rename(columns={'area': 'cell_area'})
 
                         # Filtering
-                        filtered_mask, cell_properties_df = utils.filter_labels(mask = mask, cell_properties_df=cell_properties_df, cell_area_min = cell_area_min, cell_area_max=cell_area_max, intensity_min = intensity_min, intensity_max = intensity_max)
+                        filtered_mask, cell_properties_df = utils.filter_labels(mask=mask, cell_properties_df=cell_properties_df, cell_area_min=cell_area_min, cell_area_max=cell_area_max, intensity_min=intensity_min, intensity_max=intensity_max)
 
                         # Refinement in napari if hybrid mode selected
                         if selection_mode == 'Hybrid (automated + refinement)':
                             print("Refining mask in Napari before signal extraction...")
                             print("(Close the Napari window when you are done refining to continue the pipeline)")
                             filtered_mask = refine_segmentation(image_projected, filtered_mask)
-
-                            # Update cell properties after refinement
                             cell_properties_df = utils.get_cell_properties(mask=filtered_mask, image=image_projected)
-                            
-                            # Update parameter list to indicate manual refinement was applied
                             parameter_list.append("Manual refinement applied: YES")
 
-                        # Extract raw traces
-                        cell_properties_df = utils.extract_raw_traces(image_stack = image_stack, mask = filtered_mask, cell_properties_df = cell_properties_df)
+                        cell_properties_df = utils.extract_raw_traces(image_stack=image_stack, mask=filtered_mask, cell_properties_df=cell_properties_df)
 
-                    
-                        io.imsave(os.path.join(mask_output_dir,  mask_name), filtered_mask)
-                        io.imsave(os.path.join(max_projection_output_dir,  projected_name), image_projected)
+                        io.imsave(os.path.join(mask_output_dir, mask_name), filtered_mask)
+                        io.imsave(os.path.join(max_projection_output_dir, projected_name), image_projected)
 
-
-                        if exposure.is_low_contrast(image_projected): 
+                        if exposure.is_low_contrast(image_projected):
                             image_projected = exposure.equalize_adapthist(image_projected, clip_limit=0.03)
 
-                        plot.segmentation(image = image_projected, mask = mask,  title_image = 'Calcium image', title_mask = 'Mask outline', output_path = plots_output_dir, file_name = 'calcium_mask')
-                        plot.segmentation(image = image_projected, mask = filtered_mask,  title_image = 'Calcium image', title_mask = 'Filtered mask outline', output_path = plots_output_dir, file_name = 'calcium_mask_filtered')
-                        plot.overlay_labels(image = image_projected, mask = filtered_mask, cell_properties_df = cell_properties_df, output_path = plots_output_dir, file_name = 'labelled_mask_filtered')
+                        plot.segmentation(image=image_projected, mask=mask, title_image='Calcium image', title_mask='Mask outline', output_path=plots_output_dir, file_name='calcium_mask')
+                        plot.segmentation(image=image_projected, mask=filtered_mask, title_image='Calcium image', title_mask='Filtered mask outline', output_path=plots_output_dir, file_name='calcium_mask_filtered')
+                        plot.overlay_labels(image=image_projected, mask=filtered_mask, cell_properties_df=cell_properties_df, output_path=plots_output_dir, file_name='labelled_mask_filtered')
 
                         del image_stack, image_projected, mask, filtered_mask
-                        
 
                     elif selection_mode == 'Automated' and stain_to_segment == 'Nuclear (StarDist) and cytoplasmic (Cellpose)':
-                        if index == 0:
-                            parameter_list.extend([f'Segmentation - Stain to segment: {stain_to_segment}',f'Stardist - Probability/Score Threshold: {prob_thresh_sd}', 
-                                f'Stardist - Overlap threshold: {overlap_thresh_sd}', f'Cellpose - Model: {model_cp}', f'Cellpose - Diameter: {diameter_cp}', 
-                                f'Cellpose - Cell probability threshold: {cellprob_threshold_cp}', f'Cellpose - Flow threshold: {flow_threshold_cp}', 
-                                f'Filtering - Nuclear overlap: {nuclear_overlap}', f'Filtering - Nuclear area: {nuclear_area_min} - {nuclear_area_max}',
-                                f'Filtering - Cell area: {cell_area_min} - {cell_area_max}',f'Filtering - Fluorescence intensity: {intensity_min} - {intensity_max}'])
 
-                        # Segmentation
+                        if index == 0:
+                            parameter_list.extend([
+                                f'Segmentation - Stain to segment: {stain_to_segment}',
+                                f'Stardist - Probability/Score Threshold: {prob_thresh_sd}',
+                                f'Stardist - Overlap threshold: {overlap_thresh_sd}',
+                                f'Cellpose - Model: {model_cp}',
+                                f'Cellpose - Diameter: {diameter_cp}',
+                                f'Cellpose - Cell probability threshold: {cellprob_threshold_cp}',
+                                f'Cellpose - Flow threshold: {flow_threshold_cp}',
+                                f'Filtering - Nuclear overlap: {nuclear_overlap}',
+                                f'Filtering - Nuclear area: {nuclear_area_min} - {nuclear_area_max}',
+                                f'Filtering - Cell area: {cell_area_min} - {cell_area_max}',
+                                f'Filtering - Fluorescence intensity: {intensity_min} - {intensity_max}'
+                            ])
+
                         cp_model_obj = _get_cellpose_model(model_cp)
                         first_frame_image = image_stack[:1][0]
                         print(f'Running StarDist and Cellpose segmentation...')
 
-                        mask_nuclear = run_stardist(image = first_frame_image, model_sd = _get_stardist_model(), prob_thresh_sd = prob_thresh_sd, overlap_thresh_sd = overlap_thresh_sd)
-                        mask_cyto = run_cellpose(image = image_projected,  model_cp = cp_model_obj, diameter_cp = diameter_cp, cellprob_threshold_cp = cellprob_threshold_cp, flow_threshold_cp = flow_threshold_cp)
+                        mask_nuclear = run_stardist(image=first_frame_image, model_sd=_get_stardist_model(), prob_thresh_sd=prob_thresh_sd, overlap_thresh_sd=overlap_thresh_sd)
+                        mask_cyto = run_cellpose(image=image_projected, model_cp=cp_model_obj, diameter_cp=diameter_cp, cellprob_threshold_cp=cellprob_threshold_cp, flow_threshold_cp=flow_threshold_cp)
 
-                        cell_properties_nuclear_df = utils.get_cell_properties(mask = mask_nuclear, image = first_frame_image)
-                        cell_properties_cyto_df = utils.get_cell_properties(mask = mask_cyto, image = image_projected)
+                        cell_properties_nuclear_df = utils.get_cell_properties(mask=mask_nuclear, image=first_frame_image)
+                        cell_properties_cyto_df = utils.get_cell_properties(mask=mask_cyto, image=image_projected)
 
                         if len(cell_properties_nuclear_df) > 0 and len(cell_properties_cyto_df) > 0:
-                            overlap_df, filtered_mask_cyto, filtered_mask_nuclear = utils.nuclei_cell_intersection(mask_nuclear = mask_nuclear, df_nuclear = cell_properties_nuclear_df, mask_cyto = mask_cyto, df_cyto = cell_properties_cyto_df)
+                            overlap_df, filtered_mask_cyto, filtered_mask_nuclear = utils.nuclei_cell_intersection(mask_nuclear=mask_nuclear, df_nuclear=cell_properties_nuclear_df, mask_cyto=mask_cyto, df_cyto=cell_properties_cyto_df)
                         else:
                             print(f'Warning: {filepath} is empty\n')
+                            del image_stack, image_projected, mask_nuclear, mask_cyto
+                            del cell_properties_nuclear_df, cell_properties_cyto_df
                             continue
-                
 
-                        cell_properties_df = utils.get_cell_properties(mask = filtered_mask_cyto, image = image_projected)
-
-                        cell_properties_df = cell_properties_df.merge(overlap_df[['label', 'overlap_fraction_nuclear', 'nuclear_area', 'cell_area', 'nuclear_id']],on='label', how='left') 
+                        cell_properties_df = utils.get_cell_properties(mask=filtered_mask_cyto, image=image_projected)
+                        cell_properties_df = cell_properties_df.merge(overlap_df[['label', 'overlap_fraction_nuclear', 'nuclear_area', 'cell_area', 'nuclear_id']], on='label', how='left')
                         cell_properties_df = cell_properties_df.drop("area", axis='columns')
 
-                        filtered_mask_cyto, filtered_mask_nuclear, cell_properties_df = utils.filter_labels(mask = filtered_mask_cyto, cell_properties_df=cell_properties_df, mask_nuclear = filtered_mask_nuclear , nuclear_area_min = nuclear_area_min, nuclear_area_max=nuclear_area_max,  cell_area_min = cell_area_min, cell_area_max=cell_area_max, nuclear_overlap=nuclear_overlap,  intensity_min = intensity_min, intensity_max = intensity_max)
-                        
-                        cell_properties_df = utils.extract_raw_traces(image_stack = image_stack[first_frame:], mask = filtered_mask_cyto, cell_properties_df = cell_properties_df)
+                        filtered_mask_cyto, filtered_mask_nuclear, cell_properties_df = utils.filter_labels(mask=filtered_mask_cyto, cell_properties_df=cell_properties_df, mask_nuclear=filtered_mask_nuclear, nuclear_area_min=nuclear_area_min, nuclear_area_max=nuclear_area_max, cell_area_min=cell_area_min, cell_area_max=cell_area_max, nuclear_overlap=nuclear_overlap, intensity_min=intensity_min, intensity_max=intensity_max)
 
-                        io.imsave(os.path.join(mask_output_dir,  mask_name), filtered_mask_cyto)
-                        io.imsave(os.path.join(max_projection_output_dir,  projected_name), image_projected)
+                        cell_properties_df = utils.extract_raw_traces(image_stack=image_stack[first_frame:], mask=filtered_mask_cyto, cell_properties_df=cell_properties_df)
 
+                        io.imsave(os.path.join(mask_output_dir, mask_name), filtered_mask_cyto)
+                        io.imsave(os.path.join(max_projection_output_dir, projected_name), image_projected)
 
-                        # Visualization 
-                        if exposure.is_low_contrast(first_frame_image): 
+                        # Visualization
+                        if exposure.is_low_contrast(first_frame_image):
                             first_frame_image = exposure.equalize_adapthist(first_frame_image, clip_limit=0.02)
 
-                        if exposure.is_low_contrast(image_projected): 
+                        if exposure.is_low_contrast(image_projected):
                             image_projected = exposure.equalize_adapthist(image_projected, clip_limit=0.008)
 
-                        plot.segmentation(image = first_frame_image, mask = mask_nuclear,  title_image = 'Nuclear image', title_mask = 'Mask outline', output_path = plots_output_dir, file_name = 'nuclear_mask')
-                        plot.segmentation(image = image_projected, mask = mask_cyto,  title_image = 'Calcium image', title_mask = 'Mask outline', output_path = plots_output_dir, file_name = 'calcium_mask')
-                        plot.segmentation(image = image_projected, mask = filtered_mask_cyto,  title_image = 'Calcium image', title_mask = 'Filtered mask outline', output_path = plots_output_dir, file_name = 'calcium_mask_filtered')
-                        plot.overlay_labels(image = image_projected, mask = mask_cyto, mask_nuclear = mask_nuclear, cell_properties_df = cell_properties_df, output_path = plots_output_dir, file_name = 'nuclear_calcium')
-                        plot.overlay_labels(image = image_projected, mask = filtered_mask_cyto, mask_nuclear = filtered_mask_nuclear, cell_properties_df = cell_properties_df, output_path =plots_output_dir, file_name = 'nuclear_calcium_filtered')
-                        plot.overlay_labels(image = image_projected, mask = filtered_mask_cyto, cell_properties_df = cell_properties_df, output_path = plots_output_dir, file_name = 'labelled_mask_filtered')
-                        
+                        plot.segmentation(image=first_frame_image, mask=mask_nuclear, title_image='Nuclear image', title_mask='Mask outline', output_path=plots_output_dir, file_name='nuclear_mask')
+                        plot.segmentation(image=image_projected, mask=mask_cyto, title_image='Calcium image', title_mask='Mask outline', output_path=plots_output_dir, file_name='calcium_mask')
+                        plot.segmentation(image=image_projected, mask=filtered_mask_cyto, title_image='Calcium image', title_mask='Filtered mask outline', output_path=plots_output_dir, file_name='calcium_mask_filtered')
+                        plot.overlay_labels(image=image_projected, mask=mask_cyto, mask_nuclear=mask_nuclear, cell_properties_df=cell_properties_df, output_path=plots_output_dir, file_name='nuclear_calcium')
+                        plot.overlay_labels(image=image_projected, mask=filtered_mask_cyto, mask_nuclear=filtered_mask_nuclear, cell_properties_df=cell_properties_df, output_path=plots_output_dir, file_name='nuclear_calcium_filtered')
+                        plot.overlay_labels(image=image_projected, mask=filtered_mask_cyto, cell_properties_df=cell_properties_df, output_path=plots_output_dir, file_name='labelled_mask_filtered')
+
                         del image_stack, image_projected, mask_nuclear, mask_cyto, filtered_mask_cyto, filtered_mask_nuclear
                         del cell_properties_nuclear_df, cell_properties_cyto_df, overlap_df
 
+                    # ── Per-image save ────────────────────────────────────────────
                     print(f'Saving output...\n')
 
-                    # Add metadata
                     cell_properties_df['image_id'] = image_id
                     cell_properties_df['cell_line'] = cell_line
                     cell_properties_df['stimulation'] = stimulation
                     cell_properties_df['filename'] = filename
                     cell_properties_df['plate_id'] = plate_id
-                    cell_properties_df['mask_path'] = os.path.join(mask_output_dir,  mask_name)
-                    
-                    columns = set(row.keys()).difference(cell_properties_df.columns)
+                    cell_properties_df['mask_path'] = os.path.join(mask_output_dir, mask_name)
 
-                    for column in columns:
+                    for column in set(row.keys()).difference(cell_properties_df.columns):
                         cell_properties_df[column] = row[column]
-                    
-                    # ensure file will still be made to avoid issues with concatenation later on
-                    table_dir = f'{project_dir}/Segmentation/Tables'
-                    if not os.path.exists(table_dir): os.makedirs(table_dir)
-                    
+
                     if len(cell_properties_df) > 0:
+                        plot.overlaid_traces(cell_properties_df=cell_properties_df, trace='raw')
+                        plt.savefig(os.path.join(plots_output_dir, 'raw_traces.pdf'), bbox_inches='tight')
 
-                        # Plot traces
-                        #os.makedirs(os.path.join(output_dir,  'Raw_traces'))
-                        plot.overlaid_traces(cell_properties_df = cell_properties_df, trace='raw')
-                        plt.savefig(os.path.join(plots_output_dir,  'raw_traces.pdf'), bbox_inches='tight')
-
-                        #for img in cell_properties_df.image_id.unique():
-                        #    plot.cellwise_traces(cell_properties_df = cell_properties_df[cell_properties_df.image_id == img].copy(), trace='raw', baseline=False, spikes = True, spikes_mode = 'all', output_path = os.path.join(output_dir, 'Raw_traces'))
-                        
                         with open(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'), 'ab') as f:
                             pickle.dump(cell_properties_df, f)
                     else:
                         print(f'Warning: No cells detected in {filepath}\n')
 
                     del cell_properties_df
-
                     gc.collect()
-                     
+                    # ─────────────────────────────────────────────────────────────
 
-                df_list = []
-                with open(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'), 'rb') as f:
-                    while True:
-                        try:
-                            df_list.append(pickle.load(f))
-                        except EOFError:
-                            break
+                # ── OUTSIDE the loop: finalise ────────────────────────────────────
+                if not progress.wasCanceled():
+                    progress.setLabelText("Finalising output...")
+                    progress.setValue(len(image_df))
+                    QApplication.processEvents()
 
-                cell_properties_df = pd.concat(df_list, ignore_index=True)
+                    df_list = []
+                    with open(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'), 'rb') as f:
+                        while True:
+                            try:
+                                df_list.append(pickle.load(f))
+                            except EOFError:
+                                break
 
-                cell_properties_df['plate_id'] = cell_properties_df['plate_id'].astype('category')
-                cell_properties_df['stimulation'] = cell_properties_df['stimulation'].astype('category')
-                cell_properties_df['cell_line'] = cell_properties_df['cell_line'].astype('category')
-                
-                if 'marker' in cell_properties_df.columns:
-                    cell_properties_df['marker'] = cell_properties_df['marker'].astype('category')
+                    cell_properties_df = pd.concat(df_list, ignore_index=True)
 
-                # cell_properties_df['plate_id_cell_line'] = cell_properties_df['plate_id'].astype(str) + '_' + cell_properties_df['cell_line'].astype(str)
+                    cell_properties_df['plate_id'] = cell_properties_df['plate_id'].astype('category')
+                    cell_properties_df['stimulation'] = cell_properties_df['stimulation'].astype('category')
+                    cell_properties_df['cell_line'] = cell_properties_df['cell_line'].astype('category')
 
+                    if 'marker' in cell_properties_df.columns:
+                        cell_properties_df['marker'] = cell_properties_df['marker'].astype('category')
 
-                if 'Unnamed: 0' in cell_properties_df.columns:
-                    cell_properties_df = cell_properties_df.drop(columns='Unnamed: 0')
+                    if 'Unnamed: 0' in cell_properties_df.columns:
+                        cell_properties_df = cell_properties_df.drop(columns='Unnamed: 0')
 
-                cell_properties_df.to_pickle(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'))
-                cell_properties_df.to_csv(os.path.join(table_dir, 'cell_properties_signal_extraction.csv'), sep=';')
+                    cell_properties_df.to_pickle(os.path.join(table_dir, 'cell_properties_signal_extraction.pkl'))
+                    cell_properties_df.to_csv(os.path.join(table_dir, 'cell_properties_signal_extraction.csv'), sep=';')
 
+                    time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                    end_time = perf_counter()
+                    runtime_seconds = end_time - start_time
 
-                time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-                end_time = perf_counter()
-                runtime_seconds = end_time - start_time
+                    parameter_list.extend(['', f'Date and time: {time}', f'Pipeline runtime (s): {runtime_seconds}'])
 
-                parameter_list.extend([f'',f'Date and time: {time}', f'Pipeline runtime (s): {runtime_seconds}' ])
-                
-                with open(os.path.join(project_dir, f'Segmentation', 'segmentation_signal_extraction_config.txt'), 'w') as f:
-                    for line in parameter_list:
-                        f.write(f'{line}\n')
+                    with open(os.path.join(project_dir, 'Segmentation', 'segmentation_signal_extraction_config.txt'), 'w') as f:
+                        for line in parameter_list:
+                            f.write(f'{line}\n')
 
-                parameters = {"input": {
-                                     "input_file": str(input_file),
-                                    "metadata_file": str(metadata_file),
-                                    "project_dir": str(project_dir)
-                                    },
-                                "segmentation": {
-                                    "selection_mode": selection_mode,
-                                    "nuclear_stain": nuclear_stain,
-                                    "method": stain_to_segment,
-                                        "cellpose": {
-                                            "model": model_cp,
-                                            "diameter": diameter_cp,
-                                            "cellprob_threshold": cellprob_threshold_cp,
-                                            "flow_threshold": flow_threshold_cp
-                                        },
-                                        "stardist": {
-                                            "prob_thresh": prob_thresh_sd,
-                                            "overlap_thresh": overlap_thresh_sd
-                                        }
-                                    },
-                                    "filters": {
-                                        "cell_area": [cell_area_min, cell_area_max],
-                                        "nuclear_area": [nuclear_area_min, nuclear_area_max],
-                                        "intensity": [intensity_min, intensity_max],
-                                        "nuclear_overlap": nuclear_overlap
-                                    },
-                                    "provenance": {
-                                        'Date and time': [time], 
-                                        'Pipeline runtime (s)': [runtime_seconds]
-                                    }
-                                }
+                    parameters = {
+                        "input": {
+                            "input_file": str(input_file),
+                            "metadata_file": str(metadata_file),
+                            "project_dir": str(project_dir)
+                        },
+                        "segmentation": {
+                            "selection_mode": selection_mode,
+                            "nuclear_stain": nuclear_stain,
+                            "method": stain_to_segment,
+                            "cellpose": {
+                                "model": model_cp,
+                                "diameter": diameter_cp,
+                                "cellprob_threshold": cellprob_threshold_cp,
+                                "flow_threshold": flow_threshold_cp
+                            },
+                            "stardist": {
+                                "prob_thresh": prob_thresh_sd,
+                                "overlap_thresh": overlap_thresh_sd
+                            }
+                        },
+                        "filters": {
+                            "cell_area": [cell_area_min, cell_area_max],
+                            "nuclear_area": [nuclear_area_min, nuclear_area_max],
+                            "intensity": [intensity_min, intensity_max],
+                            "nuclear_overlap": nuclear_overlap
+                        },
+                        "provenance": {
+                            'Date and time': [time],
+                            'Pipeline runtime (s)': [runtime_seconds]
+                        }
+                    }
 
-                run.save_json("parameters_segmentation.json", parameters)
-                
-                flat_params = pd.json_normalize(parameters)
-                flat_params.to_csv(os.path.join(table_dir, "parameters.csv"), index=False)
+                    run.save_json("parameters_segmentation.json", parameters)
 
-                print('All images annotated... Stopping the pipeline...\n')
-                run.log(f"Segmentation done in {perf_counter() - start_time_run:.2f} sec")
+                    flat_params = pd.json_normalize(parameters)
+                    flat_params.to_csv(os.path.join(table_dir, "parameters.csv"), index=False)
+
+                    print('All images annotated... Stopping the pipeline...\n')
+                    run.log(f"Segmentation done in {perf_counter() - start_time_run:.2f} sec")
+
+                # ── Always re-enable button and reset widgets ─────────────────────
                 widget.call_button.enabled = True
-
-                # Reset settings
                 widget.input_file.value = ''
                 widget.metadata_file.value = ''
                 widget.project_dir.value = ''
@@ -797,23 +806,15 @@ def segmentation_widget():
                 widget.co_stain.value = '-- Select --'
                 widget.marker_name.value = ''
                 widget.annotation_point_size.value = 20
-            
+                # ─────────────────────────────────────────────────────────────────
 
             else:
                 print("Cancelled.")
 
-        except Exception as e: 
+        except Exception as e:
             print("\nAn error occurred:", e)
             traceback.print_exc()
-        
-       
-
-
-
-
-        
-
-        
+            widget.call_button.enabled = True  # re-enable on error too
 
     ######################### Input directory and files ##################################
             
@@ -1589,48 +1590,47 @@ def single_cell_widget():
                 table_dir = f'{project_dir}/Quantification/Tables'
                 if not os.path.exists(table_dir): os.makedirs(table_dir)
 
+                # Normalization
+                if normalization_mode == 'Sliding window':
+                    print('Running sliding window normalization...')
+                    parameter_list.extend([f'Normalization - Sliding window size: {sliding_window_size}', f'Normalization - Percentile threshold: {percentile_threshold}'])
+                    cell_properties_df = preprocess.sliding_window(cell_properties_df = cell_properties_df, sliding_window_size = sliding_window_size, percentile_threshold = percentile_threshold)
+                    print('Sliding window normalization done.')
+                    run.log('Sliding window normalization done.')
+
+                elif normalization_mode == 'Pre-stimulus window':
+                    print('Running pre-stimulus window normalization...')
+                    parameter_list.extend([f'Normalization - Stimulation frame: {stimulation_frame}'])
+                    cell_properties_df = preprocess.pre_stimulation(cell_properties_df = cell_properties_df, stimulation_frame = stimulation_frame)
+                    print('Pre-stimulus window normalization done.')
+                    run.log('Pre-stimulus window normalization done.')
+
+                elif normalization_mode == 'Deconvolved':
+                    print('Running OASIS deconvolved trace normalization...')
+                    parameter_list.extend([f'Normalization - Deconvolved with OASIS parameters: Tau d: {deconv_taud}, Frame rate: {deconv_fr}, Smoothing: {smoothing}'])
+                    cell_properties_df = preprocess.deconvolution(cell_properties_df = cell_properties_df, tau_d = deconv_taud, frame_rate = deconv_fr, smoothing = smoothing)
+                    print('Deconvolution and normalization done.')
+                    run.log('Deconvolution and normalization done, using .')
+                else:
+                    raise ValueError(f'Invalid normalization mode: {normalization_mode}')
+                
+                palette = get_colors(cell_properties_df, project_dir)
+
+                # Sort the df for plotting
+                stimulations = [control_condition] + [c for c in palette.keys() if c != control_condition]
+                cell_properties_df['stimulation'] = pd.Categorical(cell_properties_df['stimulation'], categories=stimulations, ordered=True)
+                cell_properties_df = cell_properties_df.sort_values('stimulation')
+                palette = {cat:palette[cat] for cat in cell_properties_df.stimulation.cat.categories} # Order the palette
+                cell_properties_df['colors'] = cell_properties_df['stimulation'].map(palette) # Map colors to stimulation groups
 
                 print('Starting signal quantification...')
                 
+                #branch by modes and activity types
                 if activity_type == 'Spontaneous':
                     print('Running spontaneous peak detection...')
                     run.log([f'---------------Running spontaneous peak detection with spike prominence threshold: {spike_prominence_threshold} and spike amplitude width ratio: {spike_amplitude_width_ratio}'])
                     parameter_list.extend([f'Spike prominence threshold: {spike_prominence_threshold}', f'Spike amplitude width ratio: {spike_amplitude_width_ratio}'])
                 
-
-                    # Normalization
-                    if normalization_mode == 'Sliding window':
-                        print('Running sliding window normalization...')
-                        parameter_list.extend([f'Normalization - Sliding window size: {sliding_window_size}', f'Normalization - Percentile threshold: {percentile_threshold}'])
-                        cell_properties_df = preprocess.sliding_window(cell_properties_df = cell_properties_df, sliding_window_size = sliding_window_size, percentile_threshold = percentile_threshold)
-                        print('Sliding window normalization done.')
-                        run.log('Sliding window normalization done.')
-
-                    elif normalization_mode == 'Pre-stimulus window':
-                        print('Running pre-stimulus window normalization...')
-                        parameter_list.extend([f'Normalization - Stimulation frame: {stimulation_frame}'])
-                        cell_properties_df = preprocess.pre_stimulation(cell_properties_df = cell_properties_df, stimulation_frame = stimulation_frame)
-                        print('Pre-stimulus window normalization done.')
-                        run.log('Pre-stimulus window normalization done.')
-
-                    elif normalization_mode == 'Deconvolved':
-                        print('Running OASIS deconvolved trace normalization...')
-                        parameter_list.extend([f'Normalization - Deconvolved with OASIS parameters: Tau d: {deconv_taud}, Frame rate: {deconv_fr}, Smoothing: {smoothing}'])
-                        cell_properties_df = preprocess.deconvolution(cell_properties_df = cell_properties_df, tau_d = deconv_taud, frame_rate = deconv_fr, smoothing = smoothing)
-                        print('Deconvolution and normalization done.')
-                        run.log('Deconvolution and normalization done, using .')
-                    else:
-                        raise ValueError(f'Invalid normalization mode: {normalization_mode}')
-                    palette = get_colors(cell_properties_df, project_dir)
-
-                    # Sort the df for plotting
-                    stimulations = [control_condition] + [c for c in palette.keys() if c != control_condition]
-                    cell_properties_df['stimulation'] = pd.Categorical(cell_properties_df['stimulation'], categories=stimulations, ordered=True)
-                    cell_properties_df = cell_properties_df.sort_values('stimulation')
-
-                    palette = {cat:palette[cat] for cat in cell_properties_df.stimulation.cat.categories} # Order the palette
-                    cell_properties_df['colors'] = cell_properties_df['stimulation'].map(palette) # Map colors to stimulation groups
-
                     if 'marker' not in cell_properties_df.columns:
 
                         # Plot number of cells
@@ -1657,30 +1657,7 @@ def single_cell_widget():
                 
 
                 def spontaneous_activity_output():
-                    # Visualize baseline estimation and peak detection
-                    #plot_list = plot.cellwise_traces(cell_properties_df = cell_properties_df, trace='raw',baseline=True)
-                    #plot_list_spikes = plot.cellwise_traces(cell_properties_df = cell_properties_df, trace='dff',baseline=False, spikes=True, spikes_mode='all')
-
-                    # Generate output folder
-                    #output_dir_quantification = os.path.join(project_dir, 'Quantification_output')
-
                     
-                    #category_string = '_'.join(cell_properties_df.condition.cat.categories.tolist())
-                    #category_string = category_string.replace('_', '_vs_', 1)
-                    #output_dir_quantification = os.path.join(project_dir, 'Quantification', f'{category_string}_output')
-
-
-
-                    #if os.path.exists(plot_dir): shutil.rmtree(plot_dir, ignore_errors=True)
-                    #if os.path.exists(table_dir): shutil.rmtree(table_dir, ignore_errors=True)
-
-
-                    #output_dir_quantification = os.path.join(project_dir, 'Quantification')
-
-
-                    #os.makedirs(output_dir_quantification)
-                    #os.makedirs(f'{output_dir_quantification}/Tables')
-
                     # Dicts defining ylabels and titles for swarmplots
                     ylabel_dict = {'amplitude': '$\Delta F/F_0$', 'prominence':'$\Delta F/F_0$', 'frequency':'Spikes/min', 'width':'Time (s)','rise_time':'Time (s)', 'decay_time':'Time (s)'}
                     title_dict = {'amplitude': 'Amplitude','prominence':'Prominence', 'frequency':'Frequency', 'width':'Width','rise_time':'Rise time','decay_time':'Decay time', 'cluster':'Cluster'}
