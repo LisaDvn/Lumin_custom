@@ -343,10 +343,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-tool" class="md-nav__link">
+  <a href="#run-the-napari-lumin-is-now-a-plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the tool
+        Run the NAPARI, LUMIN is now a plugin
       
     </span>
   </a>
@@ -653,10 +653,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-tool" class="md-nav__link">
+  <a href="#run-the-napari-lumin-is-now-a-plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the tool
+        Run the NAPARI, LUMIN is now a plugin
       
     </span>
   </a>
@@ -687,15 +687,24 @@
 <li>pip</li>
 </ul>
 <h2 id="install">Install</h2>
-<p>Clone the repository:</p>
+<p>Open <strong>Anaconda Prompt</strong> and follow the steps below.</p>
+<p><strong>1. Clone the repository</strong></p>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/LisaDvn/Lumin_custom.git
-<span class="nb">cd</span><span class="w"> </span>Lumin_custom
 </code></pre></div>
-<p>Install the package and all dependencies:</p>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>.
+<p><strong>2. Navigate to the cloned folder</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Lumin_custom
 </code></pre></div>
-<h2 id="run-the-tool">Run the tool</h2>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py
+<p><strong>3. Create a conda environment</strong></p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>lumin_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.2<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.1.0<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y
+</code></pre></div>
+<p><strong>4. Activate the conda environment</strong></p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>activate<span class="w"> </span>lumin_env
+</code></pre></div>
+<p><strong>5. Install the package and all dependencies</strong></p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</code></pre></div>
+<h2 id="run-the-napari-lumin-is-now-a-plugin">Run the NAPARI, LUMIN is now a plugin</h2>
+<div class="highlight"><pre><span></span><code>NAPARI
 </code></pre></div>
 
 
