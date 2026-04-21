@@ -1,51 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>http://lisadvn.github.io/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/eventdetection/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/eventdetection/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/fair/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/fair/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/features/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/features/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/gettingstarted/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/gettingstarted/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/gui/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/gui/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/input/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/input/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/installation/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/installation/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/roidetection/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/segmentation/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/segmentation/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/signalextraction/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
-         <loc>http://lisadvn.github.io/signalextraction/</loc>
-         <lastmod>2026-04-20</lastmod>
-    </url>
-    <url>
-         <loc>http://lisadvn.github.io/workflow/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <loc>https://lisadvn.github.io/Lumin_custom/workflow/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
 </urlset>

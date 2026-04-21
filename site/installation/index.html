@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="http://lisadvn.github.io/installation/">
+        <link rel="canonical" href="https://lisadvn.github.io/Lumin_custom/installation/">
       
       
         <link rel="prev" href="..">
@@ -67,7 +67,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="celestial-blue" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="celestial-blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
@@ -332,10 +332,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install-dependencies" class="md-nav__link">
+  <a href="#install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install dependencies
+        Install
       
     </span>
   </a>
@@ -343,21 +343,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#clone-repository" class="md-nav__link">
+  <a href="#run-the-napari-lumin-is-now-a-plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Clone repository
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-the-tool" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run the tool
+        Run the NAPARI, LUMIN is now a plugin
       
     </span>
   </a>
@@ -653,10 +642,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install-dependencies" class="md-nav__link">
+  <a href="#install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install dependencies
+        Install
       
     </span>
   </a>
@@ -664,21 +653,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#clone-repository" class="md-nav__link">
+  <a href="#run-the-napari-lumin-is-now-a-plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Clone repository
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-the-tool" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run the tool
+        Run the NAPARI, LUMIN is now a plugin
       
     </span>
   </a>
@@ -708,15 +686,25 @@
 <li>Python 3.10+</li>
 <li>pip</li>
 </ul>
-<h2 id="install-dependencies">Install dependencies</h2>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<h2 id="install">Install</h2>
+<p>Open <strong>Anaconda Prompt</strong> and follow the steps below.</p>
+<p><strong>1. Clone the repository</strong></p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/LisaDvn/Lumin_custom.git
 </code></pre></div>
-<h2 id="clone-repository">Clone repository</h2>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-repo/calcium-tool.git
-<span class="nb">cd</span><span class="w"> </span>calcium-tool
+<p><strong>2. Navigate to the cloned folder</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Lumin_custom
 </code></pre></div>
-<h2 id="run-the-tool">Run the tool</h2>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py
+<p><strong>3. Create a conda environment</strong></p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>lumin_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.2<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.1.0<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y
+</code></pre></div>
+<p><strong>4. Activate the conda environment</strong></p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>activate<span class="w"> </span>lumin_env
+</code></pre></div>
+<p><strong>5. Install the package and all dependencies</strong></p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</code></pre></div>
+<h2 id="run-the-napari-lumin-is-now-a-plugin">Run the NAPARI, LUMIN is now a plugin</h2>
+<div class="highlight"><pre><span></span><code>NAPARI
 </code></pre></div>
 
 

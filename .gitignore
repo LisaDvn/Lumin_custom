@@ -8,3 +8,4 @@ lumin.egg*
 /environments
 __pycache__/
 *.zip
+site/

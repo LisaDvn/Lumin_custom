@@ -79,74 +79,150 @@ def disable_placeholder(widget):
 
 def preprocessing_widget():
 
-    import imagej
-    import tifffile as tiff
-    import csv
-    from scyjava import jimport
-
     viewer = napari.current_viewer()
-
     remove_widget_if_exists(viewer, 'Cell segmentation')
     remove_widget_if_exists(viewer, 'Trace quantification')
-    
+
     @magicgui(
         layout='vertical',
-
         input_dir=dict(widget_type='FileEdit', mode='d', label='Input folder (ND2/TIFF)', tooltip='Select the folder containing the raw ND2 or TIFF files for preprocessing.'),
         project_dir=dict(widget_type='FileEdit', mode='d', label='Project directory', tooltip='Specify the project directory for pipeline output.'),
-
-        plate_id=dict(widget_type='LineEdit', label='Plate ID', tooltip='Specify the plate ID for this dataset. This will be used to organize the output files.'),
+        plate_id=dict(widget_type='LineEdit', label='Plate ID', tooltip='Specify the plate ID for this dataset.'),
         cell_line=dict(widget_type='LineEdit', label='Cell line', tooltip='Specify the cell line or biological replicate.'),
         condition=dict(widget_type='LineEdit', label='Condition', tooltip='Specify the experimental condition.'),
-
-        Optional_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Optional metadata ———</b></div>'),
-        Researcher_ID=dict(widget_type='LineEdit', label='Researcher ID', tooltip='Specify the researcher ID or initials. This is optional and can be left blank.'),
-        Experiment_ID=dict(widget_type='LineEdit', label='Experiment ID', tooltip='Specify the experiment ID. This is optional and can be left blank.'),
-        Maturation=dict(widget_type='LineEdit', label='Days in vitro (DIV)', tooltip='Specify the days in vitro (DIV) for the recordings. This is optional and can be left blank.'),
-        Cell_density=dict(widget_type='LineEdit', label='Cell density', tooltip='Specify the cell density for the recordings. This is optional and can be left blank.'),
-        
+        Optional_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Optional metadata———</b></div>'),
+        Researcher_ID=dict(widget_type='LineEdit', label='Researcher ID', tooltip='Optional.'),
+        Experiment_ID=dict(widget_type='LineEdit', label='Experiment ID', tooltip='Optional.'),
+        Maturation=dict(widget_type='LineEdit', label='Days in vitro (DIV)', tooltip='Optional.'),
+        Cell_density=dict(widget_type='LineEdit', label='Cell density', tooltip='Optional.'),
     )
-    def widget(input_dir, project_dir, plate_id, cell_line, condition, Optional_label, Researcher_ID, Experiment_ID, Maturation, Cell_density):
+    def widget(input_dir, project_dir, plate_id, cell_line, condition, Optional_label,
+               Researcher_ID, Experiment_ID, Maturation, Cell_density):
         pass
 
     widget.native.setObjectName('Preprocessing')
 
+    from qtpy.QtCore import QThread, Signal, Qt, QTimer
+    from qtpy.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar
+
+    # ── progress dialog ───────────────────────────────────────────────
+    class ProgressDialog(QDialog):
+        def __init__(self):
+            super().__init__()
+            self.setWindowFlags(Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
+            self.setFixedWidth(380)
+            self.setModal(True)
+
+            layout = QVBoxLayout(self)
+            layout.setContentsMargins(28, 24, 28, 24)
+            layout.setSpacing(12)
+
+            self._status = QLabel("Starting…")
+            self._status.setStyleSheet("font-size: 12px; color: grey;")
+
+            self._bar = QProgressBar()
+            self._bar.setRange(0, 0)     # bouncing until files are counted
+            self._bar.setTextVisible(False)
+            self._bar.setFixedHeight(6)
+            self._bar.setStyleSheet("""
+                QProgressBar { background:#f0f0f0; border:none; border-radius:3px; }
+                QProgressBar::chunk { background:##4f86f7; border-radius:3px; }
+            """)
+
+            layout.addWidget(QLabel("<b>Preprocessing</b>"))
+            layout.addWidget(self._status)
+            layout.addWidget(self._bar)
+
+        def update(self, current, total, status):
+            self._bar.setRange(0, total)
+            self._bar.setValue(current)
+            self._status.setText(status)
+
+    # ── thread ────────────────────────────────────────────────────────────────
+    class Worker(QThread):
+        progress = Signal(int, int, str)
+        finished = Signal(float)
+        error    = Signal(str)
+
+        def __init__(self, kwargs, t0):
+            super().__init__()
+            self.kwargs, self.t0 = kwargs, t0
+
+        def run(self):
+            try:
+                run_preprocessing_pipeline(**self.kwargs,
+                                           progress_callback=self.progress.emit)
+                self.finished.emit(perf_counter() - self.t0)
+            except Exception as e:
+                self.error.emit(f"{type(e).__name__}: {e}\n\n{traceback.format_exc()}")
+
+    _worker = []   # prevent GC
+
+    # ── button callback ───────────────────────────────────────────────────────
     @widget.call_button.clicked.connect
-    def _run_preprocessing():
+    def _run():
 
-        msg = QMessageBox()
-        msg.setText("Run preprocessing?")
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-
-        if msg.exec_() != QMessageBox.Yes:
+        # basic validation
+        errors = []
+        if not os.path.isdir(str(widget.input_dir.value)):
+            errors.append("• Input folder does not exist.")
+        if not str(widget.project_dir.value).strip():
+            errors.append("• Project directory is required.")
+        if not widget.plate_id.value.strip():
+            errors.append("• Plate ID is required.")
+        if not widget.cell_line.value.strip():
+            errors.append("• Cell line is required.")
+        if not widget.condition.value.strip():
+            errors.append("• Condition is required.")
+        if errors:
+            QMessageBox.warning(None, "Missing input", "\n".join(errors))
             return
-        
-        start_time = perf_counter()
-        print("Running preprocessing...")
 
-        try:
-            # --------------------------
-            # GET VALUES
-            # --------------------------
-            run_preprocessing_pipeline(
-                input_dir = widget.input_dir.value,
-                project_dir = widget.project_dir.value,
-                plate_id = widget.plate_id.value,
-                cell_line = widget.cell_line.value,
-                condition = widget.condition.value,
-                extra_metadata={
-                    "Researcher_ID": widget.Researcher_ID.value,
-                    "Experiment_ID": widget.Experiment_ID.value,
-                    "Maturation": widget.Maturation.value,
-                    "Cell_density": widget.Cell_density.value
-                }
-            )
+        if QMessageBox.question(None, "Confirm", "Run preprocessing?",
+                                QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
+            return
 
-            print(f"Finished in {perf_counter() - start_time:.2f} seconds")
+        kwargs = dict(
+            input_dir      = str(widget.input_dir.value),
+            project_dir    = str(widget.project_dir.value),
+            plate_id       = widget.plate_id.value,
+            cell_line      = widget.cell_line.value,
+            condition      = widget.condition.value,
+            extra_metadata = {k: getattr(widget, k).value
+                              for k in ("Researcher_ID", "Experiment_ID",
+                                        "Maturation", "Cell_density")},
+        )
 
-        except Exception as e:
-            print("ERROR:", e)
-            traceback.print_exc()
+        dlg = ProgressDialog()
+        dlg.show()
+        widget.call_button.enabled = False
+
+        worker = Worker(kwargs, perf_counter())
+        _worker.clear()
+        _worker.append(worker)
+
+        worker.progress.connect(dlg.update)
+
+        def _done(runtime):
+            dlg.update(1, 1, "Done")
+            QTimer.singleShot(500, dlg.close)
+            widget.call_button.enabled = True
+            QMessageBox.information(None, "Done",
+                                    f"Preprocessing complete!\nRuntime: {runtime:.1f} s")
+            for k in ("plate_id", "cell_line", "condition",
+                      "Researcher_ID", "Experiment_ID", "Maturation", "Cell_density"):
+                getattr(widget, k).value = ''
+
+        def _err(msg):
+            dlg.close()
+            widget.call_button.enabled = True
+            err = QMessageBox(QMessageBox.Critical, "Error", "Preprocessing failed.")
+            err.setDetailedText(msg)
+            err.exec_()
+
+        worker.finished.connect(_done)
+        worker.error.connect(_err)
+        worker.start()
 
     return widget
 

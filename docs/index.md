@@ -30,4 +30,4 @@ Input → Segmentation → Signal extraction → Events → Features → Output
 
 ## Getting started
 
-See the [Installation](installation.md#dbnpy) and [Getting started](gettingstarted.md#dbnpy) pages.
+See the [Installation](installation.md) and [Getting started](gettingstarted.md) pages.

@@ -1,5 +1,5 @@
 site_name: Calcium imaging analysis tool (based on LUMIN)
-site_url: http://lisadvn.github.io
+site_url: https://lisadvn.github.io/Lumin_custom/
 
 theme:
   name: material
@@ -16,7 +16,7 @@ theme:
   palette:
     # Light mode
     - scheme: default
-      primary: celestial-blue
+      primary: indigo
       accent: blue
       toggle:
         icon: material/weather-night

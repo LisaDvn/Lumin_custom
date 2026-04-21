@@ -3,7 +3,7 @@
 ## Step 1: Input format
 
 LUMIN requires a .csv files including the following columns: plate_id, filename, filepath, biological_replicate, and stimulation.
-See an example of this format [here](input.md#dbnpy)
+See an example of this format [here](input.md)
 The recordings should be in .tiff format.
 
 ## Optional step: Preparing your data
@@ -21,7 +21,7 @@ Select the folder including all the tiffs/nd2 files, LUMIN will extract the meta
 
 After selecting the Segmentation and signal ectraction option, select the _input.csv file and the accompanying folder with .tiff files for segmentation.
 
-### Step 2.1: Inspect results
+### Optional step: Inspect results
 
 Select the automated or hybrid segmentation option, and optionally test settings on a random image. The tool will generate a first version of a segmentation mask. 
 
