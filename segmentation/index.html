@@ -14,7 +14,7 @@
         <link rel="prev" href="../input/">
       
       
-        <link rel="next" href="../signalextraction/">
+        <link rel="next" href="../eventdetection/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Segmentation & ROI Detection - Calcium imaging analysis tool (based on LUMIN)</title>
+        <title>2. Segmentation & signal extraction - Calcium imaging analysis tool (based on LUMIN)</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#segmentation-roi-detection" class="md-skip">
+        <a href="#2-segmentation-and-signal-extraction" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Segmentation & ROI Detection
+              2. Segmentation & signal extraction
             
           </span>
         </div>
@@ -260,36 +260,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
     
-  
-    Installation
-  
-
     
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
+    
     
       
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gettingstarted/" class="md-nav__link">
         
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -303,13 +294,22 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
   
 
-    
-      
-      
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -334,9 +334,99 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -349,7 +439,7 @@
   <span class="md-ellipsis">
     
   
-    Data Input & Metadata
+    1. Data input & metadata
   
 
     
@@ -361,9 +451,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
     
@@ -385,7 +476,7 @@
   <span class="md-ellipsis">
     
   
-    Segmentation & ROI Detection
+    2. Segmentation & signal extraction
   
 
     
@@ -403,7 +494,7 @@
   <span class="md-ellipsis">
     
   
-    Segmentation & ROI Detection
+    2. Segmentation & signal extraction
   
 
     
@@ -429,10 +520,149 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
+  <a href="#required-inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Methods
+        Required inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optional inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-segmentation-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported segmentation modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segmentation-methods-automated-hybrid-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segmentation methods (Automated / Hybrid only)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Segmentation methods (Automated / Hybrid only)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stardist-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StarDist parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellpose-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cellpose parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-optimisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter optimisation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-filtering-after-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-filtering (after testing)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manual-segmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual segmentation
       
     </span>
   </a>
@@ -451,10 +681,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#manual-refinement" class="md-nav__link">
+  <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Manual refinement
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo
       
     </span>
   </a>
@@ -468,36 +709,10 @@
     </li>
   
 
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../signalextraction/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Signal Extraction
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -510,7 +725,7 @@
   <span class="md-ellipsis">
     
   
-    Event & Spike Detection
+    3. Event detection
   
 
     
@@ -522,9 +737,38 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spikedetection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
-      
-      
+  
+    4. Spike detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
@@ -537,7 +781,7 @@
   <span class="md-ellipsis">
     
   
-    Feature Extraction
+    5. Feature Extraction
   
 
     
@@ -546,6 +790,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -631,10 +883,149 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
+  <a href="#required-inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Methods
+        Required inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optional inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-segmentation-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported segmentation modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segmentation-methods-automated-hybrid-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segmentation methods (Automated / Hybrid only)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Segmentation methods (Automated / Hybrid only)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stardist-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StarDist parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellpose-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cellpose parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-optimisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter optimisation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-filtering-after-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-filtering (after testing)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manual-segmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual segmentation
       
     </span>
   </a>
@@ -653,10 +1044,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#manual-refinement" class="md-nav__link">
+  <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Manual refinement
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo
       
     </span>
   </a>
@@ -680,52 +1082,170 @@
 
 
 
-<h1 id="segmentation-roi-detection">Segmentation &amp; ROI Detection</h1>
-<h2 id="methods">Methods</h2>
-<p>The deep learning method Cellpose was selected due to:</p>
+<div><h1 id="2-segmentation-and-signal-extraction">2. Segmentation and signal extraction</h1>
+<p>This step detects cells in your recordings and extracts fluorescence signals per region of interest (ROI). It generates all data required for downstream event detection and analysis.</p>
+<hr>
+<h2 id="required-inputs">Required inputs</h2>
+<p>Open the <strong>Cell segmentation</strong> widget and configure the following inputs.</p>
+<h3 id="input-file">Input file</h3>
+<p>Path to <code>_input.csv</code> (generated during preprocessing).</p>
+<h3 id="project-directory">Project directory</h3>
+<p>Root folder where all segmentation and analysis outputs will be stored.</p>
+<hr>
+<h2 id="optional-inputs">Optional inputs</h2>
+<h3 id="metadata-file">Metadata file</h3>
+<p>Optional CSV file containing scaling parameters:</p>
 <ul>
-<li>High segmentation accuracy</li>
-<li>Low parameter tuning</li>
-<li>Good performance on dense cultures</li>
+<li><code>nuclear_area_scaler</code></li>
+<li><code>cell_area_scaler</code></li>
+<li><code>intensity_scaler</code></li>
 </ul>
-<h2 id="output">Output</h2>
-<p>The segmentation step generates ROI-based outputs stored per image in a <code>.csv</code> file:</p>
+<p>These improve ROI filtering and normalization but are not required.</p>
+<hr>
+<h2 id="supported-segmentation-modes">Supported segmentation modes</h2>
+<p>LUMIN supports three segmentation strategies:</p>
 <table>
 <thead>
 <tr>
-<th>filename</th>
-<th>condition</th>
-<th>replicate</th>
-<th>image_id</th>
-<th>input_filepath</th>
-<th>roi_mask_path</th>
-<th>segmentation_overlay_path</th>
-<th>centroid_coordinates</th>
-<th>roi_labels</th>
-<th>overlay_plot_path</th>
+<th>Mode</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>img001</td>
-<td>control</td>
-<td>1</td>
-<td>001</td>
-<td>/data/img001.tiff</td>
-<td>/output/mask_img001.tiff</td>
-<td>/output/segmented_img001.tiff</td>
-<td>[(x1,y1), (x2,y2)]</td>
-<td>[1,2,3,...]</td>
-<td>/output/Plots/overlay_img001.pdf</td>
+<td><strong>Automated</strong></td>
+<td>Fully automated segmentation using StarDist and/or Cellpose</td>
+</tr>
+<tr>
+<td><strong>Hybrid</strong></td>
+<td>Automated segmentation followed by manual refinement in napari</td>
+</tr>
+<tr>
+<td><strong>Manual selection</strong></td>
+<td>Fully manual ROI annotation inside napari</td>
 </tr>
 </tbody>
 </table>
-<h2 id="manual-refinement">Manual refinement</h2>
-<p>Users can:</p>
+<hr>
+<h2 id="segmentation-methods-automated-hybrid-only">Segmentation methods (Automated / Hybrid only)</h2>
+<p>Depending on whether a nuclear channel is present:</p>
+<table>
+<thead>
+<tr>
+<th>Nuclear stain</th>
+<th>Methods</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>Cytoplasmic segmentation (Cellpose)</td>
+</tr>
+<tr>
+<td>First frame contains nucleus</td>
+<td>StarDist (nuclear) + Cellpose (cytoplasmic)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="stardist-parameters">StarDist parameters</h3>
 <ul>
-<li>Remove false positives</li>
-<li>Add missing cells</li>
+<li><strong>Probability threshold</strong> — higher = fewer but more confident ROIs  </li>
+<li><strong>Overlap threshold</strong> — controls allowed ROI overlap  </li>
 </ul>
+<hr>
+<h3 id="cellpose-parameters">Cellpose parameters</h3>
+<ul>
+<li><strong>Model</strong> — <code>cyto3</code>, <code>cyto2</code>, <code>cyto</code>, or custom model  </li>
+<li><strong>Diameter</strong> — estimated cell size in pixels  </li>
+<li><strong>Cell probability threshold</strong> — sensitivity of detection  </li>
+<li><strong>Flow threshold</strong> — segmentation strictness (0 disables filtering)  </li>
+</ul>
+<hr>
+<h2 id="parameter-optimisation">Parameter optimisation</h2>
+<p>Use the testing tools before running full analysis:</p>
+<ul>
+<li><strong>Test settings on random image</strong> → quick preview on a random recording  </li>
+<li><strong>Test settings on same image</strong> → iterate on identical sample  </li>
+</ul>
+<p>The napari viewer shows segmentation overlays and raw images.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This step does not save results and is intended for parameter tuning only.</p>
+</div>
+<hr>
+<h2 id="post-filtering-after-testing">Post-filtering (after testing)</h2>
+<table>
+<thead>
+<tr>
+<th>Slider</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nuclear overlap</td>
+<td>Minimum overlap between nucleus and cytoplasm</td>
+</tr>
+<tr>
+<td>Nuclear area</td>
+<td>Allowed size range for nuclear ROIs</td>
+</tr>
+<tr>
+<td>Cell area</td>
+<td>Allowed size range for cytoplasmic ROIs</td>
+</tr>
+<tr>
+<td>Fluorescence intensity</td>
+<td>Intensity range filter for ROIs</td>
+</tr>
+</tbody>
+</table>
+<p>Enable <strong>Apply filters</strong> to compare raw vs filtered results.</p>
+<hr>
+<h2 id="manual-segmentation">Manual segmentation</h2>
+<ul>
+<li>Enable <strong>Co-stain</strong> for labelled subpopulations  </li>
+<li>Assign a <strong>Marker name</strong> for the population  </li>
+<li>Adjust <strong>Point size</strong> for annotation visibility  </li>
+<li>Already annotated images are automatically skipped on reruns  </li>
+</ul>
+<hr>
+<h2 id="output">Output</h2>
+<p>After running, the following structure is created in your project directory:
+</p><div class="highlight"><pre><span></span><code>Segmentation/
+├──<span class="w"> </span>Masks/
+│<span class="w"> </span>└──<span class="w"> </span>&lt;plate_id&gt;/
+│<span class="w"> </span>├──<span class="w"> </span>&lt;filename&gt;_final_mask.tiff
+│<span class="w"> </span>└──<span class="w"> </span>&lt;filename&gt;_projected.tiff
+├──<span class="w"> </span>Plots/
+│<span class="w"> </span>└──<span class="w"> </span>&lt;plate_id&gt;/&lt;filename&gt;/
+│<span class="w"> </span>├──<span class="w"> </span>nuclear_mask.pdf
+│<span class="w"> </span>├──<span class="w"> </span>calcium_mask.pdf
+│<span class="w"> </span>├──<span class="w"> </span>calcium_mask_filtered.pdf
+│<span class="w"> </span>├──<span class="w"> </span>labelled_mask_filtered.pdf
+│<span class="w"> </span>└──<span class="w"> </span>raw_traces.pdf
+└──<span class="w"> </span>Tables/
+├──<span class="w"> </span>cell_properties_signal_extraction.pkl
+├──<span class="w"> </span>cell_properties_signal_extraction.csv
+├──<span class="w"> </span>parameters.csv
+└──<span class="w"> </span>segmentation_signal_extraction_config.txt
+</code></pre></div>
+<hr>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Segmentation results are required for all downstream steps  </li>
+<li>Hybrid mode is recommended for best accuracy  </li>
+<li>Each run overwrites only the selected recording outputs  </li>
+</ul>
+<hr>
+<h2 id="demo">Demo</h2>
+<video controls style="width: 100%;">
+  <source src="assets/videos/demo_segmentation.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</source></video>
+
+<hr></div>
 
 
 
@@ -755,7 +1275,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../input/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Data Input &amp; Metadata">
+          <a href="../input/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 1. Data input &amp; metadata">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -765,20 +1285,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Data Input & Metadata
+                1. Data input & metadata
               </div>
             </div>
           </a>
         
         
           
-          <a href="../signalextraction/" class="md-footer__link md-footer__link--next" aria-label="Next: Signal Extraction">
+          <a href="../eventdetection/" class="md-footer__link md-footer__link--next" aria-label="Next: 3. Event detection">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Signal Extraction
+                3. Event detection
               </div>
             </div>
             <div class="md-footer__button md-icon">

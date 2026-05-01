@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://lisadvn.github.io/Lumin_custom/eventdetection/">
       
       
-        <link rel="prev" href="../signalextraction/">
+        <link rel="prev" href="../segmentation/">
       
       
-        <link rel="next" href="../features/">
+        <link rel="next" href="../spikedetection/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Event & Spike Detection - Calcium imaging analysis tool (based on LUMIN)</title>
+        <title>3. Event detection - Calcium imaging analysis tool (based on LUMIN)</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#event-spike-detection" class="md-skip">
+        <a href="#3-event-detection" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Event & Spike Detection
+              3. Event detection
             
           </span>
         </div>
@@ -260,36 +260,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
     
-  
-    Installation
-  
-
     
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
+    
     
       
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gettingstarted/" class="md-nav__link">
         
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -303,13 +294,22 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
   
 
-    
-      
-      
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -334,9 +334,99 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -349,7 +439,7 @@
   <span class="md-ellipsis">
     
   
-    Data Input & Metadata
+    1. Data input & metadata
   
 
     
@@ -361,9 +451,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -376,7 +467,7 @@
   <span class="md-ellipsis">
     
   
-    Segmentation & ROI Detection
+    2. Segmentation & signal extraction
   
 
     
@@ -388,36 +479,10 @@
     </li>
   
 
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../signalextraction/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Signal Extraction
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
+              
+            
+              
+                
   
   
     
@@ -439,7 +504,7 @@
   <span class="md-ellipsis">
     
   
-    Event & Spike Detection
+    3. Event detection
   
 
     
@@ -457,7 +522,7 @@
   <span class="md-ellipsis">
     
   
-    Event & Spike Detection
+    3. Event detection
   
 
     
@@ -483,10 +548,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#event-detection-peak-detection" class="md-nav__link">
+  <a href="#analysis-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Event detection (peak detection)
+        Analysis modes
       
     </span>
   </a>
@@ -494,13 +559,108 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#spike-deconvolution" class="md-nav__link">
+  <a href="#activity-types-compound-evoked-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spike deconvolution
+        Activity types (compound-evoked only)
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normalization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Normalization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sliding-window-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sliding window parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-detection-peak-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event detection (peak-based)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event detection (peak-based)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-optimisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter optimisation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameter optimisation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-settings-on-random-recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test settings on random recording
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-settings-on-same-recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test settings on same recording
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -516,10 +676,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
+  <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Limitations
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo
       
     </span>
   </a>
@@ -533,9 +704,38 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spikedetection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
-      
-      
+  
+    4. Spike detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
@@ -548,7 +748,7 @@
   <span class="md-ellipsis">
     
   
-    Feature Extraction
+    5. Feature Extraction
   
 
     
@@ -557,6 +757,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -642,10 +850,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#event-detection-peak-detection" class="md-nav__link">
+  <a href="#analysis-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Event detection (peak detection)
+        Analysis modes
       
     </span>
   </a>
@@ -653,13 +861,108 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#spike-deconvolution" class="md-nav__link">
+  <a href="#activity-types-compound-evoked-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spike deconvolution
+        Activity types (compound-evoked only)
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normalization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Normalization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sliding-window-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sliding window parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-detection-peak-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event detection (peak-based)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event detection (peak-based)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-optimisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter optimisation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameter optimisation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-settings-on-random-recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test settings on random recording
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-settings-on-same-recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test settings on same recording
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -675,10 +978,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
+  <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Limitations
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo
       
     </span>
   </a>
@@ -702,48 +1016,161 @@
 
 
 
-<h1 id="event-spike-detection">Event &amp; Spike Detection</h1>
-<p>Activity of the cells can be detected using two methods:</p>
+<div><h1 id="3-event-detection">3. Event detection</h1>
+<p>This step detects calcium transients directly from fluorescence traces using ΔF/F normalization and peak-based event detection. It produces single-cell activity metrics for downstream analysis.</p>
+<hr>
+<p>Open the <strong>Trace quantification</strong> widget and select the project directory generated after segmentation and signal extraction.</p>
+<hr>
+<h2 id="analysis-modes">Analysis modes</h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Compound-evoked activity</strong></td>
+<td>Recordings include a defined stimulation event (e.g. drug addition)</td>
+</tr>
+<tr>
+<td><strong>Spontaneous activity</strong></td>
+<td>No external stimulus; analysing baseline calcium dynamics</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="activity-types-compound-evoked-only">Activity types (compound-evoked only)</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Baseline shift</strong></td>
+<td>Sustained fluorescence change after stimulation (AUC-based)</td>
+</tr>
+<tr>
+<td><strong>Spontaneous</strong></td>
+<td>Discrete calcium spikes within the recording window</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="normalization">Normalization</h2>
+<p>Fluorescence traces are normalized before event detection:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sliding window</strong></td>
+<td>Rolling percentile-based baseline (general use)</td>
+</tr>
+<tr>
+<td><strong>Pre-stimulus window</strong></td>
+<td>Baseline estimated from pre-stimulation frames</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="sliding-window-parameters">Sliding window parameters</h3>
 <ul>
-<li>Peak detection on ΔF/F traces</li>
-<li>Based on deconvolved signals (OASIS)</li>
+<li><strong>Window size</strong> — number of frames used for baseline estimation  </li>
+<li><strong>Percentile threshold</strong> — defines baseline level (higher = stricter baseline)  </li>
 </ul>
-<h2 id="event-detection-peak-detection">Event detection (peak detection)</h2>
-<p>With peak detection, different thresholding parameters can be used to detect events in the fluorescence trace. </p>
-<p>To facilitate parameter tuning, an interactive testing workflow is provided:</p>
+<hr>
+<h2 id="event-detection-peak-based">Event detection (peak-based)</h2>
+<p>Events are detected directly from ΔF/F traces using threshold-based peak detection.</p>
+<h3 id="key-parameters">Key parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Smoothing</td>
+<td>Apply smoothing before peak detection</td>
+</tr>
+<tr>
+<td>Prominence</td>
+<td>Minimum peak prominence for event detection</td>
+</tr>
+<tr>
+<td>Amplitude/width ratio</td>
+<td>Filters broad, low-amplitude events</td>
+</tr>
+<tr>
+<td>Imaging interval (s)</td>
+<td>Converts frames to time</td>
+</tr>
+<tr>
+<td>Analysis window</td>
+<td>Frame range used for analysis</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="parameter-optimisation">Parameter optimisation</h2>
+<p>Use the interactive testing tools to tune detection settings:</p>
+<h3 id="test-settings-on-random-recording">Test settings on random recording</h3>
 <ul>
-<li>Test settings on random image
-    This option samples a random recording from the input dataset. The user can:<ul>
-<li>Visualize baseline estimation and detected events using line plots</li>
-<li>Play the calcium imaging video with detected events overlaid</li>
-<li>Adjust peak detection parameters in real time</li>
+<li>Samples a random dataset entry  </li>
+<li>Displays:</li>
+<li>Baseline estimation  </li>
+<li>Detected events  </li>
+<li>Calcium trace with event overlays  </li>
+<li>Allows real-time parameter adjustment  </li>
 </ul>
-</li>
-</ul>
-<p>This exploratory step allows the user to optimize detection settings without saving results.</p>
+<h3 id="test-settings-on-same-recording">Test settings on same recording</h3>
 <ul>
-<li>
-<p>Run</p>
-<p>Executes the full single-cell analysis pipeline using the selected parameters.
-The results are saved in a Quantification folder within the specified project directory and can be accessed via the file system.</p>
-</li>
+<li>Re-runs analysis on the same sample for iterative tuning  </li>
 </ul>
-<h2 id="spike-deconvolution">Spike deconvolution</h2>
-<p>To improve temporal resolution, fluorescence traces can be deconvolved using the OASIS algorithm. This process estimates underlying spike trains from the slower calcium signals.</p>
-<p>Deconvolution is particularly useful for:
-* Resolving closely spaced events
-* Approximating neuronal firing activity
-* Enabling downstream network analysis</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This step does not save results and is intended for parameter tuning only.</p>
+</div>
+<hr>
 <h2 id="output">Output</h2>
-<p>The analysis generates the following outputs:</p>
+<p>After running event detection, the following outputs are generated:
+</p><div class="highlight"><pre><span></span><code>Quantification/
+├──<span class="w"> </span>Tables/
+│<span class="w"> </span>├──<span class="w"> </span>cell_properties_event_detection.pkl
+│<span class="w"> </span>├──<span class="w"> </span>cell_properties_event_detection.csv
+│<span class="w"> </span>└──<span class="w"> </span>event_detection_parameters.txt
+├──<span class="w"> </span>Plots/
+│<span class="w"> </span>├──<span class="w"> </span>traces_with_events.pdf
+│<span class="w"> </span>├──<span class="w"> </span>event_frequency_distribution.pdf
+│<span class="w"> </span>├──<span class="w"> </span>amplitude_distribution.pdf
+│<span class="w"> </span>└──<span class="w"> </span>condition_comparisons.pdf
+</code></pre></div>
+<hr>
+<h2 id="notes">Notes</h2>
 <ul>
-<li>Event times (per cell)</li>
-<li>Detected spike activity (deconvolved traces)</li>
-<li>Optional visualizations of activity traces and detected events</li>
+<li>Event detection is <strong>trace-based and independent of network analysis</strong></li>
+<li>Results depend strongly on parameter selection (use test mode before running full analysis)</li>
+<li>Recommended to validate on multiple recordings per condition</li>
+<li>ΔF/F normalization is required for all event detection workflows</li>
 </ul>
-<h2 id="limitations">Limitations</h2>
-<p>Calcium imaging signals are indirect proxies of neuronal firing. Event detection depends on parameter selection
-Deconvolution provides an estimate of spike activity rather than exact spike timing</p>
+<hr>
+<h2 id="demo">Demo</h2>
+<video controls style="width: 100%;">
+  <source src="../videos/demo_eventdetection.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</source></video>
+
+<hr></div>
 
 
 
@@ -773,7 +1200,7 @@ Deconvolution provides an estimate of spike activity rather than exact spike tim
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../signalextraction/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Signal Extraction">
+          <a href="../segmentation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 2. Segmentation &amp; signal extraction">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -783,20 +1210,20 @@ Deconvolution provides an estimate of spike activity rather than exact spike tim
                 Previous
               </span>
               <div class="md-ellipsis">
-                Signal Extraction
+                2. Segmentation & signal extraction
               </div>
             </div>
           </a>
         
         
           
-          <a href="../features/" class="md-footer__link md-footer__link--next" aria-label="Next: Feature Extraction">
+          <a href="../spikedetection/" class="md-footer__link md-footer__link--next" aria-label="Next: 4. Spike detection">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Feature Extraction
+                4. Spike detection
               </div>
             </div>
             <div class="md-footer__button md-icon">

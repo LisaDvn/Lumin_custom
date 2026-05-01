@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://lisadvn.github.io/Lumin_custom/input/">
       
       
-        <link rel="prev" href="../workflow/">
+        <link rel="prev" href="../installation/">
       
       
         <link rel="next" href="../segmentation/">
@@ -25,7 +25,7 @@
     
     
       
-        <title>Data Input & Metadata - Calcium imaging analysis tool (based on LUMIN)</title>
+        <title>1. Data input & metadata - Calcium imaging analysis tool (based on LUMIN)</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#data-input-metadata" class="md-skip">
+        <a href="#1-data-input-metadata" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Data Input & Metadata
+              1. Data input & metadata
             
           </span>
         </div>
@@ -260,36 +260,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
     
-  
-    Installation
-  
-
     
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
+    
     
       
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gettingstarted/" class="md-nav__link">
         
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -303,13 +294,22 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
   
 
-    
-      
-      
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -334,9 +334,99 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
     
@@ -358,7 +448,7 @@
   <span class="md-ellipsis">
     
   
-    Data Input & Metadata
+    1. Data input & metadata
   
 
     
@@ -376,7 +466,7 @@
   <span class="md-ellipsis">
     
   
-    Data Input & Metadata
+    1. Data input & metadata
   
 
     
@@ -402,10 +492,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#supported-formats" class="md-nav__link">
+  <a href="#supported-input-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supported formats
+        Supported input formats
       
     </span>
   </a>
@@ -413,10 +503,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#required-files" class="md-nav__link">
+  <a href="#required-inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Required files
+        Required inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-folder-nd2tiff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input folder (ND2/TIFF)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plate-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plate ID
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cell-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell line
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#condition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Condition
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional metadata
       
     </span>
   </a>
@@ -424,10 +586,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-files" class="md-nav__link">
+  <a href="#what-happens-during-preprocessing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional files
+        What happens during preprocessing?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What happens during preprocessing?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_inputcsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _input.csv
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo
       
     </span>
   </a>
@@ -441,9 +642,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -456,7 +658,7 @@
   <span class="md-ellipsis">
     
   
-    Segmentation & ROI Detection
+    2. Segmentation & signal extraction
   
 
     
@@ -468,36 +670,10 @@
     </li>
   
 
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../signalextraction/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Signal Extraction
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -510,7 +686,7 @@
   <span class="md-ellipsis">
     
   
-    Event & Spike Detection
+    3. Event detection
   
 
     
@@ -522,9 +698,38 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spikedetection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
-      
-      
+  
+    4. Spike detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
@@ -537,7 +742,7 @@
   <span class="md-ellipsis">
     
   
-    Feature Extraction
+    5. Feature Extraction
   
 
     
@@ -546,6 +751,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -631,10 +844,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#supported-formats" class="md-nav__link">
+  <a href="#supported-input-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supported formats
+        Supported input formats
       
     </span>
   </a>
@@ -642,10 +855,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#required-files" class="md-nav__link">
+  <a href="#required-inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Required files
+        Required inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-folder-nd2tiff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input folder (ND2/TIFF)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plate-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plate ID
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cell-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell line
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#condition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Condition
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional metadata
       
     </span>
   </a>
@@ -653,10 +938,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-files" class="md-nav__link">
+  <a href="#what-happens-during-preprocessing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional files
+        What happens during preprocessing?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What happens during preprocessing?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_inputcsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _input.csv
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demo
       
     </span>
   </a>
@@ -680,33 +1004,77 @@
 
 
 
-<h1 id="data-input-metadata">Data input &amp; metadata</h1>
-<h2 id="supported-formats">Supported formats</h2>
+<div><h1 id="1-data-input-metadata">1. Data input &amp; metadata</h1>
+<p>This step prepares your raw imaging data and generates the required project structure for downstream analysis.</p>
+<hr>
+<h2 id="supported-input-formats">Supported input formats</h2>
+<p>LUMIN accepts the following raw file formats:</p>
 <ul>
-<li>TIFF </li>
-<li>Nikon nd2 files (optional with preprocessing)</li>
-<li>AVI  files (will be optional with preprocessing)</li>
+<li><code>.tiff</code> / <code>.tif</code></li>
+<li><code>.nd2</code> (Nikon)</li>
 </ul>
-<h2 id="required-files">Required files</h2>
-<p>Input file (_input_data.csv) including:
-* plate_id
-* filename
-* filepath
-* biological_replicate
-* stimulation</p>
-<p>an example of this format is as follows:
-plate_id,filename,filepath,biological_replicate,stimulation
-1,_CTRL_WIC5_01.tif,C:\Users\name\data\STRIATAL_CTRL_DIV5_01.tif,Striatal,Control
-2,_CTRL_WIC5_01.tif,C:\Users\name\data\STRIATAL_HD50_DIV5_02.tif,Striatal,HD50</p>
-<h2 id="optional-files">Optional files</h2>
-<p>Metadata (.csv) including:
-* nuclear_area_scaler
-* cell_area_scaler
-* intensity_scaler
-* fast_mode
-* tau 
-* frame rate (ms)</p>
-<p>These parameters are used for correct signal interpretation and feature extraction.</p>
+<p>All files with the same metadata should be placed inside a single input folder.</p>
+<hr>
+<h2 id="required-inputs">Required inputs</h2>
+<p>In the <strong>Preprocessing widget</strong>, you must provide:</p>
+<h3 id="input-folder-nd2tiff">Input folder (ND2/TIFF)</h3>
+<p>Select the folder containing your raw imaging files.</p>
+<h3 id="project-directory">Project directory</h3>
+<p>Choose or create a directory where all pipeline output will be stored.</p>
+<h3 id="plate-id">Plate ID</h3>
+<p>Identifier for the imaging plate (e.g. <code>Plate_01</code>).</p>
+<h3 id="cell-line">Cell line</h3>
+<p>Biological replicate or cell type (e.g. <code>Striatal</code>, <code>iPSC-derived neurons</code>).</p>
+<h3 id="condition">Condition</h3>
+<p>Experimental condition (e.g. <code>Control</code>, <code>Drug_A</code>, <code>HD50</code>).</p>
+<hr>
+<h2 id="optional-metadata">Optional metadata</h2>
+<p>You can optionally include additional metadata for better data tracking and FAIR compliance:</p>
+<ul>
+<li><strong>Researcher ID</strong> — name or initials of the experimenter  </li>
+<li><strong>Research institute</strong> — lab or institution  </li>
+<li><strong>Experiment ID</strong> — unique experiment identifier  </li>
+<li><strong>Replicate number</strong> — replicate index (e.g. 1, 2, 3)  </li>
+<li><strong>Microscope</strong> — imaging system used  </li>
+<li><strong>Days in vitro (DIV)</strong> — cell maturation stage  </li>
+<li><strong>Calcium indicator</strong> — e.g. GCaMP6, Fluo-4  </li>
+<li><strong>Cell density</strong> — plating density or estimate  </li>
+</ul>
+<p>These fields are not required for analysis but are stored in the metadata output.</p>
+<hr>
+<h2 id="what-happens-during-preprocessing">What happens during preprocessing?</h2>
+<p>After clicking <strong>Run</strong>, LUMIN will:</p>
+<ol>
+<li>Scan the input folder for ND2/TIFF files  </li>
+<li>Extract metadata from file names and user input  </li>
+<li>Convert files (if needed) into a standardized format  </li>
+<li>Generate a structured project directory  </li>
+<li>Create an <code>_input.csv</code> file used in downstream steps  </li>
+</ol>
+<hr>
+<h3 id="_inputcsv"><code>_input.csv</code></h3>
+<p>This file contains all required information for segmentation and analysis:</p>
+<ul>
+<li><code>plate_id</code></li>
+<li><code>filename</code></li>
+<li><code>filepath</code></li>
+<li><code>cell_line</code></li>
+<li><code>condition</code></li>
+</ul>
+<hr>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Each run appends metadata consistently across all files in the selected folder  </li>
+<li>Ensure that all files in the folder belong to the same experimental context  </li>
+<li>If working with multiple conditions or plates, run preprocessing separately per dataset  </li>
+</ul>
+<hr>
+<h2 id="demo">Demo</h2>
+<video controls style="width: 100%;">
+  <source src="assets/videos/demo_preprocessing.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</source></video>
+<p>```</p></div>
 
 
 
@@ -736,7 +1104,7 @@ plate_id,filename,filepath,biological_replicate,stimulation
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../workflow/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Workflow Overview">
+          <a href="../installation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Installation">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -746,20 +1114,20 @@ plate_id,filename,filepath,biological_replicate,stimulation
                 Previous
               </span>
               <div class="md-ellipsis">
-                Workflow Overview
+                Installation
               </div>
             </div>
           </a>
         
         
           
-          <a href="../segmentation/" class="md-footer__link md-footer__link--next" aria-label="Next: Segmentation &amp; ROI Detection">
+          <a href="../segmentation/" class="md-footer__link md-footer__link--next" aria-label="Next: 2. Segmentation &amp; signal extraction">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Segmentation & ROI Detection
+                2. Segmentation & signal extraction
               </div>
             </div>
             <div class="md-footer__button md-icon">

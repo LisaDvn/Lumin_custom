@@ -260,36 +260,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
     
-  
-    Installation
-  
-
     
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
+    
     
       
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gettingstarted/" class="md-nav__link">
         
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -303,13 +294,22 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
   
 
-    
-      
-      
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -334,9 +334,99 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -349,7 +439,7 @@
   <span class="md-ellipsis">
     
   
-    Data Input & Metadata
+    1. Data input & metadata
   
 
     
@@ -361,9 +451,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -376,7 +467,7 @@
   <span class="md-ellipsis">
     
   
-    Segmentation & ROI Detection
+    2. Segmentation & signal extraction
   
 
     
@@ -388,36 +479,10 @@
     </li>
   
 
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../signalextraction/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Signal Extraction
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -430,7 +495,7 @@
   <span class="md-ellipsis">
     
   
-    Event & Spike Detection
+    3. Event detection
   
 
     
@@ -442,9 +507,38 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spikedetection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
-      
-      
+  
+    4. Spike detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
@@ -457,7 +551,7 @@
   <span class="md-ellipsis">
     
   
-    Feature Extraction
+    5. Feature Extraction
   
 
     
@@ -466,6 +560,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -680,7 +782,7 @@
 
 
 
-<h1 id="gui-usage">GUI Usage</h1>
+<div><h1 id="gui-usage">GUI Usage</h1>
 <h2 id="design-goals">Design goals</h2>
 <p>The graphical user interface (GUI) was selected and modified with the following objectives:</p>
 <ul>
@@ -700,7 +802,7 @@
 <li>Focus on analysis of in vitro calcium imaging analysis</li>
 </ul>
 <p>This makes Lumin particularly suitable for rapid analysis and interactive exploration of calcium imaging datasets.</p>
-<hr />
+<hr>
 <h2 id="features">Features</h2>
 <p>The GUI provides the following functionality:</p>
 <ul>
@@ -714,7 +816,7 @@ Detected events and spikes
 ROI overlays on imaging data</li>
 <li>Interactive inspection
 Ability to explore individual neurons and validate analysis results</li>
-</ul>
+</ul></div>
 
 
 
@@ -744,7 +846,7 @@ Ability to explore individual neurons and validate analysis results</li>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../features/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Feature Extraction">
+          <a href="../features/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 5. Feature Extraction">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -754,7 +856,7 @@ Ability to explore individual neurons and validate analysis results</li>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Feature Extraction
+                5. Feature Extraction
               </div>
             </div>
           </a>

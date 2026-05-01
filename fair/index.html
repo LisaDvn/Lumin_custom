@@ -258,36 +258,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
     
-  
-    Installation
-  
-
     
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
+    
     
       
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gettingstarted/" class="md-nav__link">
         
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -301,13 +292,22 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
   
 
-    
-      
-      
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -332,9 +332,99 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -347,7 +437,7 @@
   <span class="md-ellipsis">
     
   
-    Data Input & Metadata
+    1. Data input & metadata
   
 
     
@@ -359,9 +449,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -374,7 +465,7 @@
   <span class="md-ellipsis">
     
   
-    Segmentation & ROI Detection
+    2. Segmentation & signal extraction
   
 
     
@@ -386,36 +477,10 @@
     </li>
   
 
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../signalextraction/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Signal Extraction
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -428,7 +493,7 @@
   <span class="md-ellipsis">
     
   
-    Event & Spike Detection
+    3. Event detection
   
 
     
@@ -440,9 +505,38 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spikedetection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
-      
-      
+  
+    4. Spike detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
@@ -455,7 +549,7 @@
   <span class="md-ellipsis">
     
   
-    Feature Extraction
+    5. Feature Extraction
   
 
     
@@ -464,6 +558,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -790,7 +892,7 @@
 
 
 
-<h1 id="fair-principles">FAIR Principles</h1>
+<div><h1 id="fair-principles">FAIR Principles</h1>
 <p>To ensure that the developed calcium imaging analysis tool is reusable and aligned with best practices in scientific data management, the pipeline was adapted to meet the FAIR principles: <strong>Findable, Accessible, Interoperable, and Reusable</strong>.</p>
 <h2 id="1-findable">1. Findable</h2>
 <p>The analysis workflow, codebase, and documentation are structured <em>and version-controlled</em> to ensure that they can be easily located and referenced.</p>
@@ -807,7 +909,7 @@
 <li>Standardized file naming conventions are used for both input and output data.</li>
 <li>The modular structure of the LUMIN pipeline, ensures that each processing step (segmentation, event detection, analysis) is clearly defined and can be independently identified and referenced.</li>
 </ul>
-<hr />
+<hr>
 <h2 id="2-accessible">2. Accessible</h2>
 <p>The tool and its outputs are designed to be easily accessible to users with varying technical backgrounds.</p>
 <ul>
@@ -817,7 +919,7 @@
 <li>The tool is developed in Python and distributed as open-source software, avoiding licensing barriers (e.g., MATLAB).</li>
 <li>Napari offers an interactive, user-friendly interface for image visualization and manual refinement of segmentation results.</li>
 </ul>
-<hr />
+<hr>
 <h2 id="3-interoperable">3. Interoperable</h2>
 <p>To ensure compatibility with other tools and workflows, the pipeline uses open and widely supported file formats.</p>
 <h3 id="input-formats">Input formats</h3>
@@ -860,7 +962,7 @@
 </ul>
 <p>The integration of Bio-Formats ensures that proprietary microscopy formats can be converted into open, standardized formats without loss of essential metadata. 
 Additionally, the Napari environment supports visualization of multidimensional imaging data across formats and the support for plugins allows customization and extending.</p>
-<hr />
+<hr>
 <h2 id="4-reusable">4. Reusable</h2>
 <p>The pipeline is designed to support reproducibility and reuse across experiments and research groups.</p>
 <ul>
@@ -880,7 +982,7 @@ Additionally, the Napari environment supports visualization of multidimensional 
 <ul>
 <li>The current validation is based on a limited number of datasets (proof-of-concept), which may affect generalizability.</li>
 <li>Future work should include validation on larger and more diverse datasets to further improve reusability.</li>
-</ul>
+</ul></div>
 
 
 
