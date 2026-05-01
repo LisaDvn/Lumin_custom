@@ -1,46 +1,116 @@
-# Event & Spike Detection
+# 3. Event detection
 
-Activity of the cells can be detected using two methods:
+This step detects calcium transients directly from fluorescence traces using ΔF/F normalization and peak-based event detection. It produces single-cell activity metrics for downstream analysis.
 
-* Peak detection on ΔF/F traces
-* Based on deconvolved signals (OASIS)
+---
 
-## Event detection (peak detection)
-With peak detection, different thresholding parameters can be used to detect events in the fluorescence trace. 
+Open the **Trace quantification** widget and select the project directory generated after segmentation and signal extraction.
 
-To facilitate parameter tuning, an interactive testing workflow is provided:
+---
 
-* Test settings on random image
-    This option samples a random recording from the input dataset. The user can:
-    * Visualize baseline estimation and detected events using line plots
-    * Play the calcium imaging video with detected events overlaid
-    * Adjust peak detection parameters in real time
+## Analysis modes
 
-This exploratory step allows the user to optimize detection settings without saving results.
+| Mode | Use when |
+|---|---|
+| **Compound-evoked activity** | Recordings include a defined stimulation event (e.g. drug addition) |
+| **Spontaneous activity** | No external stimulus; analysing baseline calcium dynamics |
 
-* Run
+---
 
-    Executes the full single-cell analysis pipeline using the selected parameters.
-    The results are saved in a Quantification folder within the specified project directory and can be accessed via the file system.
+## Activity types (compound-evoked only)
 
-## Spike deconvolution
-To improve temporal resolution, fluorescence traces can be deconvolved using the OASIS algorithm. This process estimates underlying spike trains from the slower calcium signals.
+| Type | Description |
+|---|---|
+| **Baseline shift** | Sustained fluorescence change after stimulation (AUC-based) |
+| **Spontaneous** | Discrete calcium spikes within the recording window |
 
-Deconvolution is particularly useful for:
-* Resolving closely spaced events
-* Approximating neuronal firing activity
-* Enabling downstream network analysis
+---
 
+## Normalization
+
+Fluorescence traces are normalized before event detection:
+
+| Method | Description |
+|---|---|
+| **Sliding window** | Rolling percentile-based baseline (general use) |
+| **Pre-stimulus window** | Baseline estimated from pre-stimulation frames |
+
+---
+
+### Sliding window parameters
+- **Window size** — number of frames used for baseline estimation  
+- **Percentile threshold** — defines baseline level (higher = stricter baseline)  
+
+---
+
+## Event detection (peak-based)
+
+Events are detected directly from ΔF/F traces using threshold-based peak detection.
+
+### Key parameters
+
+| Parameter | Description |
+|---|---|
+| Smoothing | Apply smoothing before peak detection |
+| Prominence | Minimum peak prominence for event detection |
+| Amplitude/width ratio | Filters broad, low-amplitude events |
+| Imaging interval (s) | Converts frames to time |
+| Analysis window | Frame range used for analysis |
+
+---
+
+## Parameter optimisation
+
+Use the interactive testing tools to tune detection settings:
+
+### Test settings on random recording
+- Samples a random dataset entry  
+- Displays:
+  - Baseline estimation  
+  - Detected events  
+  - Calcium trace with event overlays  
+- Allows real-time parameter adjustment  
+
+### Test settings on same recording
+- Re-runs analysis on the same sample for iterative tuning  
+
+!!! note
+    This step does not save results and is intended for parameter tuning only.
+
+---
 
 ## Output
 
-The analysis generates the following outputs:
+After running event detection, the following outputs are generated:
+```bash
+Quantification/
+├── Tables/
+│ ├── cell_properties_event_detection.pkl
+│ ├── cell_properties_event_detection.csv
+│ └── event_detection_parameters.txt
+├── Plots/
+│ ├── traces_with_events.pdf
+│ ├── event_frequency_distribution.pdf
+│ ├── amplitude_distribution.pdf
+│ └── condition_comparisons.pdf
+```
 
-* Event times (per cell)
-* Detected spike activity (deconvolved traces)
-* Optional visualizations of activity traces and detected events
+---
 
-## Limitations
+## Notes
 
-Calcium imaging signals are indirect proxies of neuronal firing. Event detection depends on parameter selection
-Deconvolution provides an estimate of spike activity rather than exact spike timing
+- Event detection is **trace-based and independent of network analysis**
+- Results depend strongly on parameter selection (use test mode before running full analysis)
+- Recommended to validate on multiple recordings per condition
+- ΔF/F normalization is required for all event detection workflows
+
+---
+
+## Demo
+
+<video controls style="width: 100%;">
+  <source src="../videos/demo_eventdetection.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+---

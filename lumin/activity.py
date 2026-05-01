@@ -74,15 +74,15 @@ def baseline_change(cell_properties_df: pd.DataFrame = None,  control_condition:
 
     std_dict, mean_dict, response_l = {},{}, []
 
-    for replicate in cell_properties_df.biological_replicate.unique():
-        mean_dict[replicate] = cell_properties_df[(cell_properties_df.biological_replicate == replicate) & (cell_properties_df.stimulation == control_condition)].AUC.mean()
-        std_dict[replicate] = cell_properties_df[(cell_properties_df.biological_replicate == replicate) & (cell_properties_df.stimulation == control_condition)].AUC.std()
+    for replicate in cell_properties_df.cell_line.unique():
+        mean_dict[replicate] = cell_properties_df[(cell_properties_df.cell_line == replicate) & (cell_properties_df.stimulation == control_condition)].AUC.mean()
+        std_dict[replicate] = cell_properties_df[(cell_properties_df.cell_line == replicate) & (cell_properties_df.stimulation == control_condition)].AUC.std()
 
     for index, row in cell_properties_df.iterrows():
-        if mean_dict[row.biological_replicate] + std_threshold * std_dict[row.biological_replicate] < row.AUC:
+        if mean_dict[row.cell_line] + std_threshold * std_dict[row.cell_line] < row.AUC:
             response_l.append('above')
 
-        elif mean_dict[row.biological_replicate] - std_threshold * std_dict[row.biological_replicate] > row.AUC:
+        elif mean_dict[row.cell_line] - std_threshold * std_dict[row.cell_line] > row.AUC:
             response_l.append('below')
 
         else: response_l.append('no response')
@@ -102,17 +102,17 @@ def baseline_change(cell_properties_df: pd.DataFrame = None,  control_condition:
             threshold_above = mean_auc_well + std_threshold * std_auc_well
             threshold_below = mean_auc_well - std_threshold * std_auc_well
 
-            sample = df['plate_id_biological_replicate'] == exp_replicate
+            sample = df['plate_id_cell_line'] == exp_replicate
 
             df.loc[sample, 'response'] = np.where(
                 df.loc[sample, 'AUC'] > threshold_above, "above",
                 np.where(df.loc[sample, 'AUC'] < threshold_below, "below", "no response")
             )
 
-        for exp_replicate in cell_properties_df['plate_id_biological_replicate'].unique():
+        for exp_replicate in cell_properties_df['plate_id_cell_line'].unique():
 
-            mean_auc_control = cell_properties_df[(cell_properties_df.plate_id_biological_replicate == exp_replicate) & (cell_properties_df.stimulation == control_condition)].AUC.mean()
-            std_auc_control = cell_properties_df[(cell_properties_df.plate_id_biological_replicate == exp_replicate) & (cell_properties_df.stimulation == control_condition)].AUC.std()
+            mean_auc_control = cell_properties_df[(cell_properties_df.plate_id_cell_line == exp_replicate) & (cell_properties_df.stimulation == control_condition)].AUC.mean()
+            std_auc_control = cell_properties_df[(cell_properties_df.plate_id_cell_line == exp_replicate) & (cell_properties_df.stimulation == control_condition)].AUC.std()
             
             classify_response(cell_properties_df, mean_auc_control, std_auc_control, exp_replicate)
 
@@ -135,16 +135,16 @@ def baseline_change(cell_properties_df: pd.DataFrame = None,  control_condition:
         threshold_above = mean_auc_well + std_threshold * std_auc_well
         threshold_below = mean_auc_well - std_threshold * std_auc_well
 
-        sample = df['plate_id_biological_replicate'] == exp_replicate
+        sample = df['plate_id_cell_line'] == exp_replicate
 
         df.loc[sample, 'response'] = np.where(
             df.loc[sample, 'AUC'] > threshold_above, "above",
             np.where(df.loc[sample, 'AUC'] < threshold_below, "below", "no response")
         )
 
-    for exp_replicate in response_df_control['plate_id_biological_replicate'].unique():
-        mean_auc_well = response_df_control.loc[response_df_control.plate_id_biological_replicate == exp_replicate, 'AUC'].mean()
-        std_auc_well = response_df_control.loc[response_df_control.plate_id_biological_replicate == exp_replicate, 'AUC'].std()
+    for exp_replicate in response_df_control['plate_id_cell_line'].unique():
+        mean_auc_well = response_df_control.loc[response_df_control.plate_id_cell_line == exp_replicate, 'AUC'].mean()
+        std_auc_well = response_df_control.loc[response_df_control.plate_id_cell_line == exp_replicate, 'AUC'].std()
 
         classify_response(response_df_control, mean_auc_well, std_auc_well, exp_replicate)
         classify_response(response_df_treatment, mean_auc_well, std_auc_well, exp_replicate) 
@@ -162,7 +162,7 @@ def baseline_change(cell_properties_df: pd.DataFrame = None,  control_condition:
 
 
 
-def peak_calling(filename,  stimulation,biological_replicate, image_id, label_id, dff_traces, param_prominence_threshold, param_amplitude_width_ratio, output_folder):
+def peak_calling(filename,  stimulation,cell_line, image_id, label_id, dff_traces, param_prominence_threshold, param_amplitude_width_ratio, output_folder):
 
     filtering = True
     peak_properties_dict = {}

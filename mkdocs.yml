@@ -32,14 +32,16 @@ theme:
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Getting Started: gettingstarted.md
-  - Workflow Overview: workflow.md
-  - Data Input & Metadata: input.md
-  - Segmentation & ROI Detection: segmentation.md
-  - Signal Extraction: signalextraction.md
-  - Event & Spike Detection: eventdetection.md
-  - Feature Extraction: features.md
+  - Getting Started: 
+    - Workflow Overview: workflow.md
+    - Installation: installation.md
+
+  - Pipeline Modules:
+    - 1. Data input & metadata: input.md
+    - 2. Segmentation & signal extraction: segmentation.md
+    - 3. Event detection: eventdetection.md
+    - 4. Spike detection: spikedetection.md
+    - 5. Feature Extraction: features.md
   - GUI Usage: gui.md
   - FAIR Principles: fair.md
 
@@ -55,6 +57,7 @@ extra:
 
 plugins:
   - search
+  - mkdocs-video
 
 extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js

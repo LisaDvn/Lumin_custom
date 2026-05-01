@@ -23,7 +23,11 @@ def create_shortcut():
             icon=icon_path,
         )
 
-        print("[LUMIN] Desktop shortcut created ✔")
-
+        print("[LUMIN] Desktop shortcut created successfully.")
+    except ImportError:
+        print(
+            "[LUMIN] pyshortcuts is not installed.\n"
+            "Run: pip install pyshortcuts"
+        )
     except Exception as e:
         print(f"[LUMIN] Shortcut creation failed: {e}")

@@ -1,33 +1,34 @@
 # **Calcium imaging analysis tool**
 
-## Overview
+Welcome to the NAPARI-based calcium imaging analysis pipeline for in vitro (hiPSC) recordings.
 
-This tool provides an automated pipeline for the analysis of calcium imaging data from iPSC-derived neurons. It integrates segmentation, signal extraction, event detection and feature extraction into a single workflow.
+This tool provides an end-to-end workflow for:
+
+- Cell segmentation
+- Signal extraction
+- Event and spike detection
+- Single-cell analysis
+- Network analysis
+
 
 ## Why this tool?
 
-Current workflows rely on manual ROI selection and spreadsheet-based analysis, which are time-consuming and not reproducible. This tool standardizes the analysis and reduces user intervention.
+Current workflows rely on fragmented pipelines across tools such as FIJI, MATLAB, and spreadsheets, often requiring manual ROI selection and extensive user intervention. These approaches are time-consuming, error-prone, and difficult to reproduce or scale across experiments. 
 
-## Key features
-
-* Automated cell segmentation (Cellpose)
-* ΔF/F signal extraction
-* Event and spike detection (Peak detection + OASIS deconvolution)
-* Single-cell feature extraction
-* Network-level analysis (coming)
-* Excel and PDF outputs
+This tool addresses these limitations by providing an integrated, model-based workflow that standardizes segmentation, signal extraction, and downstream analysis. Each analysis step produces structured outputs, allowing users to inspect intermediate results and flexibly run or repeat specific stages of the pipeline. The result is a more automated, scalable, and reproducible approach that supports both single-cell and network-level analysis with minimal manual effort.
 
 ## Workflow
 
-Input → Segmentation → Signal extraction → Events → Features → Output
-
+```text
+Input → Segmentation + signal extraction → Activity detection → Features
+```
 ## Example output
 
 * ROI masks
 * Calcium traces
 * Event detection plots
-* Feature tables (.xlsx)
+* Feature tables
 
 ## Getting started
 
-See the [Installation](installation.md) and [Getting started](gettingstarted.md) pages.
+See the [Installation](installation.md) page.

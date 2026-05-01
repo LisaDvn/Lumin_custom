@@ -1,46 +1,68 @@
-# Installation
+# Installation & getting Started
 
-## Requirements
+This page explains how to install LUMIN and run your first analysis.
 
-- Python 3.10+
+---
+
+## 1. Requirements
+
+- Python 3.10+ (via Anaconda)
 - pip
+---
 
-## Install
+## 2. Installation
 
-Open **Anaconda Prompt** and follow the steps below.
-
-**1. Clone the repository**
+Open **Anaconda Prompt** and run:
 
 ```bash
 git clone https://github.com/LisaDvn/Lumin_custom.git
-```
-
-**2. Navigate to the cloned folder**
-
-```bash
 cd Lumin_custom
-```
-
-**3. Create a conda environment**
-
-```bash
 conda create -n lumin_env python=3.10 cudatoolkit=11.2 cudnn=8.1.0 -c conda-forge -y
-```
-
-**4. Activate the conda environment**
-
-```bash
 conda activate lumin_env
-```
-
-**5. Install the package and all dependencies**
-
-```bash
 pip install -e .
 ```
 
-## Run the NAPARI, LUMIN is now a plugin
+---
+
+## 3. Launch the application
 
 ```bash
-NAPARI
+napari
 ```
+
+LUMIN is available as a Napari plugin.
+
+---
+
+## 4. First analysis workflow
+
+Once installed, follow the full pipeline:
+
+### Step 1 — Input
+Prepare your recordings and metadata.
+
+→ [Go to Input module](input.md)
+
+---
+
+### Step 2 — Segmentation & signal extraction
+Detect cells and extract fluorescence traces.
+
+→ [Go to Segmentation module](segmentation.md)
+
+---
+
+### Step 3 — Event detection & features
+Detect calcium events and extract single-cell metrics.
+
+→ See: [Go to Event detection module](eventdetection.md)
+
+---
+
+### Step 4 — Network analysis (optional)
+Infer spike trains and compute network metrics.
+
+→ See: [Go to Spike detection module](spikedetection.md)
+
+---
+

@@ -47,9 +47,9 @@ def parse_input_output(input_file: str = None, metadata_file: str = None, projec
             os.makedirs(project_dir, exist_ok=True)
 
             if co_stain == True:
-                annotated_image_df = pd.DataFrame(columns=['image_id','filename','biological_replicate', 'stimulation','plate_id', 'marker_name','max_label','image_stack','mask'])
+                annotated_image_df = pd.DataFrame(columns=['image_id','filename','cell_line', 'stimulation','plate_id', 'marker_name','max_label','image_stack','mask'])
             else: 
-                annotated_image_df = pd.DataFrame(columns=['image_id','filename','biological_replicate', 'stimulation','plate_id', 'max_label','image_stack','mask'])
+                annotated_image_df = pd.DataFrame(columns=['image_id','filename','cell_line', 'stimulation','plate_id', 'max_label','image_stack','mask'])
 
         # Check if output csv file in output folder. If yes, read the images already annotated
         else:
@@ -236,11 +236,11 @@ def percentage_responding(cell_properties_df: pd.DataFrame, analysis_type = None
     # Compute replicate-level means
     if 'marker' in cell_properties_df.columns:
         response_perc_rep_df = response_perc_well_df.groupby(
-            ['biological_replicate', 'stimulation', 'marker'], observed=True
+            ['cell_line', 'stimulation', 'marker'], observed=True
         )[response_col].mean().reset_index()
     else:
         response_perc_rep_df = response_perc_well_df.groupby(
-            ['biological_replicate', 'stimulation'], observed=True
+            ['cell_line', 'stimulation'], observed=True
         )[response_col].mean().reset_index()
 
     return response_perc_well_df, response_perc_rep_df
@@ -250,10 +250,15 @@ def percentage_responding(cell_properties_df: pd.DataFrame, analysis_type = None
 
 
 def scale_spike_properties(cell_properties_df: pd.DataFrame):
-
-    features_df = cell_properties_df[['frequency','width','rise_time','decay_time','amplitude']]
-    X_scaled = StandardScaler().fit_transform(features_df.to_numpy())
-    features_df = pd.DataFrame(X_scaled, columns = [f'{col}_scaled' for col in features_df.columns])
+    features_df = cell_properties_df[['frequency','width','rise_time','decay_time','amplitude']].copy()
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(features_df.to_numpy())
+    
+    # Replace NaN columns (zero variance) with 0
+    col_std = features_df.std()
+    X_scaled = np.nan_to_num(X_scaled, nan=0.0)
+    
+    features_df = pd.DataFrame(X_scaled, columns=[f'{col}_scaled' for col in features_df.columns])
     cell_properties_df = cell_properties_df.reset_index(drop=True)
     for col in features_df.columns:
         cell_properties_df[col] = features_df[col]

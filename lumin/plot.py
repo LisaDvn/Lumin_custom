@@ -1,18 +1,18 @@
-# -------------------- IMPORTS --------------------
-import matplotlib.pyplot as plt                     # plotting
-from skimage.segmentation import mark_boundaries    # draw outlines on images
-import os                                           # file handling
-import numpy as np                                  # numerical operations
-from skimage import io                              # image reading
-from cv2 import circle                              # draw circles on images
-from skimage.color import gray2rgb                  # convert grayscale → RGB
-from skimage.util import img_as_ubyte               # convert image format
-import pandas as pd                                 # dataframes
-from typing import Literal                          # type hints
-from sklearn.preprocessing import minmax_scale      # normalize data
-import seaborn as sns                               # statistical plots
-import matplotlib.lines as mlines                   # custom legend elements
-from pca import pca                                 # PCA library
+import matplotlib.pyplot as plt
+from skimage.segmentation import mark_boundaries
+import os
+import numpy as np
+from skimage import io
+from cv2 import circle
+from skimage.color import gray2rgb
+from skimage.util import img_as_ubyte
+import pandas as pd
+from typing import Literal
+from sklearn.preprocessing import minmax_scale
+import seaborn as sns
+import matplotlib.lines as mlines
+from pca import pca
+
 
 import warnings
 warnings.filterwarnings("ignore", message="Clipping input data to the valid range for imshow with RGB data")
@@ -20,20 +20,12 @@ warnings.filterwarnings("ignore", message="Clipping input data to the valid rang
 
 
 def create_palette(unique_stimulations):
-    """
-    Create a dictionary mapping each stimulation condition to a color (hex).
-    """
-
     colors = sns.color_palette(n_colors=len(unique_stimulations))
     hex_colors = ["#{:02X}{:02X}{:02X}".format(int(color[0]*255), int(color[1]*255), int(color[2]*255)) for color in colors]
     return dict(zip(unique_stimulations, hex_colors))
 
 
 def segmentation(image: np.ndarray, mask: np.ndarray,  title_image: str = 'Image',  title_mask: str = 'Mask Outline',  output_path: str = None,  file_name: str = 'segmentation_plot'):
-
-    """
-    Overlay segmentation mask boundaries on an image and save it.
-    """
 
     with plt.rc_context({"figure.dpi": (350), 'figure.figsize':(10, 10)}):
         fig, ax = plt.subplots()
@@ -52,11 +44,27 @@ def segmentation(image: np.ndarray, mask: np.ndarray,  title_image: str = 'Image
         plt.close('all')
 
 
+
+'''def segmentation(image: np.ndarray, mask: np.ndarray,  title_image: str = 'Image',  title_mask: str = 'Mask Outline',  output_path: str = None,  file_name: str = 'segmentation_plot'):
+
+    with plt.rc_context({"figure.dpi": (350)}):
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+
+        # Plot 1: Input image
+        axes[0].imshow(mark_boundaries(image,np.zeros_like(mask),  color = (1.0, 0.0, 1.0) , mode='thick'), cmap='gray')
+        axes[0].axis("off")
+        axes[0].set_title(title_image)
+
+        # Plot 2: Overlay boundaries on input
+        axes[1].imshow(mark_boundaries(image,mask,  color = (1.0, 0.0, 1.0) , mode='thick'), cmap='gray')
+        axes[1].axis("off")
+        axes[1].set_title(title_mask)
+
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_path, f'{file_name}.pdf'), bbox_inches = 'tight')'''
+
+
 def overlay_labels(image: np.ndarray, mask: np.ndarray,  cell_properties_df: pd.DataFrame, mask_nuclear: np.ndarray = None,   output_path: str = None,  file_name: str = 'overlay_plot'):
-    
-    """
-    Overlay segmentation + cell labels (numbers) on image.
-    """
 
     image_rgb = gray2rgb(img_as_ubyte(image))
 
@@ -96,11 +104,6 @@ def overlay_labels(image: np.ndarray, mask: np.ndarray,  cell_properties_df: pd.
 
 
 def overlaid_traces(cell_properties_df: pd.DataFrame,trace: str = None, mean: bool= False):
-    
-    """
-    Plot all calcium traces on top of each other.
-    Optionally overlay the mean trace.
-    """
     # dff traces with mean       
     filename = cell_properties_df['filename'].iloc[0]
     with plt.rc_context({"figure.dpi": 350}):
@@ -119,11 +122,6 @@ def overlaid_traces(cell_properties_df: pd.DataFrame,trace: str = None, mean: bo
 def overlaid_traces_two_groups(cell_properties_df: pd.DataFrame = None, trace: str = None, output_path: str = None, mean: bool= False, control_condition: str = None, treatment_condition: str = None, start_frame: int = None, end_frame: int = None, stimulation_frame: int = None, ax = None, palette:dict = None, imaging_interval:float = None, kcl_frame:int=None):
     with plt.rc_context({"figure.dpi": 350}):
     
-        """
-        Compare traces between control vs treatment groups.
-        Shows individual traces + mean traces.
-        """
-
         if ax is None:
             fig, ax = plt.subplots()
         
@@ -197,13 +195,6 @@ def overlaid_traces_two_groups(cell_properties_df: pd.DataFrame = None, trace: s
 
 def cellwise_traces(cell_properties_df: pd.DataFrame, trace: str = None, baseline: bool = False, spikes: bool = False,
                     spikes_mode: Literal["all", "filtered"] = "all", output_path: str = None, smoothing: bool = False):
-    """
-    Plot traces per cell (max 20 per figure).
-    Optionally show:
-    - baseline
-    - spikes
-    - smoothed trace
-    """
 
     filename = cell_properties_df['filename'].iloc[0]
     plot_list = []
@@ -289,10 +280,6 @@ def cellwise_traces(cell_properties_df: pd.DataFrame, trace: str = None, baselin
 
 
 def overlay_events(cell_properties_df: pd.DataFrame):
-    """
-    Create a mask showing where spikes/events occur in time + space.
-    """
-    
     stack = io.imread(cell_properties_df['filepath'].values[0])
     mask = np.zeros_like(stack, dtype=np.uint16)
     for index, row in cell_properties_df.iterrows():
@@ -305,7 +292,6 @@ def overlay_events(cell_properties_df: pd.DataFrame):
             radius = int(np.sqrt(area / np.pi))
             n_frames = mask.shape[0]
             for frame_idx in locations:
-                # Draw circle around event for a few frames
                 for offset in [-1, 0, 1, 2]:
                     idx = frame_idx + offset
                     if 0 <= idx < n_frames:   # only draw if within valid range
@@ -314,6 +300,163 @@ def overlay_events(cell_properties_df: pd.DataFrame):
 
     return stack, mask
 
+
+'''def draw_vertical_brace(ax, yspan, xx, text):
+    """Draws an annotated vertical brace on the axes."""
+    ymin, ymax = yspan
+    yspan = ymax - ymin
+    #yspan = abs(ymax - ymin)
+    ax_ymin, ax_ymax = ax.get_ylim()
+    yax_span = ax_ymax - ax_ymin
+    #yax_span = abs(ax_ymax - ax_ymin)
+
+    xmin, xmax = ax.get_xlim() 
+    xspan = xmax - xmin
+    resolution = int(yspan / yax_span * 100) * 2 + 1  # guaranteed uneven
+    beta = 300. / yax_span  # the higher this is, the smaller the radius
+
+    y = np.linspace(ymin, ymax, resolution)
+    y_half = y[:int(resolution / 2) + 1]
+    x_half_brace = (1 / (1. + np.exp(-beta * (y_half - y_half[0])))
+                    + 1 / (1. + np.exp(-beta * (y_half - y_half[-1]))))
+    x = np.concatenate((x_half_brace, x_half_brace[-2::-1]))
+    x = xx + (.05 * x - .01) * xspan   # adjust horizontal position
+
+    ax.autoscale(False)
+    ax.plot(x, y, color='black', lw=1, clip_on=False)  # <-- key fix here
+
+    ax.text(xx + .09 * xspan, (ymax + ymin) / 2., text,
+            ha='left', va='center', rotation='vertical', clip_on=False) 
+    
+
+def generate_beeswarm(distributions: list, tick_labels: list, max_plot_width: int = 1, alpha=0.7,
+                            number_of_segments=12,
+                            separation_between_plots=0.1,
+                            separation_between_subplots=0.1,
+                            vertical_limits=None,
+                            grid=False,
+                            remove_outlier_above_segment=None,
+                            remove_outlier_below_segment=None,
+                            y_label=None,
+                            title=None, ax=None, palette = None):
+
+    #unique_conditions = tick_labels
+    
+    #if palette is None: 
+        #palette = create_palette(unique_conditions)
+        
+    #palette = {cond: palette[cond] for cond in unique_conditions}
+
+    number_of_plots = len(distributions)
+
+    ax.set_xlim(left=0, right=number_of_plots * (max_plot_width + separation_between_plots) + separation_between_plots)
+
+    ticks = [separation_between_plots + max_plot_width / 2 + (max_plot_width + separation_between_plots) * i
+             for i in range(0, number_of_plots)]
+    
+    max_counts = 0.0
+    counts_filled_list = []
+    segment_indices_list = []
+    for i in range(len(distributions)):
+        distribution = distributions[i]
+        segments = np.linspace(np.min(distribution), np.max(distribution), number_of_segments + 1)[1:-1]
+        
+        segment_indices = number_of_segments - 1 - np.where(segments[:, None] >= distribution[None, :], 1, 0).sum(0)
+        
+        if remove_outlier_above_segment:
+            a = remove_outlier_above_segment[i]
+            distribution = distribution[segment_indices <= a]
+            segment_indices = segment_indices[segment_indices <= a]
+
+        if remove_outlier_below_segment:
+            b = remove_outlier_below_segment[i]
+            distribution = distribution[segment_indices >= b - 1]
+            segment_indices = segment_indices[segment_indices >= b - 1]
+        segment_indices_list.append(segment_indices)
+
+        values, counts = np.unique(segment_indices, return_counts=True)
+        if np.max(counts) > max_counts:
+            max_counts = np.max(counts)
+        counts_filled = []
+        j = 0
+        for k in range(number_of_segments):
+            if k in values:
+                counts_filled.append(counts[j])
+                j += 1
+            else:
+                counts_filled.append(0)
+        counts_filled_list.append(counts_filled)
+
+
+    for i in range(len(distributions)):    
+        variances = (max_plot_width / 2) * (counts_filled_list[i] / max_counts)
+        jitter_unadjusted = np.random.uniform(-1, 1, len(distributions[i])) 
+        jitter = np.take(variances, segment_indices_list[i]) * jitter_unadjusted
+
+        ax.scatter(jitter + ticks[i], distributions[i], alpha=0.85, s=3, linewidth=0.2, edgecolor='black', c = list(palette.values())[i])
+
+
+    ax.spines['right'].set_color(None)
+    ax.spines['top'].set_color(None)
+    ax.tick_params(axis='y', labelsize='x-small') 
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(tick_labels, size='large')
+    #ax.set_yticks(fontsize='x-large')
+
+    
+
+    return ax, ticks
+
+def beeswarm(cell_properties_df: pd.DataFrame, control_condition: str = None,  std_threshold: float = None, ax = None, palette: dict = None, brace: bool = False, ycolumn: str = None, control_condition_mean: bool = False):
+    with plt.rc_context({"figure.dpi": 350}):
+        cell_properties_df['stimulation'] = cell_properties_df['stimulation'].cat.remove_unused_categories()
+        
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        if palette is None: 
+            palette = create_palette(cell_properties_df["stimulation"].cat.categories)
+            
+        # Handle this to work with several conditions, check the colors
+        distributions = [cell_properties_df[cell_properties_df.stimulation == cond][ycolumn].values for cond in cell_properties_df.stimulation.cat.categories]
+        palette = {cond: palette[cond] for cond in cell_properties_df.stimulation.cat.categories}
+        ax , ticks =  generate_beeswarm(distributions, tick_labels=cell_properties_df.stimulation.cat.categories, number_of_segments=200,
+                                grid=False, ax=ax, palette = palette)
+        
+        if control_condition_mean == True:
+            ax.axhline(np.mean(distributions[0]), color='#636363', linewidth = 1, label=f'Mean ({control_condition})')
+        
+        else:
+            for i, dist in enumerate(distributions):
+                center = ticks[i]
+                ax.boxplot(
+                    dist,
+                    positions=[center],         # manual x-location
+                    widths=0.5,
+                    showfliers=False,
+                    showcaps=True,
+                    patch_artist=True,
+                    boxprops={"facecolor": "none", "edgecolor": "black", "linewidth": 0.5},
+                    whiskerprops={"color": "black", "linewidth": 0.5},
+                    capprops={"color": "black", "linewidth": 0.5},
+                    medianprops={"color": "black", "linewidth": 0.7}
+                )
+
+            
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(cell_properties_df.stimulation.cat.categories)
+
+        if std_threshold is not None:
+            ax.axhline(np.std(distributions[0])*std_threshold, color='red', linewidth = 1, linestyle='--', label='std threshold')
+            ax.legend(loc='upper left',bbox_to_anchor=(-0.03, 1), frameon=False, fontsize='small', handlelength=1.2, handletextpad=0.3)
+
+        if brace == True:
+            max_value = np.max([np.max(distributions[0]), np.max(distributions[1])])
+            std_threshold = np.std(distributions[0]) * std_threshold
+            if max_value > std_threshold:
+                draw_vertical_brace(ax, (std_threshold, max_value),2.3, 'Responding')
+        
+        return ax  '''
 
 def draw_vertical_brace(ax, yspan, xx, text):
     """Draws an annotated vertical brace on the axes."""
@@ -350,9 +493,10 @@ def generate_beeswarm(distributions, positions, ax, colors,
     segment_indices_list = []
 
     for distribution in distributions:
-        if len(distribution) == 0:
-            segment_indices_list.append([])
-            counts_filled_list.append([0]*number_of_segments)
+        if len(distribution) == 0 or np.min(distribution) == np.max(distribution):
+            segment_indices_list.append(np.zeros(len(distribution), dtype=int))
+            counts_filled_list.append([len(distribution)] + [0]*(number_of_segments-1))
+            max_counts = max(max_counts, len(distribution))
             continue
 
         segments = np.linspace(np.min(distribution),
@@ -652,13 +796,13 @@ def two_conditions_barplot(response_perc_mean_df: pd.DataFrame, palette: dict = 
         if hue is None:
             sns.lineplot(
                 data=response_perc_mean_df, 
-                style='biological_replicate', 
+                style='cell_line', 
                 x=x, # stim
                 y=y, # "proportion_positive_cells"
                 estimator=None,  
                 markers=['o'], 
                 markeredgewidth=0, 
-                dashes={line: (2, 2) for line in response_perc_mean_df['biological_replicate'].unique()}, 
+                dashes={line: (2, 2) for line in response_perc_mean_df['cell_line'].unique()}, 
                 markersize=3.5, 
                 lw=0.5, 
                 ax=ax, 
@@ -738,6 +882,9 @@ def two_conditions_barplot(response_perc_mean_df: pd.DataFrame, palette: dict = 
         return ax'''
     
 def biplot(cell_properties_df: pd.DataFrame, arrow_scale_factor: float = 1, palette: dict = None):
+    pca_cols = ['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled']
+    cell_properties_df = cell_properties_df.dropna(subset=pca_cols).reset_index(drop=True)
+    features_df = cell_properties_df[pca_cols].copy()
 
     # Scale
     features_df = cell_properties_df[['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled']]
@@ -875,7 +1022,7 @@ def pca_property(cell_properties_df: pd.DataFrame, color_by: str = 'cluster', cm
     
 
 def cluster_heatmap(cell_properties_df: pd.DataFrame, vmax: int = None, vmin: int = None, cbar:bool = False):
-    mean_df = cell_properties_df[['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled','cluster']].groupby(['cluster']).mean()
+    mean_df = cell_properties_df[['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled','cluster']].groupby(['cluster'], observed=True).mean()
     
     with plt.rc_context({"figure.dpi": 350}):
         fig, ax = plt.subplots()
@@ -915,17 +1062,83 @@ def cluster_centroids( cluster_dict:dict,palette:dict,  imaging_interval:float =
     return ax
 
 
-'''def cluster_barplot(cluster_percentages_df: pd.DataFrame, palette: dict = None):
-    with plt.rc_context({"figure.dpi": 350}):
-        fig, ax = plt.subplots()
-        ax = sns.barplot(data=cluster_percentages_df, x='percentage', y='cluster', hue='stimulation', legend=None,palette=palette, ci=None, edgecolor='black', linewidth=0.5)
-        sns.stripplot(data=cluster_percentages_df, x='percentage', y='cluster', hue='stimulation',  legend=None,ax=ax, color='black', dodge=True, size=2)
-        
-        #ax.set_ylabel('Cluster', size=13)
-        #ax.set_xlabel('% of cells', size=13)
-        
-        plt.yticks(rotation=0)
-        #plt.xticks( size=13)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-    return ax'''
+# -------------------- SYNCHRONIZATION --------------------
+def compute_synchronization(dff_array, save_path=None):
+    """
+    Compute synchronization matrix using correlation.
+ 
+    Parameters
+    ----------
+    dff_array : list/array of 1D traces (shape: num_cells x timepoints)
+    """
+    dff_array = np.array(dff_array)
+ 
+    n_cells = dff_array.shape[0]
+    sync_matrix = np.zeros((n_cells, n_cells))
+ 
+    for i in range(n_cells):
+        for j in range(n_cells):
+            if dff_array.shape[1] == dff_array.shape[1]:
+                sync_matrix[i, j] = np.corrcoef(dff_array[i], dff_array[j])[0, 1]
+ 
+    sync_matrix = np.nan_to_num(sync_matrix)
+ 
+    if save_path is not None:
+        os.makedirs(save_path, exist_ok=True)
+        plt.figure()
+        sns.heatmap(sync_matrix, cmap='viridis')
+        plt.title("Synchronization")
+        plt.savefig(os.path.join(save_path, "synchronization_heatmap.png"))
+        plt.close()
+ 
+        np.savetxt(os.path.join(save_path, "synchronization_matrix.csv"),
+                   sync_matrix, delimiter=",")
+ 
+    return sync_matrix
+ 
+# -------------------- CORRELATION --------------------
+def correlation(cell_properties_df, trace_col, output_path):
+    detrended_seq = np.array(cell_properties_df[trace_col].tolist())
+ 
+    obs_num, length = detrended_seq.shape
+    heat_mat = np.zeros((obs_num, obs_num))
+    max_lag = min(50, length // 2)
+ 
+    for i in range(obs_num):
+        for j in range(i + 1):
+            max_cor = -1
+ 
+            for lag in range(max_lag + 1):
+                A = detrended_seq[i, :length - lag]
+                B = detrended_seq[j, lag:]
+ 
+                cor = np.sum(
+                    (A - np.mean(A)) * (B - np.mean(B)) /
+                    (np.std(A) * np.std(B))
+                ) / (length - lag - 1)
+ 
+                max_cor = max(cor, max_cor)
+ 
+            for lag in range(1, max_lag + 1):
+                A = detrended_seq[i, lag:]
+                B = detrended_seq[j, :length - lag]
+ 
+                cor = np.sum(
+                    (A - np.mean(A)) * (B - np.mean(B)) /
+                    (np.std(A) * np.std(B))
+                ) / (length - lag - 1)
+ 
+                max_cor = max(cor, max_cor)
+ 
+            heat_mat[i][j] = max_cor
+            heat_mat[j][i] = max_cor
+ 
+    plt.figure()
+    sns.heatmap(heat_mat, cmap='jet', vmin=-1, vmax=1)
+    plt.title("Correlation")
+    plt.savefig(os.path.join(output_path, "correlation.png"))
+    plt.close()
+ 
+    np.savetxt(os.path.join(output_path, "correlation.csv"), heat_mat, delimiter=",")
+ 
+    return heat_mat
