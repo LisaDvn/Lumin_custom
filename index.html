@@ -302,39 +302,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Workflow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example output
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Getting started
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -633,6 +600,34 @@
   
   
     <li class="md-nav__item">
+      <a href="parameter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="features/" class="md-nav__link">
         
   
@@ -640,7 +635,7 @@
   <span class="md-ellipsis">
     
   
-    5. Feature Extraction
+    Features
   
 
     
@@ -752,39 +747,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Workflow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example output
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Getting started
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -814,20 +776,8 @@
 </ul>
 <p>Because the pipeline is modular, each analysis step generates intermediate outputs that can be inspected, validated, and re-used independently, allowing users to choose which steps to run and when.</p>
 <h2 id="why-this-tool">Why this tool?</h2>
-<p>Current calcium imaging workflows are often fragmented across FIJI/ImageJ, MATLAB, spreadsheets, and custom scripts, making analysis time-consuming, difficult to reproduce, and dependent on manual intervention. This pipeline builds upon the open-source LUMIN framework and extends it into a modular, end-to-end environment for in vitro calcium imaging analysis of iPSC-derived neuronal cultures.</p>
-<p>The pipeline is implemented as a plugin for napari, providing an interactive graphical interface without requiring coding experience. By combining automated analysis, model-based methods such as OASIS spike inference, and manual refinement options, the workflow supports scalable, reproducible, and user-friendly calcium imaging analysis across experiments and datasets.</p>
-<h2 id="workflow">Workflow</h2>
-<div class="highlight"><pre><span></span><code>Input → Segmentation + signal extraction → Activity detection → Features
-</code></pre></div>
-<h2 id="example-output">Example output</h2>
-<ul>
-<li>ROI masks</li>
-<li>Calcium traces</li>
-<li>Event detection plots</li>
-<li>Feature tables</li>
-</ul>
-<h2 id="getting-started">Getting started</h2>
-<p>See the <a href="installation/">Installation</a> page.</p></div>
+<p>Current calcium imaging workflows are often fragmented across FIJI/ImageJ, MATLAB, spreadsheets, and custom scripts, making analysis time-consuming, difficult to reproduce, and dependent on manual intervention. This pipeline builds upon the open-source LUMIN framework: a modular, end-to-end environment for in vitro calcium imaging analysis of (iPSC-derived) neuronal cultures. LUMIN is a plugin for napari, providing an interactive graphical interface without requiring coding experience.</p>
+<p>This pipeline extends LUMIN with combining automated preprocessing, manual segmentation refinement options and model-based methods such as OASIS spike inference. The workflow supports scalable, reproducible, and user-friendly calcium imaging analysis across experiments and datasets.</p></div>
 
 
 

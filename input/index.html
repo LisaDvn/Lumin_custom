@@ -492,6 +492,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#required-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#supported-input-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -501,15 +513,9 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#required-inputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Required inputs
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -532,23 +538,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="What happens during preprocessing?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_inputcsv" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        _input.csv
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -674,6 +663,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../parameter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../features/" class="md-nav__link">
         
   
@@ -681,7 +698,7 @@
   <span class="md-ellipsis">
     
   
-    5. Feature Extraction
+    Features
   
 
     
@@ -783,6 +800,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#required-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#supported-input-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -792,15 +821,9 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#required-inputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Required inputs
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -823,23 +846,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="What happens during preprocessing?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_inputcsv" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        _input.csv
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -885,14 +891,6 @@
 <div><h1 id="1-data-input-metadata">1. Data input &amp; metadata</h1>
 <p>This step prepares your raw imaging data and generates the required project structure for downstream analysis.</p>
 <hr>
-<h2 id="supported-input-formats">Supported input formats</h2>
-<p>LUMIN accepts the following raw file formats:</p>
-<ul>
-<li><code>.tiff</code> / <code>.tif</code></li>
-<li><code>.nd2</code> (Nikon)</li>
-</ul>
-<p>All files with the same metadata should be placed inside a single input folder.</p>
-<hr>
 <h2 id="required-inputs">Required inputs</h2>
 <p>In the <strong>Preprocessing widget</strong>, you must provide:</p>
 <ul>
@@ -902,6 +900,16 @@
 <li><strong>Cell line</strong> — Biological replicate or cell type (e.g. <code>Striatal</code>, <code>iPSC-derived neurons</code>).</li>
 <li><strong>Condition</strong> — Experimental condition (e.g. <code>Control</code>, <code>Drug_A</code>, <code>HD50</code>).</li>
 </ul>
+<h3 id="supported-input-formats">Supported input formats</h3>
+<p>LUMIN accepts the following raw file formats:</p>
+<ul>
+<li><code>.tiff</code> / <code>.tif</code></li>
+<li><code>.nd2</code> (Nikon)</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>All files with the same metadata should be placed inside a single input folder.</p>
+</div>
 <hr>
 <h2 id="optional-metadata">Optional metadata</h2>
 <p>You can optionally include additional metadata for better data tracking and FAIR compliance:</p>
@@ -915,27 +923,24 @@
 <li><strong>Calcium indicator</strong> — e.g. GCaMP6, Fluo-4  </li>
 <li><strong>Cell density</strong> — plating density or estimate  </li>
 </ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
 <p>These fields are not required for analysis but are stored in the metadata output.</p>
+</div>
 <hr>
 <h2 id="what-happens-during-preprocessing">What happens during preprocessing?</h2>
 <p>After clicking <strong>Run</strong>, LUMIN will:</p>
 <ol>
 <li>Scan the input folder for ND2/TIFF files  </li>
-<li>Extract metadata from file names and user input  </li>
+<li>Extract metadata from the files and user input  </li>
 <li>Convert files (if needed) into a standardized format  </li>
 <li>Generate a structured project directory  </li>
 <li>Create an <code>_input.csv</code> file used in downstream steps  </li>
 </ol>
-<hr>
-<h3 id="_inputcsv"><code>_input.csv</code></h3>
-<p>This file contains all required information for segmentation and analysis:</p>
-<ul>
-<li><code>plate_id</code></li>
-<li><code>filename</code></li>
-<li><code>filepath</code></li>
-<li><code>cell_line</code></li>
-<li><code>condition</code></li>
-</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can process multiple input folders into the same project directory. Each run appends new entries to the existing _input.csv file, allowing metadata and datasets to accumulate across experiments without overwriting previous records.</p>
+</div>
 <hr>
 <h2 id="notes">Notes</h2>
 <ul>

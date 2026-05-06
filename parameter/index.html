@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://lisadvn.github.io/Lumin_custom/installation/">
+        <link rel="canonical" href="https://lisadvn.github.io/Lumin_custom/parameter/">
       
       
-        <link rel="prev" href="../workflow/">
+        <link rel="prev" href="../spikedetection/">
       
       
-        <link rel="next" href="../input/">
+        <link rel="next" href="../features/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Installation - Calcium imaging analysis tool (based on LUMIN)</title>
+        <title>Parameters - Calcium imaging analysis tool (based on LUMIN)</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#installation-getting-started" class="md-skip">
+        <a href="#parameter-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Installation
+              Parameters
             
           </span>
         </div>
@@ -258,8 +258,6 @@
       
   
   
-    
-  
   
   
     
@@ -272,11 +270,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
@@ -297,7 +297,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -340,37 +340,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Installation
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
         
   
   
@@ -386,120 +359,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Requirements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-launch-the-application" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Launch the application
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-first-analysis-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. First analysis workflow
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4. First analysis workflow">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#step-1-input" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1 — Input
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-2-segmentation-signal-extraction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2 — Segmentation &amp; signal extraction
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-event-detection-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 3 — Event detection &amp; features
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-4-network-analysis-optional" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 4 — Network analysis (optional)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -516,8 +375,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -528,13 +389,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -555,7 +414,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -682,10 +541,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../parameter/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -701,6 +587,220 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#segmentation-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segmentation parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#even-detection-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Even detection parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oasis-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OASIS parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OASIS parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#indicator-decay-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indicator decay τ (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imaging-interval-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imaging interval (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline-window-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline window (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline-frames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline σ (frames)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cascade-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CASCADE parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CASCADE parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imaging-interval-s_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imaging interval (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spike-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spike threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-analysis-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network analysis parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network analysis parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-event-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network event threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#min-event-distance-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Min. event distance (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imaging-interval-s_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imaging interval (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -822,10 +922,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-requirements" class="md-nav__link">
+  <a href="#segmentation-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Requirements
+        Segmentation parameters
       
     </span>
   </a>
@@ -833,10 +933,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-installation" class="md-nav__link">
+  <a href="#even-detection-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Installation
+        Even detection parameters
       
     </span>
   </a>
@@ -844,33 +944,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-launch-the-application" class="md-nav__link">
+  <a href="#oasis-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Launch the application
+        OASIS parameters
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-first-analysis-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. First analysis workflow
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="4. First analysis workflow">
+    <nav class="md-nav" aria-label="OASIS parameters">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-input" class="md-nav__link">
+  <a href="#indicator-decay-s" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1 — Input
+        Indicator decay τ (s)
       
     </span>
   </a>
@@ -878,10 +967,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-segmentation-signal-extraction" class="md-nav__link">
+  <a href="#imaging-interval-s" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2 — Segmentation &amp; signal extraction
+        Imaging interval (s)
       
     </span>
   </a>
@@ -889,10 +978,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-event-detection-features" class="md-nav__link">
+  <a href="#baseline-method" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3 — Event detection &amp; features
+        Baseline method
       
     </span>
   </a>
@@ -900,10 +989,121 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-network-analysis-optional" class="md-nav__link">
+  <a href="#baseline-window-s" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4 — Network analysis (optional)
+        Baseline window (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline-frames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline σ (frames)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cascade-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CASCADE parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CASCADE parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imaging-interval-s_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imaging interval (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spike-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spike threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-analysis-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network analysis parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network analysis parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-event-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network event threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#min-event-distance-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Min. event distance (s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imaging-interval-s_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imaging interval (s)
       
     </span>
   </a>
@@ -932,47 +1132,170 @@
 
 
 
-<div><h1 id="installation-getting-started">Installation &amp; getting Started</h1>
-<p>This page explains how to install LUMIN and run your first analysis.</p>
+<div><h1 id="parameter-guide">Parameter guide</h1>
 <hr>
-<h2 id="1-requirements">1. Requirements</h2>
+<h2 id="segmentation-parameters">Segmentation parameters</h2>
+<hr>
+<h2 id="even-detection-parameters">Even detection parameters</h2>
+<hr>
+<h2 id="oasis-parameters">OASIS parameters</h2>
+<h3 id="indicator-decay-s">Indicator decay τ (s)</h3>
+<p><strong>What it does:</strong> The indicator decay constant (τ) describes how quickly fluorescence returns to baseline after a calcium transient. During OASIS deconvolution, each inferred spike is modelled as an exponentially decaying signal: <code>F(t) = exp(-t/τ)</code>. </p>
+<p>Accurate estimation of τ is critical for reliable spike inference.</p>
 <ul>
-<li>Python 3.10+ (via Anaconda)</li>
-<li>pip</li>
+<li>If τ is set too low, slow calcium events may be split into multiple spikes</li>
+<li>If τ is set too high, nearby spikes may merge together or false events may appear</li>
 </ul>
+<p><strong>How to set it:</strong> Use literature values or manufacturer specifications for the calcium indicator used in your experiment. The optimal value may also depend on imaging speed, cell type, temperature, and expression level.</p>
+<p>The following commonly used defaults were summarised from published datasets (Chen et al., 2013; Dana et al., 2019; Ohkura et al., 2012; Zhang et al., 2023):</p>
+<table>
+<thead>
+<tr>
+<th>Indicator</th>
+<th>Typical τ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GCaMP6f</td>
+<td>0.4 – 0.6 s</td>
+</tr>
+<tr>
+<td>GCaMP6s</td>
+<td>1.5 – 2.5 s</td>
+</tr>
+<tr>
+<td>GCaMP7f</td>
+<td>0.2 – 0.4 s</td>
+</tr>
+<tr>
+<td>jGCaMP8f</td>
+<td>0.1 – 0.2 s</td>
+</tr>
+<tr>
+<td>jGCaMP8s</td>
+<td>0.3 – 0.5 s</td>
+</tr>
+<tr>
+<td>RCaMP1</td>
+<td>1.0 – 2.0 s</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In vitro vs in vivo: Temperature, intracellular calcium buffering, and indicator expression level all affect decay kinetics. 
+Published values are usually from in vivo mouse cortex at 37°C. For in vitro cell culture preparations, decay can be somewhat slower. 
+It is worth empirically checking τ by looking at isolated single-transient events in your test recordings and measuring how long the tail lasts.</p>
+</div>
 <hr>
-<h2 id="2-installation">2. Installation</h2>
-<p>Open <strong>Anaconda Prompt</strong> and run:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/LisaDvn/Lumin_custom.git
-<span class="nb">cd</span><span class="w"> </span>Lumin_custom
-conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>lumin_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.2<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.1.0<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y
-conda<span class="w"> </span>activate<span class="w"> </span>lumin_env
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</code></pre></div>
+<h3 id="imaging-interval-s">Imaging interval (s)</h3>
+<p><strong>What it does:</strong> The time between consecutive frames. Used to convert τ from seconds to frames (<code>fs = 1 / interval</code>), and to scale all time axes in plots and metric outputs (e.g. spike frequency in Hz, ISI in seconds).</p>
+<p><strong>How to set it:</strong> Read from your microscope acquisition software. Common values: 0.033 s (30 Hz), 0.1 s (10 Hz), 0.133 s (7.5 Hz).</p>
 <hr>
-<h2 id="3-launch-the-application">3. Launch the application</h2>
-<div class="highlight"><pre><span></span><code>napari
-</code></pre></div>
-<p>LUMIN is available as a Napari plugin.</p>
+<h3 id="baseline-method">Baseline method</h3>
+<p><strong>What it does:</strong> Before spike inference, OASIS subtracts a slowly-varying baseline from the raw fluorescence to remove drift from photobleaching, focus changes, and neuropil contamination.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>How it works</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>maximin</strong></td>
+<td>Smooths trace with Gaussian → rolling minimum → rolling maximum. Tracks slow drift while preserving transient peaks.</td>
+<td>Default. Works well for most recordings.</td>
+</tr>
+<tr>
+<td><strong>constant</strong></td>
+<td>Subtracts the global minimum of the entire trace.</td>
+<td>Only for very short, stable recordings with no drift.</td>
+</tr>
+<tr>
+<td><strong>prctile</strong></td>
+<td>Subtracts the 8th percentile of the trace.</td>
+<td>When the recording is too short for a meaningful rolling window.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Default:</strong> <code>maximin</code> — the same default used by Suite2p.</p>
 <hr>
-<h2 id="4-first-analysis-workflow">4. First analysis workflow</h2>
-<p>Once installed, follow the full pipeline:</p>
-<h3 id="step-1-input">Step 1 — Input</h3>
-<p>Prepare your recordings and metadata.</p>
-<p>→ <a href="../input/">Go to Input module</a></p>
+<h3 id="baseline-window-s">Baseline window (s)</h3>
+<p><strong>What it does:</strong> The rolling window size for the maximin filter. Determines how quickly the estimated baseline is allowed to change over time. A window that is too short will follow real calcium transients and over-subtract them; a window that is too long will not track genuine slow drift.</p>
+<p><strong>Rule of thumb:</strong> Should be at least 5–10× the duration of your longest expected calcium transient, and no more than ~20% of the total recording duration.</p>
+<p><strong>Default:</strong> 60 s — inherited from Suite2p defaults, assumes recordings of several minutes. Adjust downward for short recordings.</p>
 <hr>
-<h3 id="step-2-segmentation-signal-extraction">Step 2 — Segmentation &amp; signal extraction</h3>
-<p>Detect cells and extract fluorescence traces.</p>
-<p>→ <a href="../segmentation/">Go to Segmentation module</a></p>
+<h3 id="baseline-frames">Baseline σ (frames)</h3>
+<p><strong>What it does:</strong> The standard deviation of the Gaussian smoothing kernel applied to the raw trace before the rolling min/max filters. Smoothing removes high-frequency noise so the baseline estimate tracks only slow trends.</p>
+<p><strong>Rule of thumb:</strong> Should be roughly 1–3× your expected spike width in frames. At 30 Hz with τ ≈ 1 s, a transient lasts ~30 frames, so σ = 10 frames is reasonable.</p>
+<p><strong>Default:</strong> 10 frames — reasonable for 30 Hz recordings with medium-speed indicators. Reduce for faster frame rates or faster indicators; increase for very noisy recordings.</p>
 <hr>
-<h3 id="step-3-event-detection-features">Step 3 — Event detection &amp; features</h3>
-<p>Detect calcium events and extract single-cell metrics.</p>
-<p>→ See: <a href="../eventdetection/">Go to Event detection module</a></p>
+<h2 id="cascade-parameters">CASCADE parameters</h2>
+<h3 id="model">Model</h3>
+<p><strong>What it does:</strong> Selects the pre-trained neural network. Each model was trained on ground truth data recorded at a specific frame rate with a specific amount of temporal smoothing of the spike labels.</p>
+<p><strong>How to set it:</strong> Match the model frame rate to your imaging interval. The smoothing parameter controls the temporal precision of spike localisation — 200 ms smoothing gives firing rate estimates, 50 ms causal smoothing gives sharper spike timing.</p>
+<table>
+<thead>
+<tr>
+<th>Model name</th>
+<th>Frame rate</th>
+<th>Smoothing</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Global_EXC_7.5Hz_smoothing200ms</td>
+<td>7.5 Hz</td>
+<td>200 ms</td>
+<td>Slow imaging, firing rate focus</td>
+</tr>
+<tr>
+<td>Global_EXC_30Hz_smoothing200ms</td>
+<td>30 Hz</td>
+<td>200 ms</td>
+<td>Fast imaging, firing rate focus</td>
+</tr>
+<tr>
+<td>Global_EXC_30Hz_smoothing50ms_causal</td>
+<td>30 Hz</td>
+<td>50 ms</td>
+<td>Fast imaging, precise spike timing</td>
+</tr>
+<tr>
+<td>Global_EXC_7.5Hz_smoothing50ms_causal</td>
+<td>7.5 Hz</td>
+<td>50 ms</td>
+<td>Slow imaging, precise spike timing</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Default:</strong> <code>Global_EXC_7.5Hz_smoothing200ms</code> — conservative choice. Always verify against your actual frame rate.</p>
 <hr>
-<h3 id="step-4-network-analysis-optional">Step 4 — Network analysis (optional)</h3>
-<p>Infer spike trains and compute network metrics.</p>
-<p>→ See: <a href="../spikedetection/">Go to Spike detection module</a></p>
-<hr></div>
+<h3 id="imaging-interval-s_1">Imaging interval (s)</h3>
+<p>Same meaning as for OASIS. See above.</p>
+<hr>
+<h3 id="spike-threshold">Spike threshold</h3>
+<p><strong>What it does:</strong> CASCADE outputs a continuous spike-rate estimate in spikes/frame for every time point. This threshold binarises it: frames where the output exceeds the threshold are counted as spike events.</p>
+<p><strong>How to set it:</strong> Lower values detect more spikes but increase false positives. Higher values are more conservative. Inspect the spike train output on a test recording and adjust until the detected events match the visible calcium transients.</p>
+<p><strong>Default:</strong> 0.5 spikes/frame — a starting point from the CASCADE paper, but should be verified on your data.</p>
+<hr>
+<h2 id="network-analysis-parameters">Network analysis parameters</h2>
+<h3 id="network-event-threshold">Network event threshold</h3>
+<p><strong>What it does:</strong> At each frame, the population activity is the fraction of cells with a spike. A "network event" (population burst) is a local peak in this trace that exceeds this threshold. Used to compute network event rate.</p>
+<p><strong>How to set it:</strong> Depends on how synchronous your network is. A very synchronous culture might show 50–80% co-activation during bursts; sparse spontaneous activity might only reach 10–20%. Set lower to detect smaller coordinated events, higher to detect only large bursts.</p>
+<p><strong>Default:</strong> 0.10 (10% of cells co-active) — a common threshold in the in vitro network activity literature, but highly data-dependent.</p>
+<hr>
+<h3 id="min-event-distance-s">Min. event distance (s)</h3>
+<p><strong>What it does:</strong> Minimum time that must separate two detected network events. Prevents a single broad burst with a bumpy peak from being counted as multiple events.</p>
+<p><strong>How to set it:</strong> Should be roughly equal to the typical duration of a network burst in your preparation. For in vitro cortical cultures this is typically 0.5–2 s.</p>
+<p><strong>Default:</strong> 0.5 s — a conservative lower bound. Increase if you see the same burst being counted multiple times.</p>
+<hr>
+<h3 id="imaging-interval-s_2">Imaging interval (s)</h3>
+<p>Used to convert network event counts to rates (events/second) and to scale time axes in network plots. Should match the value used during deconvolution. Auto-filled when switching from Temporal to Network analysis mode.</p></div>
 
 
 
@@ -1002,7 +1325,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../workflow/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Workflow Overview">
+          <a href="../spikedetection/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 4. Spike detection">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1012,20 +1335,20 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
                 Previous
               </span>
               <div class="md-ellipsis">
-                Workflow Overview
+                4. Spike detection
               </div>
             </div>
           </a>
         
         
           
-          <a href="../input/" class="md-footer__link md-footer__link--next" aria-label="Next: 1. Data input &amp; metadata">
+          <a href="../features/" class="md-footer__link md-footer__link--next" aria-label="Next: Features">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                1. Data input & metadata
+                Features
               </div>
             </div>
             <div class="md-footer__button md-icon">
