@@ -10,78 +10,102 @@ Open the **Network activity** widget and select the project directory containing
 
 ## Analysis modes
 
-| Mode | Description |
-|---|---|
-| **Temporal (spike trains)** | Analyse temporal spike structure across cells |
-| **Network analysis** | Compute network metrics from pre-computed spike trains |
-| **Combined** | Perform spike inference and network analysis in a single step |
+- **Temporal (spike trains)** — Estimate action potentials (spike inference) by deconvolving the calcium trace to spike trains
+- **Network analysis** — Compute network metrics from pre-computed spike trains 
+- **Combined** — Perform spike inference and network analysis in a single step 
 
 ---
 
 ## Spike inference methods
 
-### OASIS
-Model-based deconvolution of calcium traces into spike trains.
+### OASIS [\[Pachitariu et al., 2019\]](https://pmc.ncbi.nlm.nih.gov/articles/PMC12044035/#B47)
 
-- **Indicator decay (τ)** — calcium indicator decay time constant (s)  
-- **Sampling rate** — recording frame rate (Hz)  
-- **Baseline method** — `maximin` (recommended), `constant`, or `prctile`  
-- **Baseline window** — rolling baseline window size (s)  
-- **Baseline σ** — Gaussian smoothing applied before baseline estimation  
+OASIS is a model-based deconvolution algorithm that estimates action potentials from calcium fluorescence traces using a first-order autoregressive model.
+
+It is:
+
+* Fast and lightweight
+* Well-suited for large datasets
+* Recommended for most standard calcium imaging experiments
+
+**OASIS parameters**
+
+| Parameter               | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| **Indicator decay (τ)** | Calcium indicator decay constant in seconds                  |
+| **Sampling rate (Hz)**  | Imaging frame rate                                           |
+| **Baseline method**     | Drift correction strategy (`maximin`, `constant`, `prctile`) |
+| **Baseline window**     | Rolling baseline estimation window                           |
+| **Baseline σ**          | Gaussian smoothing applied before baseline estimation        |
 
 ---
 
-### CASCADE
-Deep learning-based spike inference method.
+### CASCADE [\[Rupprecht et al., 2021\]](https://pmc.ncbi.nlm.nih.gov/articles/PMC12044035/#B55)
 
-- Select a pre-trained model matching your frame rate (auto-downloaded on first use)  
-- **Spike threshold** — threshold applied to spike-rate output (0 = no threshold)  
+CASCADE is a deep learning-based spike inference framework trained on simultaneous electrophysiology and calcium imaging recordings.
+
+It is:
+
+* More sensitive to complex calcium dynamics
+* Better at recovering dense firing patterns
+
+**CASCADE parameters**
+
+| Parameter              | Description                                       |
+| ---------------------- | ------------------------------------------------- |
+| **Model**              | Pre-trained model matching the imaging frame rate |
+| **Spike threshold**    | Threshold applied to spike probability output     |
+| **Sampling rate (Hz)** | Recording frame rate                              |
+
+!!! note
+CASCADE models are automatically downloaded the first time they are used.
+ 
 
 ---
 
-## Network analysis parameters
+### Network analysis parameters
 
-| Parameter | Description |
-|---|---|
-| Network event threshold | Fraction of co-active neurons required to define a population burst (e.g. 0.10 = 10%) |
-| Min. event distance (s) | Minimum time between successive network events |
-| Sampling rate (Hz) | Frame rate used for metric calculations |
-| Spike binarisation threshold | Threshold to convert spike probabilities into binary events |
+| Parameter                        | Description                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| **Network event threshold**      | Fraction of simultaneously active neurons required to define a population event |
+| **Min. event distance (s)**      | Minimum time between detected network bursts                                    |
+| **Sampling rate (Hz)**           | Imaging frame rate used for temporal scaling                                    |
+| **Spike binarisation threshold** | Threshold used to convert spike probabilities into binary events                |
 
+---
+
+## Extracted network metrics
+
+Depending on the selected workflow, LUMIN computes:
+
+* Spike frequency
+* Inter-spike interval (ISI)
+* Population firing rate
+* Network burst frequency
+* Fraction of active neurons
+* Synchrony/co-activity measures
+* Temporal activity profiles
+* Network event statistics
+
+These metrics can be used for downstream phenotyping, pharmacology, or disease modelling experiments.
 ---
 
 ## Parameter optimisation
 
-Use small-scale testing before running full analysis:
+Use the interactive testing tools before running full analysis:
 
-- Run on selected recordings to validate spike inference quality  
-- Adjust thresholds to control network event sensitivity  
-- Compare outputs across conditions for consistency  
+* **Test settings on random recording** → preview analysis on a randomly selected recording
+* **Test settings on same recording** → repeatedly test parameters on the same sample for direct comparison
+
+The following visualisations are shown during testing:
+
+* Deconvolved signal
+* Inferred spike train
+
+This allows rapid optimisation of spike inference and network detection parameters before batch processing the full dataset.
 
 !!! note
-    This step does not save results and is intended for parameter tuning only.
----
-
-## Output
-
-After running network analysis, the following outputs are generated:
-
-```bash
-Network/
-├── Spike_trains/
-│ ├── spike_trains.pkl
-│ └── spike_trains.csv
-├── Metrics/
-│ ├── network_events.csv
-│ ├── synchrony_metrics.csv
-│ ├── burst_analysis.csv
-│ └── participation_scores.csv
-├── Plots/
-│ ├── raster_plot.pdf
-│ ├── network_activity_overview.pdf
-│ ├── synchrony_heatmap.pdf
-│ └── population_bursts.pdf
-```
+    Testing mode is intended for parameter optimisation only and does not save analysis outputs.
 
 ---
 
@@ -90,7 +114,6 @@ Network/
 - Network metrics depend on quality of prior segmentation and event detection  
 - Spike inference method strongly influences network structure (OASIS vs CASCADE)  
 - Recommended to keep parameters consistent across datasets for comparability  
-- Combined mode is computationally heavier but fully automated  
 
 ---
 
@@ -102,3 +125,4 @@ Network/
 </video>
 
 ---
+

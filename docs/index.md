@@ -10,25 +10,10 @@ This tool provides an end-to-end workflow for:
 - Single-cell analysis
 - Network analysis
 
+Because the pipeline is modular, each analysis step generates intermediate outputs that can be inspected, validated, and re-used independently, allowing users to choose which steps to run and when.
 
 ## Why this tool?
 
-Current workflows rely on fragmented pipelines across tools such as FIJI, MATLAB, and spreadsheets, often requiring manual ROI selection and extensive user intervention. These approaches are time-consuming, error-prone, and difficult to reproduce or scale across experiments. 
+Current calcium imaging workflows are often fragmented across FIJI/ImageJ, MATLAB, spreadsheets, and custom scripts, making analysis time-consuming, difficult to reproduce, and dependent on manual intervention. This pipeline builds upon the open-source LUMIN framework: a modular, end-to-end environment for in vitro calcium imaging analysis of (iPSC-derived) neuronal cultures. LUMIN is a plugin for napari, providing an interactive graphical interface without requiring coding experience.
 
-This tool addresses these limitations by providing an integrated, model-based workflow that standardizes segmentation, signal extraction, and downstream analysis. Each analysis step produces structured outputs, allowing users to inspect intermediate results and flexibly run or repeat specific stages of the pipeline. The result is a more automated, scalable, and reproducible approach that supports both single-cell and network-level analysis with minimal manual effort.
-
-## Workflow
-
-```text
-Input → Segmentation + signal extraction → Activity detection → Features
-```
-## Example output
-
-* ROI masks
-* Calcium traces
-* Event detection plots
-* Feature tables
-
-## Getting started
-
-See the [Installation](installation.md) page.
+This pipeline extends LUMIN with combining automated preprocessing, manual segmentation refinement options and model-based methods such as OASIS spike inference. The workflow supports scalable, reproducible, and user-friendly calcium imaging analysis across experiments and datasets.

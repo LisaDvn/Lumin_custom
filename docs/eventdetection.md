@@ -1,116 +1,120 @@
 # 3. Event detection
 
-This step detects calcium transients directly from fluorescence traces using ΔF/F normalization and peak-based event detection. It produces single-cell activity metrics for downstream analysis.
+This step detects calcium activity events directly from extracted fluorescence traces using ΔF/F normalization and peak-based signal analysis. It generates single-cell activity metrics that can be used for downstream phenotyping, condition comparison, and network-level analysis.
 
 ---
 
-Open the **Trace quantification** widget and select the project directory generated after segmentation and signal extraction.
+Open the **Trace quantification** widget and select the project directory generated during segmentation and signal extraction.
 
 ---
 
 ## Analysis modes
 
-| Mode | Use when |
-|---|---|
-| **Compound-evoked activity** | Recordings include a defined stimulation event (e.g. drug addition) |
-| **Spontaneous activity** | No external stimulus; analysing baseline calcium dynamics |
+LUMIN supports two activity modes depending on the experiment:
+
+- **Compound-evoked activity** — Recordings contain a defined stimulation event such as drug addition, optogenetic stimulation, or media exchange 
+- **Spontaneous activity**     — Recordings without external perturbation, used to analyse intrinsic calcium dynamics
 
 ---
 
-## Activity types (compound-evoked only)
+## ΔF/F normalization
 
-| Type | Description |
-|---|---|
-| **Baseline shift** | Sustained fluorescence change after stimulation (AUC-based) |
-| **Spontaneous** | Discrete calcium spikes within the recording window |
+Before event detection, fluorescence traces are normalized to ΔF/F to reduce baseline variability and improve comparability between cells.
 
----
+Available normalization methods:
 
-## Normalization
-
-Fluorescence traces are normalized before event detection:
-
-| Method | Description |
-|---|---|
-| **Sliding window** | Rolling percentile-based baseline (general use) |
-| **Pre-stimulus window** | Baseline estimated from pre-stimulation frames |
+- **Sliding window** — Rolling percentile-based baseline estimation across the recording (default) 
+- **Pre-stimulus window** — Baseline estimated only from frames preceding stimulation
 
 ---
 
 ### Sliding window parameters
-- **Window size** — number of frames used for baseline estimation  
-- **Percentile threshold** — defines baseline level (higher = stricter baseline)  
+
+| Parameter                | Description                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| **Window size**          | Number of frames used for baseline estimation                                                          |
+| **Percentile threshold** | Defines the baseline level used for normalization (higher values produce a stricter baseline estimate) |
 
 ---
 
-## Event detection (peak-based)
+## Activity classification (compound-evoked mode only)
 
-Events are detected directly from ΔF/F traces using threshold-based peak detection.
+For stimulation experiments, LUMIN can distinguish between different response types:
 
-### Key parameters
+- **Baseline shift** — Sustained fluorescence increase or decrease after stimulation, quantified using area-under-the-curve (AUC) metrics
+- **Spontaneous events** — Discrete calcium transients occurring throughout the recording window
 
-| Parameter | Description |
-|---|---|
-| Smoothing | Apply smoothing before peak detection |
-| Prominence | Minimum peak prominence for event detection |
-| Amplitude/width ratio | Filters broad, low-amplitude events |
-| Imaging interval (s) | Converts frames to time |
-| Analysis window | Frame range used for analysis |
+---
+
+## Event detection
+
+Events are identified directly from ΔF/F traces using threshold-based peak detection.
+
+### Event detection parameters
+
+| Parameter                 | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| **Smoothing**             | Applies optional smoothing before peak detection to reduce noise         |
+| **Prominence**            | Minimum peak prominence required to classify an event                    |
+| **Amplitude/width ratio** | Filters broad low-amplitude fluctuations and non-specific signal changes |
+| **Imaging interval (s)**  | Converts frame indices into real time                                    |
+| **Analysis window**       | Restricts analysis to a selected frame range                             |
 
 ---
 
 ## Parameter optimisation
 
-Use the interactive testing tools to tune detection settings:
+Use the testing tools before running full analysis:
 
-### Test settings on random recording
-- Samples a random dataset entry  
-- Displays:
-  - Baseline estimation  
-  - Detected events  
-  - Calcium trace with event overlays  
-- Allows real-time parameter adjustment  
+- **Test settings on random image** → quick preview on a random recording  
+
+The following visualisations will be shown for a random recording:
+
+* ΔF/F normalization
+* baseline estimation
+* calcium traces with event overlays
 
 ### Test settings on same recording
-- Re-runs analysis on the same sample for iterative tuning  
+
+Re-runs analysis on the same sample to allow iterative parameter refinement and direct comparison between settings.
 
 !!! note
-    This step does not save results and is intended for parameter tuning only.
+    Testing mode is intended for parameter optimisation only and does not save analysis outputs.
 
 ---
 
-## Output
+## Generated outputs
 
-After running event detection, the following outputs are generated:
-```bash
-Quantification/
-├── Tables/
-│ ├── cell_properties_event_detection.pkl
-│ ├── cell_properties_event_detection.csv
-│ └── event_detection_parameters.txt
-├── Plots/
-│ ├── traces_with_events.pdf
-│ ├── event_frequency_distribution.pdf
-│ ├── amplitude_distribution.pdf
-│ └── condition_comparisons.pdf
-```
+Depending on the selected analysis mode, LUMIN generates:
+
+* normalized ΔF/F traces
+* detected event timestamps
+* event amplitudes and durations
+* firing frequency metrics
+* AUC-based response measurements
+* per-cell activity summaries
+
+These outputs are used in downstream modules including phenotype comparison, clustering, and network analysis.
 
 ---
 
 ## Notes
 
-- Event detection is **trace-based and independent of network analysis**
-- Results depend strongly on parameter selection (use test mode before running full analysis)
-- Recommended to validate on multiple recordings per condition
-- ΔF/F normalization is required for all event detection workflows
+* Accurate segmentation and signal extraction are required for reliable results
+* Detection sensitivity depends strongly on parameter selection
+* It is recommended to validate settings across multiple recordings and conditions before large-scale analysis
 
 ---
 
 ## Demo
 
-<video controls style="width: 100%;">
-  <source src="../videos/demo_eventdetection.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe
+    src="https://www.youtube.com/embed/Fkmgo1ZjrRo"
+    title="Demo video"
+    frameborder="0"
+    allowfullscreen
+    style="position: absolute; top:0; left:0; width:100%; height:100%;">
+  </iframe>
+</div>
 ---

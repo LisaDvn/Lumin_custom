@@ -8,22 +8,16 @@ This step detects cells in your recordings and extracts fluorescence signals per
 
 Open the **Cell segmentation** widget and configure the following inputs.
 
-### Input file
-Path to `_input.csv` (generated during preprocessing).
+- **Input file** — Path to `_input.csv` (generated during preprocessing).
+- **Project directory** — Root folder where all segmentation and analysis outputs will be stored.
 
-### Project directory
-Root folder where all segmentation and analysis outputs will be stored.
 
----
+### Optional inputs
 
-## Optional inputs
-
-### Metadata file
-Optional CSV file containing scaling parameters:
-
-- `nuclear_area_scaler`
-- `cell_area_scaler`
-- `intensity_scaler`
+- **Metadata file** — Optional CSV file containing scaling parameters:
+  - `nuclear_area_scaler`
+  - `cell_area_scaler`
+  - `intensity_scaler`
 
 These improve ROI filtering and normalization but are not required.
 
@@ -41,7 +35,7 @@ LUMIN supports three segmentation strategies:
 
 ---
 
-## Segmentation methods (Automated / Hybrid only)
+## Segmentation methods
 
 Depending on whether a nuclear channel is present:
 
@@ -52,17 +46,15 @@ Depending on whether a nuclear channel is present:
 
 ---
 
-### StarDist parameters
-- **Probability threshold** — higher = fewer but more confident ROIs  
-- **Overlap threshold** — controls allowed ROI overlap  
-
----
-
 ### Cellpose parameters
-- **Model** — `cyto3`, `cyto2`, `cyto`, or custom model  
+- **Model** — `cyto3`, `cyto2`, `cyto`, or custom trained model  
 - **Diameter** — estimated cell size in pixels  
 - **Cell probability threshold** — sensitivity of detection  
 - **Flow threshold** — segmentation strictness (0 disables filtering)  
+
+### StarDist parameters
+- **Probability threshold** — higher = fewer but more confident ROIs  
+- **Overlap threshold** — controls allowed ROI overlap  
 
 ---
 
@@ -75,20 +67,38 @@ Use the testing tools before running full analysis:
 
 The napari viewer shows segmentation overlays and raw images.
 
-!!! note
-    This step does not save results and is intended for parameter tuning only.
+### Post-filtering (after testing)
+
+After generating an initial segmentation preview, you can further refine the detected ROIs using post-filtering controls. These filters help remove incorrectly segmented objects such as debris or abnormally large structures.
+
+The effect of each filter is shown immediately in the napari viewer, allowing rapid visual optimisation before running the full dataset.
+
+- **Cell area** — Removes ROIs that are too small or too large based on the selected size range
+- **Fluorescence intensity** — Excludes ROIs with unusually low or high signal intensity
+
+
+!!! tip
+    Post-filtering is intended for interactive parameter optimisation only. No results are saved during testing until the full segmentation pipeline is executed.
+
 ---
 
-## Post-filtering (after testing)
+## Hybrid segmentation
 
-| Slider | Description |
-|---|---|
-| Nuclear overlap | Minimum overlap between nucleus and cytoplasm |
-| Nuclear area | Allowed size range for nuclear ROIs |
-| Cell area | Allowed size range for cytoplasmic ROIs |
-| Fluorescence intensity | Intensity range filter for ROIs |
+Hybrid mode combines automated segmentation with manual refinement inside the napari viewer. This approach is recommended when fully automated segmentation is insufficient or when additional quality control is required.
 
-Enable **Apply filters** to compare raw vs filtered results.
+During hybrid segmentation:
+
+1. ROIs are first generated automatically using Cellpose and/or StarDist
+2. The resulting segmentation masks are loaded into napari as editable layers
+3. Users can manually refine the masks before finalizing the analysis
+
+Available refinement actions include:
+
+* adding missing ROIs
+* deleting incorrect ROIs
+* splitting merged cells
+
+This workflow allows automated models to provide an initial segmentation while still giving full user control over the final ROI set.
 
 ---
 
@@ -101,30 +111,6 @@ Enable **Apply filters** to compare raw vs filtered results.
 
 ---
 
-## Output
-
-After running, the following structure is created in your project directory:
-```bash
-Segmentation/
-├── Masks/
-│ └── <plate_id>/
-│ ├── <filename>_final_mask.tiff
-│ └── <filename>_projected.tiff
-├── Plots/
-│ └── <plate_id>/<filename>/
-│ ├── nuclear_mask.pdf
-│ ├── calcium_mask.pdf
-│ ├── calcium_mask_filtered.pdf
-│ ├── labelled_mask_filtered.pdf
-│ └── raw_traces.pdf
-└── Tables/
-├── cell_properties_signal_extraction.pkl
-├── cell_properties_signal_extraction.csv
-├── parameters.csv
-└── segmentation_signal_extraction_config.txt
-```
----
-
 ## Notes
 
 - Segmentation results are required for all downstream steps  
@@ -135,10 +121,15 @@ Segmentation/
 
 ## Demo
 
-<video controls style="width: 100%;">
-  <source src="../videos/demo_segmentation.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe
+    src="https://www.youtube.com/embed/kQwwagh8vb4"
+    title="Demo video"
+    frameborder="0"
+    allowfullscreen
+    style="position: absolute; top:0; left:0; width:100%; height:100%;">
+  </iframe>
+</div>
 
 ---
 

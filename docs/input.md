@@ -4,35 +4,25 @@ This step prepares your raw imaging data and generates the required project stru
 
 ---
 
-## Supported input formats
+## Required inputs
+
+In the **Preprocessing widget**, you must provide:
+
+- **Input folder (ND2/TIFF)** — Select the folder containing your raw imaging files.
+- **Project directory** — Choose or create a directory where all pipeline output will be stored.
+- **Plate ID** — Identifier for the imaging plate (e.g. `Plate_01`).
+- **Cell line** — Biological replicate or cell type (e.g. `Striatal`, `iPSC-derived neurons`).
+- **Condition** — Experimental condition (e.g. `Control`, `Drug_A`, `HD50`).
+
+### Supported input formats
 
 LUMIN accepts the following raw file formats:
 
 - `.tiff` / `.tif`
 - `.nd2` (Nikon)
 
-All files with the same metadata should be placed inside a single input folder.
-
----
-
-## Required inputs
-
-In the **Preprocessing widget**, you must provide:
-
-### Input folder (ND2/TIFF)
-Select the folder containing your raw imaging files.
-
-### Project directory
-Choose or create a directory where all pipeline output will be stored.
-
-### Plate ID
-Identifier for the imaging plate (e.g. `Plate_01`).
-
-### Cell line
-Biological replicate or cell type (e.g. `Striatal`, `iPSC-derived neurons`).
-
-### Condition
-Experimental condition (e.g. `Control`, `Drug_A`, `HD50`).
+!!! tip
+    All files with the same metadata should be placed inside a single input folder.
 
 ---
 
@@ -49,7 +39,8 @@ You can optionally include additional metadata for better data tracking and FAIR
 - **Calcium indicator** — e.g. GCaMP6, Fluo-4  
 - **Cell density** — plating density or estimate  
 
-These fields are not required for analysis but are stored in the metadata output.
+!!! tip
+    These fields are not required for analysis but are stored in the metadata output.
 
 ---
 
@@ -58,21 +49,13 @@ These fields are not required for analysis but are stored in the metadata output
 After clicking **Run**, LUMIN will:
 
 1. Scan the input folder for ND2/TIFF files  
-2. Extract metadata from file names and user input  
+2. Extract metadata from the files and user input  
 3. Convert files (if needed) into a standardized format  
 4. Generate a structured project directory  
 5. Create an `_input.csv` file used in downstream steps  
 
----
-
-### `_input.csv`
-This file contains all required information for segmentation and analysis:
-
-- `plate_id`
-- `filename`
-- `filepath`
-- `cell_line`
-- `condition`
+!!! tip
+    You can process multiple input folders into the same project directory. Each run appends new entries to the existing _input.csv file, allowing metadata and datasets to accumulate across experiments without overwriting previous records.
 
 ---
 
@@ -86,8 +69,12 @@ This file contains all required information for segmentation and analysis:
 
 ## Demo
 
-<video controls style="width: 100%;">
-  <source src="../videos/demo_preprocessing.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-```
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe
+    src="https://www.youtube.com/embed/8fdCsX5Xs9w"
+    title="Demo video"
+    frameborder="0"
+    allowfullscreen
+    style="position: absolute; top:0; left:0; width:100%; height:100%;">
+  </iframe>
+</div>

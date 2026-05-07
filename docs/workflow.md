@@ -2,14 +2,18 @@
 
 This pipeline provides an end-to-end workflow for calcium imaging analysis, from raw recordings to single-cell and network-level insights. Each step generates structured outputs, allowing inspection and flexible re-analysis.
 
+```text
+Input → Segmentation + signal extraction → Activity detection → Features
+```
+
 ---
 
 ## Pipeline overview
 
 | Step | Input | Output |
 |------|------|--------|
-| **1. Input** | ND2 / TIFF recordings + metadata | `_input.csv` + organised project structure |
-| **2. Segmentation & signal extraction** | `_input.csv` + recordings (`.tiff`) | ROI masks + fluorescence traces (`cell_properties_signal_extraction.pkl`) |
+| **1. Input** | ND2 / TIFF recordings + metadata | Structured input file(`_input.csv`) |
+| **2. Segmentation & signal extraction** | input file + recordings folder (`.tiff`) | ROI masks + fluorescence traces (`cell_properties_signal_extraction.pkl`) |
 | **3. Event detection** | Fluorescence traces | Detected events + single-cell activity metrics |
 | **4. Spike inference** | Fluorescence traces | Inferred activity + network activity metrics|
 
@@ -41,13 +45,13 @@ Cells are detected and fluorescence signals are extracted per ROI.
 **Modes:**
 
 - Automated — ROI detection using Cellpose  
-- **Hybrid — automated detection with manual refinement  
+- Hybrid — automated detection with manual ROI refinement  
 - Manual — user-defined ROI selection  
 
 **Input:**
 
 - `_input.csv`
-- Image recordings
+- Folder with recordings
 
 **Output:**
 
@@ -72,22 +76,25 @@ Fluorescence traces are normalised and analysed for activity.
 
 **Output:**
 
-- Detected events per cell
+- Detected calcium events per cell
 - Single-cell activity metrics
 
 ---
 
 ### 4. Spike inference
 
-Model-based estimation of action potentials.
+Fluorescence traces are deconvolved and action potentials are being estimated.
 
 **Input:**
+
 - Fluorescence traces (`cell_properties_signal_extraction.pkl`)
 
 **Processing:**
+
 - Deconvolution using OASIS
 
 **Output:**
+
 - Inferred spike trains
 - Network activity metrics
 
@@ -96,7 +103,12 @@ Model-based estimation of action potentials.
 
 ## Key features
 
-- Modular workflow — run steps independently  
-- Model-based spike inference (OASIS)  
+- Scalable across datasets and experiments 
+- Modular workflow — run steps independently   
 - Intermediate outputs for validation  
-- Scalable across datasets and experiments  
+- Model-based spike inference (OASIS)  
+
+
+## Getting started
+
+See the [Installation](installation.md) page to get started.

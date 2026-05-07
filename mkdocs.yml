@@ -41,7 +41,8 @@ nav:
     - 2. Segmentation & signal extraction: segmentation.md
     - 3. Event detection: eventdetection.md
     - 4. Spike detection: spikedetection.md
-    - 5. Feature Extraction: features.md
+    - Parameters: parameter.md
+    - Features: features.md
   - GUI Usage: gui.md
   - FAIR Principles: fair.md
 
