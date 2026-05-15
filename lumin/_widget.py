@@ -35,13 +35,15 @@ from time import perf_counter
 from lumin.logging import RunManager
 from lumin.preprocessing import run_preprocessing_pipeline
 
+from lumin.Z_network_plots import network_event_overlay_preview
+
 from qtpy.QtCore import QThread, Signal, Qt, QTimer
 from qtpy.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar, QProgressDialog, QApplication
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QDoubleSpinBox, QSpinBox, QGroupBox,
     QFormLayout, QStackedWidget, QCheckBox, QProgressBar,
-    QSizePolicy
+    QSizePolicy, QScrollArea
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont
@@ -54,11 +56,26 @@ CP_models = ['-- Select --', "cyto3", "cyto2", "cyto", "trained_model"]
 
 # Takes widget name as input and it removes
 def remove_widget_if_exists(viewer, widget_name):
-    for dock_widget in viewer.window._dock_widgets.values():
-        widget = dock_widget.widget() 
-        if widget.objectName() == widget_name:
+    for dock_widget in list(viewer.window._dock_widgets.values()):
+        if dock_widget is None:
+            continue
+        widget = dock_widget.widget()
+        if widget is not None and widget.objectName() == widget_name:
             viewer.window.remove_dock_widget(dock_widget)
             break
+# Get existing dock widget for the main network activity widget or add it if it doesn't exist, to avoid duplicate tabs stacking up.
+def _get_or_add_main_dock(viewer, widget):
+    """Return the existing dock for the network activity widget without
+    re-adding it, to avoid duplicate tabs stacking up."""
+    for dw in list(viewer.window._dock_widgets.values()):
+        if dw is None:
+            continue
+        w = dw.widget()
+        if w is not None and w.objectName() == 'Network activity':
+            return dw
+    # Not found — add it once
+    return viewer.window.add_dock_widget(widget, area='right', name='Network activity')
+ 
 
 
 # Disable or enable widget value 
@@ -122,7 +139,7 @@ def preprocessing_widget():
         def __init__(self):
             super().__init__()
             self.setWindowFlags(Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
-            self.setWindowTitle("Segmentation pipeline")
+            self.setWindowTitle("Preprocessing...")
             self.setFixedWidth(380)
             self.setModal(True)
 
@@ -2403,14 +2420,14 @@ def network_activity_widget():
         ),
         oasis_tau=dict(
             widget_type='FloatSpinBox', label='Indicator decay τ',
-            value=1.5, min=0.01, max=10.0, step=0.1,
+            value=0.0, min=0.0, max=10.0, step=0.1,
             tooltip='Calcium indicator decay time constant in seconds.',
         ),
         oasis_imaging_interval=dict(
             widget_type='FloatSpinBox', label='Imaging interval (s)',
             value=0.0, min=0.0, max=60.0, step=0.001,
             tooltip=(
-                'Time between frames in seconds (e.g. 0.033 for 30 Hz). '
+                'Time between frames in seconds (e.g. 0.125 for 8 Hz). '
                 'Must be set to match your recording — no meaningful default exists.'
             ),
         ),
@@ -2483,7 +2500,7 @@ def network_activity_widget():
         ),
         network_participation_thr=dict(
             widget_type='FloatSpinBox', label='Network event threshold',
-            value=0.10, min=0.01, max=1.0, step=0.01,
+            value=0.50, min=0.01, max=1.0, step=0.01,
             tooltip=(
                 'Minimum fraction of co-active neurons required to classify a frame '
                 'as a network event (population burst). E.g. 0.10 = 10 % of cells.'
@@ -2504,6 +2521,18 @@ def network_activity_widget():
             ),
         ),
 
+        # ── network preview ────────────────────────────────────────────────
+        network_preview_button=dict(
+            widget_type='PushButton',
+            text='Preview network events',
+            tooltip=(
+                'Preview detected network events using the current threshold and '
+                'distance settings — without running the full analysis. '
+                'Requires spike trains to be computed first.'
+            ),
+            enabled=False,
+        ),
+
     )
     def widget(
         project_dir, analysis_mode,
@@ -2512,7 +2541,7 @@ def network_activity_widget():
         cascade_label, cascade_model, cascade_imaging_interval, cascade_thr,
         optimize_label, optimize_button, optimize_button_previous,
         network_label, network_participation_thr, network_min_peak_dist,
-        network_imaging_interval,
+        network_imaging_interval, network_preview_button,
     ):
         pass
 
@@ -2520,18 +2549,19 @@ def network_activity_widget():
     widget.native.setObjectName('Network activity')
     disable_placeholder(widget.analysis_mode)
 
-    # ── widget state ──────────────────────────────────────────────────────────
+    # widget state (e.g. for storing loaded data and intermediate results across function calls)
     class WidgetState:
         cell_properties_df = None
         F                  = None    # (n_neurons × n_frames) float32
-        F_col              = None    # 'raw' | 'dff'
+        F_col              = None    # 'raw' or 'dff'
         spike_trains       = None    # set after full deconvolution run
+        spike_trains_method = None   # 'OASIS' or 'CASCADE' — method used for spike_trains
         previous_image_id  = None    # last recording used for test run
 
     state   = WidgetState()
     _worker = [None]
 
-    # ── initial visibility ────────────────────────────────────────────────────
+    # visibility: hide all method-specific and network-analysis widgets until an analysis mode is selected
     for name in (
         'deconv_label', 'deconv_method',
         'oasis_label', 'oasis_tau', 'oasis_imaging_interval',
@@ -2539,11 +2569,10 @@ def network_activity_widget():
         'cascade_label', 'cascade_model', 'cascade_imaging_interval', 'cascade_thr',
         'optimize_label', 'optimize_button', 'optimize_button_previous',
         'network_label', 'network_participation_thr', 'network_min_peak_dist',
-        'network_imaging_interval',
+        'network_imaging_interval', 'network_preview_button',
     ):
         getattr(widget, name).visible = False
 
-    # ── visibility helpers ────────────────────────────────────────────────────
     def _show_oasis(visible):
         for n in ('oasis_label', 'oasis_tau', 'oasis_imaging_interval',
                   'oasis_baseline', 'oasis_win', 'oasis_sig'):
@@ -2555,7 +2584,8 @@ def network_activity_widget():
 
     def _show_network_params(visible):
         for n in ('network_label', 'network_participation_thr',
-                  'network_min_peak_dist', 'network_imaging_interval'):
+                  'network_min_peak_dist', 'network_imaging_interval',
+                  'network_preview_button'):
             getattr(widget, n).visible = visible
 
     def _show_optimize_buttons(visible):
@@ -2570,7 +2600,10 @@ def network_activity_widget():
             _show_oasis(False)
             _show_cascade(True)
 
-    # ── data loading ──────────────────────────────────────────────────────────
+    def _update_preview_button_state():
+        """Enable preview button only when spike trains are available."""
+        widget.network_preview_button.enabled = state.spike_trains is not None
+
     def _load_data(path):
         try:
             state.cell_properties_df = get_cell_properties_df(path)
@@ -2583,7 +2616,6 @@ def network_activity_widget():
                 QMessageBox.warning(None, 'Data error', 'No trace column found.')
                 return
 
-            # parse: CSV stores lists as strings, pickle preserves them
             first = df[raw_col].iloc[0]
             if isinstance(first, str):
                 import ast
@@ -2591,7 +2623,6 @@ def network_activity_widget():
             else:
                 traces = df[raw_col].tolist()
 
-            # fix inhomogeneous lengths BEFORE building numpy array
             lengths = [len(t) for t in traces]
             unique_lengths, counts = np.unique(lengths, return_counts=True)
             if len(unique_lengths) > 1:
@@ -2616,7 +2647,6 @@ def network_activity_widget():
             QMessageBox.critical(None, 'Load error', f'Could not load data:\n{e}')
             traceback.print_exc()
 
-    # ── change handlers ───────────────────────────────────────────────────────
     @widget.project_dir.changed.connect
     def _on_project_dir_changed():
         if os.path.isdir(str(widget.project_dir.value)):
@@ -2642,6 +2672,7 @@ def network_activity_widget():
             _show_optimize_buttons(False)
 
         _show_network_params(needs_network)
+        _update_preview_button_state()
 
         if mode == 'Network analysis':
             widget.network_imaging_interval.value = widget.oasis_imaging_interval.value
@@ -2650,7 +2681,7 @@ def network_activity_widget():
     def _on_method_changed():
         _sync_method_panels()
 
-    # ── shared deconvolution core ─────────────────────────────────────────────
+    # deconvolution functions
     def _deconvolve(F_subset, F_col, method, params):
         """Runs OASIS or CASCADE on F_subset. Call only from a worker thread."""
         if method == 'OASIS':
@@ -2682,21 +2713,122 @@ def network_activity_widget():
                 verbosity  = 1,
             )
 
-    # ── trace viewer ─────────────────────────────────────────────────────────
+    # network event preview function
+    def _show_network_preview(S, fs, method, label='all cells'):
+        spike_thr     = widget.cascade_thr.value if method == 'CASCADE' else 0.0
+        S_bin_preview = (S > spike_thr).astype(np.uint8)
+    
+        preview_fig = network_event_overlay_preview(
+            S_bin               = S_bin_preview,
+            fs                  = fs,
+            participation_thr   = widget.network_participation_thr.value,
+            min_peak_distance_s = widget.network_min_peak_dist.value,
+            recording_label     = label,
+            method              = method,
+        )
+    
+        canvas = FigureCanvas(preview_fig)
+        canvas.setMinimumSize(900, 600)
+    
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.addWidget(canvas)
+        layout.setContentsMargins(0, 0, 0, 0)
+        scroll.setWidget(container)
+        scroll.setObjectName('Event preview')
+    
+        # Remove any existing preview tab before adding a new one
+        remove_widget_if_exists(viewer, 'Event preview')
+    
+        dw_preview = viewer.window.add_dock_widget(
+            scroll, area='right', name=f'Event preview  [{label}]'
+        )
+    
+        # Reuse the existing main dock rather than adding a duplicate
+        dw_main = _get_or_add_main_dock(viewer, widget)
+        viewer.window._qt_window.tabifyDockWidget(dw_main, dw_preview)
+        dw_preview.raise_()
+    
+        plt.close(preview_fig)
+        print(f'Network event preview shown  ({label})')
+ 
+
+    # button for previewing network events based on current settings
+    @widget.network_preview_button.clicked.connect
+    def _on_network_preview():
+        """
+        Uses state.spike_trains — no deconvolution is run.
+        Shows events for a randomly chosen single recording so the plot stays
+        readable; falls back to all cells if no image_id column is present.
+        """
+        if state.spike_trains is None:
+            QMessageBox.warning(
+                None, 'No spike trains',
+                'No spike trains available.\n\n'
+                'Run "Temporal (spike trains)" or "Combined" first, then adjust '
+                'the network parameters here and click Preview.',
+            )
+            return
+
+        # resolve imaging interval
+        mode     = widget.analysis_mode.value
+        method   = state.spike_trains_method or widget.deconv_method.value
+        interval = widget.network_imaging_interval.value
+        decay_time = widget.oasis_tau.value
+        if decay_time <= 0:
+            # fall back to whichever deconv interval is visible
+            decay_time = (widget.oasis_imaging_interval.value
+                        if method == 'OASIS'
+                        else widget.cascade_imaging_interval.value)
+        if decay_time <= 0:
+            QMessageBox.warning(None, 'Decay time not set',
+                'Please set the decay time (s) before previewing.')
+            return
+        if interval <= 0:
+            # fall back to whichever deconv interval is visible
+            interval = (widget.oasis_imaging_interval.value
+                        if method == 'OASIS'
+                        else widget.cascade_imaging_interval.value)
+        if interval <= 0:
+            QMessageBox.warning(None, 'Imaging interval not set',
+                'Please set the imaging interval (s) before previewing.')
+            return
+        
+        fs = 1.0 / interval
+
+        S   = state.spike_trains
+        df  = state.cell_properties_df
+
+        # pick one recording for the preview (keeps the raster readable)
+        if df is not None and 'image_id' in df.columns:
+            # reuse the last test recording if available, else pick randomly
+            image_id = state.previous_image_id or random.choice(df['image_id'].unique().tolist())
+            orig_idx = df.index[df['image_id'] == image_id].tolist()
+            S_rec    = S[orig_idx]
+            label    = (str(df.loc[df['image_id'] == image_id, 'filename'].iloc[0])
+                        if 'filename' in df.columns else str(image_id))
+        else:
+            S_rec  = S
+            label  = 'all cells'
+
+        try:
+            widget.network_preview_button.enabled = False
+            _show_network_preview(S_rec, fs, method, label=label)
+        except Exception:
+            print('Warning: network event preview failed.')
+            traceback.print_exc()
+        finally:
+            widget.network_preview_button.enabled = True
+
+    # trace viewer function for showing deconvolution results in the test run
     def _show_trace_viewers(plot_df, S_subset, recording_label=''):
-        """
-        Dock two tabbed PlotViewer widgets next to the main widget:
-          'Baseline traces' — raw fluorescence per cell
-          'Spike trains'    — deconvolved output with spike events overlaid
-        Mirrors the viewer pair in single_cell_widget._optimize_quantification.
-        """
         plot_df = plot_df.copy()
-        # put the continuous spike-rate output in 'dff' so cellwise_traces
-        # can overlay spikes using its existing detection logic
         plot_df['dff'] = list(S_subset)
-
+    
         trace_col = 'raw' if 'raw' in plot_df.columns else 'dff'
-
+    
         plot_list_raw = plot.cellwise_traces(
             cell_properties_df = plot_df,
             trace              = trace_col,
@@ -2710,32 +2842,32 @@ def network_activity_widget():
             spikes             = True,
             spikes_mode        = 'all',
         )
-
+    
+        # Remove stale tabs before creating new ones
         remove_widget_if_exists(viewer, 'Baseline traces')
         remove_widget_if_exists(viewer, 'Spike trains')
-
+    
         suffix = f'  [{recording_label}]' if recording_label else ''
-
+    
         widget_raw = PlotViewer(plot_list_raw)
         widget_raw.setObjectName('Baseline traces')
         dw_raw = viewer.window.add_dock_widget(
             widget_raw, area='right', name=f'Baseline traces{suffix}'
         )
-
+    
         widget_spikes = PlotViewer(plot_list_spikes)
         widget_spikes.setObjectName('Spike trains')
         dw_spikes = viewer.window.add_dock_widget(
             widget_spikes, area='right', name=f'Spike trains{suffix}'
         )
-
-        dw_main = viewer.window.add_dock_widget(
-            widget, area='right', name='Network activity'
-        )
+    
+        # Reuse the existing main dock rather than adding a duplicate
+        dw_main = _get_or_add_main_dock(viewer, widget)
         viewer.window._qt_window.tabifyDockWidget(dw_main, dw_raw)
         viewer.window._qt_window.tabifyDockWidget(dw_main, dw_spikes)
         dw_spikes.raise_()
 
-    # ── test run (random / previous recording) ────────────────────────────────
+    # test run function for deconvolution settings — runs on a single recording to preview the inferred spike trains in the trace viewers
     def _run_test(sample_mode):
         if state.cell_properties_df is None or state.F is None:
             QMessageBox.warning(None, 'No data', 'Load a project directory first.')
@@ -2743,7 +2875,6 @@ def network_activity_widget():
 
         df = state.cell_properties_df
 
-        # pick a single recording to test on
         if 'image_id' in df.columns:
             image_ids = df['image_id'].unique().tolist()
             if sample_mode == 'random' or state.previous_image_id is None:
@@ -2753,7 +2884,6 @@ def network_activity_widget():
                 image_id = state.previous_image_id
 
             subset_df  = df[df['image_id'] == image_id].copy().reset_index(drop=True)
-            # locate rows in the F matrix using the original df index
             orig_idx   = df.index[df['image_id'] == image_id].tolist()
             F_subset   = state.F[orig_idx]
             label      = str(subset_df['filename'].iloc[0]) if 'filename' in subset_df.columns else str(image_id)
@@ -2808,7 +2938,7 @@ def network_activity_widget():
             widget.optimize_button_previous.enabled = True
             print(f'Test done — {S.shape[0]} cells.')
 
-            # ── load mask + label overlay into napari, mirroring single_cell_widget ──
+            # ── load mask + label overlay into napari ──────────────────────
             try:
                 remove_layers(viewer)
                 if 'mask_path' in sdf.columns:
@@ -2824,7 +2954,6 @@ def network_activity_widget():
                         viewer.layers['Labels'].contour = 3
                         viewer.layers['Labels'].visible = True
 
-                        # calcium video — read from filepath column same as single_cell_widget
                         if 'filepath' in sdf.columns:
                             filepath = sdf['filepath'].iloc[0]
                             if os.path.isfile(str(filepath)):
@@ -2870,7 +2999,7 @@ def network_activity_widget():
                 print('Warning: mask loading failed.')
                 traceback.print_exc()
 
-            # ── trace viewers ─────────────────────────────────────────────
+            # ── trace viewers only (no network preview here) ───────────────
             try:
                 _show_trace_viewers(sdf, S, recording_label=label)
             except Exception:
@@ -2891,22 +3020,40 @@ def network_activity_widget():
     widget.optimize_button.clicked.connect(lambda: _run_test('random'))
     widget.optimize_button_previous.clicked.connect(lambda: _run_test('previous'))
 
-    # ── full-run worker ───────────────────────────────────────────────────────
+    
     class DeconvolutionWorker(QThread):
         finished = Signal(object)
         error    = Signal(str)
-
-        def __init__(self, F, F_col, method, params):
+ 
+        def __init__(self, F, F_col, method, params, cell_properties_df):
             super().__init__()
-            self.F, self.F_col, self.method, self.params = F, F_col, method, params
-
+            self.F                  = F
+            self.F_col              = F_col
+            self.method             = method
+            self.params             = params
+            self.cell_properties_df = cell_properties_df
+ 
         def run(self):
             try:
-                self.finished.emit(_deconvolve(self.F, self.F_col, self.method, self.params))
+                df = self.cell_properties_df
+ 
+                # if recordings are labelled, deconvolve each separately
+                if df is not None and 'image_id' in df.columns:
+                    S_out = np.zeros_like(self.F)
+                    for image_id, grp in df.groupby('image_id', sort=False):
+                        idx      = grp.index.tolist()
+                        F_rec    = self.F[idx]
+                        S_rec    = _deconvolve(F_rec, self.F_col, self.method, self.params)
+                        S_out[idx] = S_rec
+                    self.finished.emit(S_out)
+                else:
+                    # single recording — original behaviour
+                    self.finished.emit(
+                        _deconvolve(self.F, self.F_col, self.method, self.params)
+                    )
             except Exception as e:
                 self.error.emit(f'{type(e).__name__}: {e}\n\n{traceback.format_exc()}')
-
-    # ── network analysis helper ───────────────────────────────────────────────
+   
     def _run_network_analysis(S, method, fs):
         from lumin.Z_network_metrics import compute_and_save_all
         from lumin.Z_network_plots   import generate_all_plots
@@ -2914,9 +3061,7 @@ def network_activity_widget():
         project_dir       = str(widget.project_dir.value)
         participation_thr = widget.network_participation_thr.value
         min_peak_dist     = widget.network_min_peak_dist.value
-        # OASIS: spike where S > 0 (non-negativity guarantee)
-        # CASCADE: use cascade_thr if method matches, else 0
-        spike_thr = widget.cascade_thr.value if method == 'CASCADE' else 0.0
+        spike_thr         = widget.cascade_thr.value if method == 'CASCADE' else 0.0
 
         print('Computing network metrics…')
         results = compute_and_save_all(
@@ -2972,7 +3117,8 @@ def network_activity_widget():
                         'Please set the imaging interval (s) before running.')
                     return
                 _run_network_analysis(
-                    state.spike_trains, 'precomputed', 1.0 / interval
+                    state.spike_trains, state.spike_trains_method or 'precomputed',
+                    1.0 / interval,
                 )
             except Exception:
                 err = QMessageBox(QMessageBox.Critical, 'Error', 'Network analysis failed.')
@@ -3024,16 +3170,22 @@ def network_activity_widget():
         widget.optimize_button_previous.enabled = False
         print(f'Running {method} deconvolution on full dataset…')
 
-        worker = DeconvolutionWorker(state.F, state.F_col, method, params)
+        worker = DeconvolutionWorker(state.F, state.F_col, method, params, state.cell_properties_df)
         _worker[0] = worker
 
         def _on_finished(S):
             widget.call_button.enabled              = True
             widget.optimize_button.enabled          = True
             widget.optimize_button_previous.enabled = True
-            state.spike_trains = S
+
+            # store spike trains so the preview button can use them immediately
+            state.spike_trains        = S
+            state.spike_trains_method = method
             state.cell_properties_df['spike_train'] = list(S)
             print(f'{method} done — {S.shape[0]} spike trains, {S.shape[1]} frames.')
+
+            # enable preview button now that spike trains exist
+            _update_preview_button_state()
 
             try:
                 _show_trace_viewers(state.cell_properties_df, S)
@@ -3052,8 +3204,9 @@ def network_activity_widget():
                 QMessageBox.information(
                     None, 'Deconvolution done',
                     f'{S.shape[0]} neurons × {S.shape[1]} frames.\n\n'
-                    f'Traces shown in "Baseline traces" and "Spike trains" tabs.\n'
-                    f'Switch to "Network analysis" to compute network metrics.',
+                    f'Traces shown in "Baseline traces" and "Spike trains" tabs.\n\n'
+                    f'Switch to "Network analysis" mode and use "Preview network events" '
+                    f'to check your threshold settings before running the full analysis.',
                 )
 
         def _on_error(msg_text):
@@ -3070,8 +3223,6 @@ def network_activity_widget():
 
     return widget
 
+
 def napari_experimental_provide_dock_widget():
     return preprocessing_widget, segmentation_widget, single_cell_widget, network_activity_widget, {"name": "My Pipeline Launcher"}
-
-
-

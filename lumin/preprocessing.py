@@ -157,6 +157,34 @@ def _read_tiff_shape(fpath: str) -> tuple | None:
     return None
 
 
+def _parse_tiff_shape(shape: tuple) -> dict:
+    """
+    Convert a TIFF shape tuple into individual dimension columns that mirror
+    the ND2 metadata keys (X_pixels, Y_pixels, Timepoints).
+
+    Assumed axis order: (Timepoints, Y_pixels, X_pixels)
+    Handles gracefully for 2-D (single frame) or unexpected ranks.
+    """
+    if len(shape) >= 3:
+        return {
+            "Timepoints": shape[-3],
+            "Y_pixels":   shape[-2],
+            "X_pixels":   shape[-1],
+        }
+    elif len(shape) == 2:
+        return {
+            "Timepoints": 1,
+            "Y_pixels":   shape[0],
+            "X_pixels":   shape[1],
+        }
+    else:
+        return {
+            "Timepoints": None,
+            "Y_pixels":   None,
+            "X_pixels":   None,
+        }
+
+
 # build metadata row
 
 def _build_row(base: dict, extra_metadata: dict) -> dict:
@@ -246,6 +274,9 @@ def run_preprocessing_pipeline(
 
             try:
                 _convert_nd2(fpath, out_path, ij, BF)
+                import gc
+                gc.collect() # help release memory from large ND2 files before next iteration
+                
                 nd2_meta = extract_nd2_metadata(fpath)
 
                 row = _build_row(
@@ -263,6 +294,10 @@ def run_preprocessing_pipeline(
                     extra_metadata,
                 )
                 new_rows.append(row)
+                try:
+                    ij.py.run_macro('run("Collect Garbage");')
+                except:
+                    pass 
 
             except FileNotFoundError:
                 print(f"  ERROR: File not found – {fname}")
@@ -303,6 +338,10 @@ def run_preprocessing_pipeline(
             failed_files.append(fname)
             continue
 
+        # Parse shape tuple → individual dimension columns matching ND2 keys.
+        # Assumed axis order: (Timepoints, Y_pixels, X_pixels)
+        dims = _parse_tiff_shape(shape)
+
         row = _build_row(
             {
                 "plate_id"  : plate_id,
@@ -312,7 +351,7 @@ def run_preprocessing_pipeline(
                 "condition" : condition,
                 "format"    : "tiff",
                 "converted" : False,
-                "shape"     : str(shape),
+                **dims,
             },
             extra_metadata,
         )
