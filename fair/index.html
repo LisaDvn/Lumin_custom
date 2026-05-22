@@ -921,21 +921,14 @@
 
 
 <div><h1 id="fair-principles">FAIR Principles</h1>
-<p>To ensure that the developed calcium imaging analysis tool is reusable and aligned with best practices in scientific data management, the pipeline was adapted to meet the FAIR principles: <strong>Findable, Accessible, Interoperable, and Reusable</strong>.</p>
+<p>To ensure that the developed calcium imaging analysis tool is reusable and aligned with best practices in scientific data management, the pipeline was adapted to meet the [FAIR principles] (https://www.go-fair.org/fair-principles/): <strong>Findable, Accessible, Interoperable, and Reusable</strong>.</p>
 <h2 id="1-findable">1. Findable</h2>
-<p>The analysis workflow, codebase, and documentation are structured <em>and version-controlled</em> to ensure that they can be easily located and referenced.</p>
+<p>The analysis workflow, codebase, and documentation are structured and version-controlled to ensure that they can be easily located and referenced.</p>
 <ul>
-<li>
-<p>The full analysis pipeline is documented using structured documentation (MkDocs), including:</p>
-</li>
-<li>
-<p>Installation instructions</p>
-</li>
-<li>Step-by-step workflow description</li>
-<li>Parameter explanations</li>
+<li>The full analysis pipeline is documented using structured documentation (MkDocs), including installation instructions, a step-by-step workflow description, and parameter explanations.</li>
 <li>Code and documentation are maintained in a version-controlled repository (GitHub), enabling traceability of changes.</li>
-<li>Standardized file naming conventions are used for both input and output data.</li>
-<li>The modular structure of the LUMIN pipeline, ensures that each processing step (segmentation, event detection, analysis) is clearly defined and can be independently identified and referenced.</li>
+<li>Standardized file naming conventions are used for both input and output data, including method-tagged output filenames (e.g., <code>networkmetrics_per_well_OASIS.csv</code>).</li>
+<li>The modular structure of the LUMIN pipeline ensures that each processing step (segmentation, event detection, analysis) is clearly defined and can be independently identified and referenced.</li>
 </ul>
 <hr>
 <h2 id="2-accessible">2. Accessible</h2>
@@ -952,28 +945,22 @@
 <p>To ensure compatibility with other tools and workflows, the pipeline uses open and widely supported file formats.</p>
 <h3 id="input-formats">Input formats</h3>
 <ul>
+<li>Imaging data:</li>
+<li><code>.tiff</code> (standard format for microscopy data)</li>
 <li>
-<p>Imaging data:</p>
+<p><code>.nd2</code> (converted to <code>.tiff</code> using Bio-Formats)</p>
 </li>
-<li>
-<p><code>.tiff</code> (standard format for microscopy data)</p>
-</li>
-<li><code>.nd2</code> (converted to <code>.tiff</code> using Bio-Formats)</li>
-<li><em><code>.avi</code> (converted to <code>.tiff</code> using Bio-Formats)</em></li>
 <li>
 <p>Metadata:</p>
 </li>
-<li>
-<p><code>.csv</code> files (structured tabular format)</p>
-</li>
+<li><code>.csv</code> (structured tabular format)</li>
 </ul>
 <h3 id="output-formats">Output formats</h3>
 <ul>
+<li>Quantitative data:</li>
+<li><code>.csv</code> (feature tables)</li>
 <li>
-<p>Quantitative data:</p>
-</li>
-<li>
-<p><code>.csv</code> / <code>.xlsx</code> (feature tables)</p>
+<p><code>.pkl</code> (serialized Python DataFrames for intermediate results and downstream analysis within the pipeline)</p>
 </li>
 <li>
 <p>Imaging data:</p>
@@ -982,32 +969,42 @@
 <p><code>.tiff</code> (ROI masks)</p>
 </li>
 <li>
-<p>Reports and visualization:</p>
+<p>Experiment configuration and metadata:</p>
 </li>
 <li>
-<p><code>.pdf</code></p>
+<p><code>.json</code> (per-run parameter exports, enabling exact reproduction of analysis settings)</p>
 </li>
+<li>
+<p>Logging:</p>
+</li>
+<li>
+<p><code>.log</code> (structured run logs recording processing steps, parameter values, warnings, and errors per analysis session)</p>
+</li>
+<li>
+<p>Reports and visualization:</p>
+</li>
+<li><code>.pdf</code></li>
 </ul>
-<p>The integration of Bio-Formats ensures that proprietary microscopy formats can be converted into open, standardized formats without loss of essential metadata. 
-Additionally, the Napari environment supports visualization of multidimensional imaging data across formats and the support for plugins allows customization and extending.</p>
+<p>The integration of Bio-Formats ensures that proprietary microscopy formats can be converted into open, standardized formats without loss of essential metadata. Additionally, the Napari environment supports visualization of multidimensional imaging data across formats, and its plugin architecture allows customization and extension.</p>
+<p>Interoperability is further supported by embedding experimental metadata (e.g., <code>plate_id</code>, <code>cell_line</code>, <code>stimulation</code>, <code>deconv_method</code>) directly in all output tables, making outputs self-describing and linkable across datasets without reliance on external databases.</p>
 <hr>
 <h2 id="4-reusable">4. Reusable</h2>
 <p>The pipeline is designed to support reproducibility and reuse across experiments and research groups.</p>
 <ul>
 <li>A standardized workflow ensures consistent processing of calcium imaging data.</li>
 <li>Metadata integration enables reproducible parameter selection across datasets.</li>
+<li>All analysis parameters are exported as <code>.json</code> files at runtime, allowing exact reproduction of any analysis session.</li>
+<li>Run logs (<code>.log</code>) provide a traceable record of each session, including parameter values, processing steps, and any warnings or errors encountered.</li>
+<li>The deconvolution method used is stored explicitly in every output table (<code>deconv_method</code> column), ensuring that results remain interpretable and comparable across runs.</li>
 <li>All analysis steps (segmentation, signal extraction, feature extraction) are documented and transparent.</li>
-<li>
-<p>The modular design in Napari allows:</p>
-</li>
-<li>
-<p>Replacement of individual components (e.g., segmentation method)</p>
-</li>
-<li>Extension with new analysis modules</li>
+<li>The modular design in Napari allows replacement of individual components (e.g., segmentation method) and extension with new analysis modules.</li>
 <li>Output files are structured and labeled, enabling downstream analysis and sharing.</li>
 </ul>
 <h3 id="limitations">Limitations</h3>
 <ul>
+<li><code>.pkl</code> files are Python-specific and cannot be opened without a Python environment, limiting their interoperability with non-Python tools.</li>
+<li>The semicolon-delimited <code>.csv</code> format used in outputs may require delimiter configuration in tools that expect comma-separated values by default.</li>
+<li>The GUI is desktop-based and requires local installation; no browser-based or remote access is currently supported.</li>
 <li>The current validation is based on a limited number of datasets (proof-of-concept), which may affect generalizability.</li>
 <li>Future work should include validation on larger and more diverse datasets to further improve reusability.</li>
 </ul></div>
