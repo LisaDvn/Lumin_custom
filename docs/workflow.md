@@ -36,6 +36,7 @@ Input → Segmentation + signal extraction → Activity detection → Features
 - Structured `_input.csv`
 - Organised project directory with converted `.tiff` files (if needed)
 
+![input_preprocessing](images/Input_preprocessing.png)
 ---
 
 ### 2. Segmentation & signal extraction
@@ -59,6 +60,7 @@ Cells are detected and fluorescence signals are extracted per ROI.
 - Fluorescence traces per cell
 - Cell properties table (`.csv` / `.pkl`)
 
+![input_segmentation](images/input_segmentation.png)
 ---
 
 ### 3. Event detection (ΔF/F)
@@ -79,6 +81,7 @@ Fluorescence traces are normalised and analysed for activity.
 - Detected calcium events per cell
 - Single-cell activity metrics
 
+![input_event](images/input_event.png)
 ---
 
 ### 4. Spike inference
@@ -98,6 +101,7 @@ Fluorescence traces are deconvolved and action potentials are being estimated.
 - Inferred spike trains
 - Network activity metrics
 
+![input_spike](images/input_spike.png)
 ---
 
 

@@ -3,7 +3,7 @@ import numpy as np          # numerical operations (arrays, mean, etc.)
 import statistics           # basic statistics (used for mean here)
 import pandas as pd         # dataframe handling
 from scipy.signal import savgol_filter  # for optional smoothing of deconvolved trace
-import lumin.Z_deconv_oasis as oasis  # OASIS deconvolution function
+import lumin.deconv_oasis as oasis  # OASIS deconvolution function
 
 # -------------------- METHOD 1: PRE-STIMULATION BASELINE --------------------
 def pre_stimulation(cell_properties_df: pd.DataFrame = None,

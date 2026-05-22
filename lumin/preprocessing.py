@@ -322,7 +322,7 @@ def run_preprocessing_pipeline(
             except Exception:
                 pass
 
-    # ── TIFF registration (no conversion) ──────────────────
+    # Tiff processing (metadata extraction only, no conversion)
     tiff_to_process = [f for f in tiff_files if f not in already_processed]
     skipped_tiff    = len(tiff_files) - len(tiff_to_process)
 
@@ -338,8 +338,7 @@ def run_preprocessing_pipeline(
             failed_files.append(fname)
             continue
 
-        # Parse shape tuple → individual dimension columns matching ND2 keys.
-        # Assumed axis order: (Timepoints, Y_pixels, X_pixels)
+        # Parse shape tuple → individual dimension columns matching ND2 keys
         dims = _parse_tiff_shape(shape)
 
         row = _build_row(
@@ -361,11 +360,8 @@ def run_preprocessing_pipeline(
         if progress_callback:
             progress_callback(done, total, f"TIFF: {fname}")
 
-    # ── write combined CSV ──────────────────────────────────
     all_rows = existing_rows + new_rows
     _write_csv(csv_path, all_rows)
-
-    # ── summary ────────────────────────────────────────────
     print()
     print("=" * 60)
     print(f"Preprocessing complete.")

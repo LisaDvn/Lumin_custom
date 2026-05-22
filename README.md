@@ -11,7 +11,7 @@ Includes segmentation, signal extraction, event detection and feature extraction
 - Single-cell feature extraction
 - Excel and PDF outputs
 
-For full documentation, installation and usage, please see the[documentation site.](https://lisadvn.github.io/Lumin_custom/)
+For full documentation, installation and usage, please see the [documentation site.](https://lisadvn.github.io/Lumin_custom/)
 
 ## Acknowledgements
 

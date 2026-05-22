@@ -882,9 +882,6 @@ def two_conditions_barplot(response_perc_mean_df: pd.DataFrame, palette: dict = 
         return ax'''
     
 def biplot(cell_properties_df: pd.DataFrame, arrow_scale_factor: float = 1, palette: dict = None):
-    pca_cols = ['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled']
-    cell_properties_df = cell_properties_df.dropna(subset=pca_cols).reset_index(drop=True)
-    features_df = cell_properties_df[pca_cols].copy()
 
     # Scale
     features_df = cell_properties_df[['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled']]
@@ -1022,7 +1019,7 @@ def pca_property(cell_properties_df: pd.DataFrame, color_by: str = 'cluster', cm
     
 
 def cluster_heatmap(cell_properties_df: pd.DataFrame, vmax: int = None, vmin: int = None, cbar:bool = False):
-    mean_df = cell_properties_df[['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled','cluster']].groupby(['cluster'], observed=True).mean()
+    mean_df = cell_properties_df[['frequency_scaled','width_scaled','rise_time_scaled','decay_time_scaled','amplitude_scaled','cluster']].groupby(['cluster']).mean()
     
     with plt.rc_context({"figure.dpi": 350}):
         fig, ax = plt.subplots()
@@ -1062,83 +1059,17 @@ def cluster_centroids( cluster_dict:dict,palette:dict,  imaging_interval:float =
     return ax
 
 
-# -------------------- SYNCHRONIZATION --------------------
-def compute_synchronization(dff_array, save_path=None):
-    """
-    Compute synchronization matrix using correlation.
- 
-    Parameters
-    ----------
-    dff_array : list/array of 1D traces (shape: num_cells x timepoints)
-    """
-    dff_array = np.array(dff_array)
- 
-    n_cells = dff_array.shape[0]
-    sync_matrix = np.zeros((n_cells, n_cells))
- 
-    for i in range(n_cells):
-        for j in range(n_cells):
-            if dff_array.shape[1] == dff_array.shape[1]:
-                sync_matrix[i, j] = np.corrcoef(dff_array[i], dff_array[j])[0, 1]
- 
-    sync_matrix = np.nan_to_num(sync_matrix)
- 
-    if save_path is not None:
-        os.makedirs(save_path, exist_ok=True)
-        plt.figure()
-        sns.heatmap(sync_matrix, cmap='viridis')
-        plt.title("Synchronization")
-        plt.savefig(os.path.join(save_path, "synchronization_heatmap.png"))
-        plt.close()
- 
-        np.savetxt(os.path.join(save_path, "synchronization_matrix.csv"),
-                   sync_matrix, delimiter=",")
- 
-    return sync_matrix
- 
-# -------------------- CORRELATION --------------------
-def correlation(cell_properties_df, trace_col, output_path):
-    detrended_seq = np.array(cell_properties_df[trace_col].tolist())
- 
-    obs_num, length = detrended_seq.shape
-    heat_mat = np.zeros((obs_num, obs_num))
-    max_lag = min(50, length // 2)
- 
-    for i in range(obs_num):
-        for j in range(i + 1):
-            max_cor = -1
- 
-            for lag in range(max_lag + 1):
-                A = detrended_seq[i, :length - lag]
-                B = detrended_seq[j, lag:]
- 
-                cor = np.sum(
-                    (A - np.mean(A)) * (B - np.mean(B)) /
-                    (np.std(A) * np.std(B))
-                ) / (length - lag - 1)
- 
-                max_cor = max(cor, max_cor)
- 
-            for lag in range(1, max_lag + 1):
-                A = detrended_seq[i, lag:]
-                B = detrended_seq[j, :length - lag]
- 
-                cor = np.sum(
-                    (A - np.mean(A)) * (B - np.mean(B)) /
-                    (np.std(A) * np.std(B))
-                ) / (length - lag - 1)
- 
-                max_cor = max(cor, max_cor)
- 
-            heat_mat[i][j] = max_cor
-            heat_mat[j][i] = max_cor
- 
-    plt.figure()
-    sns.heatmap(heat_mat, cmap='jet', vmin=-1, vmax=1)
-    plt.title("Correlation")
-    plt.savefig(os.path.join(output_path, "correlation.png"))
-    plt.close()
- 
-    np.savetxt(os.path.join(output_path, "correlation.csv"), heat_mat, delimiter=",")
- 
-    return heat_mat
+'''def cluster_barplot(cluster_percentages_df: pd.DataFrame, palette: dict = None):
+    with plt.rc_context({"figure.dpi": 350}):
+        fig, ax = plt.subplots()
+        ax = sns.barplot(data=cluster_percentages_df, x='percentage', y='cluster', hue='stimulation', legend=None,palette=palette, ci=None, edgecolor='black', linewidth=0.5)
+        sns.stripplot(data=cluster_percentages_df, x='percentage', y='cluster', hue='stimulation',  legend=None,ax=ax, color='black', dodge=True, size=2)
+        
+        #ax.set_ylabel('Cluster', size=13)
+        #ax.set_xlabel('% of cells', size=13)
+        
+        plt.yticks(rotation=0)
+        #plt.xticks( size=13)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+    return ax'''

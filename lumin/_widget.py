@@ -35,7 +35,9 @@ from time import perf_counter
 from lumin.logging import RunManager
 from lumin.preprocessing import run_preprocessing_pipeline
 
-from lumin.Z_network_plots import network_event_overlay_preview
+from lumin.network_plot import network_event_overlay_preview
+from lumin.network_metric import compute_and_save_all
+from lumin.network_plot   import generate_all_plots
 
 from qtpy.QtCore import QThread, Signal, Qt, QTimer
 from qtpy.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar, QProgressDialog, QApplication
@@ -109,6 +111,7 @@ def preprocessing_widget():
     viewer = napari.current_viewer()
     remove_widget_if_exists(viewer, 'Cell segmentation')
     remove_widget_if_exists(viewer, 'Trace quantification')
+    remove_widget_if_exists(viewer, 'Network activity')
 
     @magicgui(
         layout='vertical',
@@ -134,12 +137,11 @@ def preprocessing_widget():
 
     widget.native.setObjectName('Preprocessing')
 
-    # ── progress dialog ───────────────────────────────────────────────
     class ProgressDialog(QDialog):
         def __init__(self):
             super().__init__()
             self.setWindowFlags(Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
-            self.setWindowTitle("Preprocessing...")
+            self.setWindowTitle("Preprocessing")
             self.setFixedWidth(380)
             self.setModal(True)
 
@@ -167,7 +169,6 @@ def preprocessing_widget():
             self._bar.setValue(current)
             self._status.setText(status)
 
-    # ── thread ────────────────────────────────────────────────────────────────
     class Worker(QThread):
         progress = Signal(int, int, str)
         finished = Signal(float)
@@ -187,7 +188,6 @@ def preprocessing_widget():
 
     _worker = []   # prevent GC
 
-    # ── button callback ───────────────────────────────────────────────────────
     @widget.call_button.clicked.connect
     def _run():
 
@@ -265,6 +265,7 @@ def segmentation_widget():
     remove_widget_if_exists(viewer, 'Baseline quantification')
     remove_widget_if_exists(viewer, 'Baseline normalization')
     remove_widget_if_exists(viewer, 'Spontaneous activity')
+    remove_widget_if_exists(viewer, 'Network activity')
 
     # Widget layout
     @magicgui(
@@ -468,28 +469,25 @@ def segmentation_widget():
                 table_dir = os.path.join(project_dir, 'Segmentation', 'Tables')
                 os.makedirs(table_dir, exist_ok=True)
 
-                # ── Progress dialog ──────────────────────────────────────────────
+                # progress dialog
                 progress = QProgressDialog("Starting pipeline...", "Cancel", 0, len(image_df))
-                progress.setWindowTitle("Segmentation pipeline")
+                progress.setWindowTitle("Segmentation and signal extraction")
                 progress.setWindowModality(Qt.WindowModal)
                 progress.setMinimumDuration(0)
                 progress.setValue(0)
-                # ────────────────────────────────────────────────────────────────
 
                 for index, row in image_df.iterrows():
 
-                    # ── Cancellation check ───────────────────────────────────────
                     if progress.wasCanceled():
                         print("Pipeline cancelled by user.")
                         run.log("Pipeline cancelled by user.")
                         break
-                    # ────────────────────────────────────────────────────────────
 
-                    # ── Update progress label and step ───────────────────────────
+                    # update progress dialog
                     progress.setLabelText(f"Processing image {index + 1} / {len(image_df)}\n{row.get('filename', '')}")
                     progress.setValue(index)
                     QApplication.processEvents()
-                    # ────────────────────────────────────────────────────────────
+
 
                     # Try except to catch if required columns not there
                     try:
@@ -737,9 +735,7 @@ def segmentation_widget():
 
                     del cell_properties_df
                     gc.collect()
-                    # ─────────────────────────────────────────────────────────────
-
-                # ── OUTSIDE the loop: finalise ────────────────────────────────────
+                    
                 if not progress.wasCanceled():
                     progress.setLabelText("Finalising output...")
                     progress.setValue(len(image_df))
@@ -819,7 +815,7 @@ def segmentation_widget():
                     print('All images annotated... Stopping the pipeline...\n')
                     run.log(f"Segmentation done in {perf_counter() - start_time_run:.2f} sec")
 
-                # ── Always re-enable button and reset widgets ─────────────────────
+                # reset widgets to default values
                 widget.call_button.enabled = True
                 widget.input_file.value = ''
                 widget.metadata_file.value = ''
@@ -836,7 +832,6 @@ def segmentation_widget():
                 widget.co_stain.value = '-- Select --'
                 widget.marker_name.value = ''
                 widget.annotation_point_size.value = 20
-                # ─────────────────────────────────────────────────────────────────
 
             else:
                 print("Cancelled.")
@@ -1487,7 +1482,9 @@ def single_cell_widget():
 
     viewer = napari.current_viewer()
     remove_layers(viewer)
+    remove_widget_if_exists(viewer, 'Preprocessing')
     remove_widget_if_exists(viewer, 'Cell segmentation')
+    remove_widget_if_exists(viewer, 'Network activity')
 
     class WidgetState:
         def __init__(self):
@@ -1539,8 +1536,7 @@ def single_cell_widget():
         pass
 
     widget.native.setObjectName('Trace quantification')
-
-
+   
     @widget.call_button.clicked.connect
     def _run_analysis():
         msg_box = QMessageBox()
@@ -1592,6 +1588,14 @@ def single_cell_widget():
                 for col in cell_properties_df.select_dtypes(include='category').columns:
                     cell_properties_df[col] = cell_properties_df[col].cat.remove_unused_categories()
 
+                steps = ['Normalization', 'Peak detection', 'Clustering', 'Saving output']
+                progress = QProgressDialog("Starting analysis...", "Cancel", 0, len(steps))
+                progress.setWindowTitle("Signal quantification")
+                progress.setWindowModality(Qt.WindowModal)
+                progress.setMinimumDuration(0)
+                progress.setValue(0)
+                QApplication.processEvents()
+
                 # Generate parameter list to be written to file
                 parameter_list = [f'Project directory: {project_dir}', f'Analysis mode: {analysis_mode}',f'Activity type: {analysis_mode}',
                                 f'Control condition: {control_condition}', f'Normalization mode: {normalization_mode}']
@@ -1616,6 +1620,13 @@ def single_cell_widget():
                 if not os.path.exists(table_dir): os.makedirs(table_dir)
 
                 # Normalization
+                if progress.wasCanceled():
+                    widget.call_button.enabled = True
+                    return
+                progress.setLabelText("Normalizing traces...")
+                progress.setValue(0)
+                QApplication.processEvents()
+
                 if normalization_mode == 'Sliding window':
                     print('Running sliding window normalization...')
                     parameter_list.extend([f'Normalization - Sliding window size: {sliding_window_size}', f'Normalization - Percentile threshold: {percentile_threshold}'])
@@ -1835,7 +1846,14 @@ def single_cell_widget():
 
                     
 
-                #if analysis_mode == 'Baseline shift':
+                # Peak detection
+                if progress.wasCanceled():
+                    widget.call_button.enabled = True
+                    return
+                progress.setLabelText("Quantifying activity...")
+                progress.setValue(1)
+                QApplication.processEvents()
+
                 if analysis_mode == 'Compound-evoked activity':
                     if activity_type == 'Baseline shift':
                         print('Running baseline shift analysis...')
@@ -1996,7 +2014,6 @@ def single_cell_widget():
                         cell_properties_df.to_csv(os.path.join(table_dir,f'cell_properties_baseline_change.csv'), sep=';')
                         cell_properties_df.to_pickle(os.path.join(table_dir,f'cell_properties_baseline_change.pkl'))
 
-
                     elif activity_type == 'Spontaneous':
                         parameter_list.extend([f'Quantification - Smoothing: {smoothing}','Quantification - Prominence threshold: {spike_prominence_threshold}', f'Quantification - Amplitude width ratio: {spike_amplitude_width_ratio}',   f'Quantification - Imaging interval: {imaging_interval}', f'Quantification - KCl stimulation frame: {kcl_frame}'])
 
@@ -2024,7 +2041,14 @@ def single_cell_widget():
 
                     else:
                         print("Spike detection skipped due to issues with the data. Please check the warnings above.")
-                    
+                
+                if progress.wasCanceled():
+                    widget.call_button.enabled = True
+                    return
+                progress.setLabelText("Saving output...")
+                progress.setValue(3)
+                QApplication.processEvents()
+
                 time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                 end_time = perf_counter()
                 runtime_seconds = end_time - start_time
@@ -2033,6 +2057,45 @@ def single_cell_widget():
 
                 with open(os.path.join(project_dir,f'Quantification', 'normalization_signal_quantification_config.txt'), 'w') as f:
                     for line in parameter_list: f.write(f'{line}\n')
+
+                parameters_quantification = {
+                    "input": {
+                        "project_dir": str(project_dir),
+                    },
+                    "analysis": {
+                        "analysis_mode": analysis_mode,
+                        "activity_type": activity_type,
+                        "control_condition": control_condition,
+                    },
+                    "normalization": {
+                        "mode": normalization_mode,
+                        "stimulation_frame": stimulation_frame,
+                        "sliding_window_size": sliding_window_size,
+                        "percentile_threshold": percentile_threshold,
+                    },
+                    "quantification": {
+                        "smoothing": smoothing,
+                        "spike_prominence_threshold": spike_prominence_threshold,
+                        "spike_amplitude_width_ratio": spike_amplitude_width_ratio,
+                        "analysis_window_start": analysis_window_start,
+                        "analysis_window_end": analysis_window_end,
+                        "baseline_std_threshold": baseline_std_threshold,
+                        "imaging_interval": imaging_interval,
+                        "kcl_frame": kcl_frame,
+                    },
+                    "downstream": {
+                        "n_clusters": n_clusters,
+                    },
+                    "provenance": {
+                        "date_time": time,
+                        "runtime_seconds": runtime_seconds,
+                    },
+                }
+                run.save_json("parameters_quantification.json", parameters_quantification)
+
+                progress.setValue(len(steps))
+                progress.close()
+                QMessageBox.information(None, "Quantification done", f"Analysis complete!")
 
                 print('Analysis ready...')
 
@@ -2382,156 +2445,40 @@ def single_cell_widget():
 def network_activity_widget():
 
     viewer = napari.current_viewer()
+    remove_widget_if_exists(viewer, 'Preprocessing')
     remove_widget_if_exists(viewer, 'Cell segmentation')
     remove_widget_if_exists(viewer, 'Trace quantification')
 
     @magicgui(
         layout='vertical',
-        project_dir=dict(
-            widget_type='FileEdit', value='', label='Project directory:', mode='d',
-            tooltip='Specify project directory for pipeline output',
-        ),
-        analysis_mode=dict(
-            widget_type='ComboBox', label='Analysis mode', value='-- Select --',
-            choices=['-- Select --', 'Temporal (spike trains)', 'Network analysis', 'Combined'],
-            tooltip=(
-                'Temporal: deconvolve each cell to infer spike trains.\n'
-                'Network: compute cross-cell statistics from pre-computed spike trains.\n'
-                'Combined: deconvolution + network analysis in one step.'
-            ),
-        ),
+        project_dir=dict(widget_type='FileEdit', value='', label='Project directory:', mode='d', tooltip='Specify project directory for pipeline output',),
+        analysis_mode=dict(widget_type='ComboBox', label='Analysis mode', value='-- Select --', choices=['-- Select --', 'Temporal (spike trains)', 'Network analysis', 'Combined'], tooltip=('Temporal: deconvolve each cell to infer spike trains.\n''Network: compute cross-cell statistics from pre-computed spike trains.\n''Combined: deconvolution + network analysis in one step.'),),
+        
+        deconv_label=dict(widget_type='Label', label='<div style="text-align:center;display:block;width:100%;"><b>———Deconvolution settings———</b></div>',),
+        deconv_method=dict(widget_type='ComboBox', label='Method', value='OASIS',choices=['OASIS', 'CASCADE'],tooltip=('OASIS: fast analytical deconvolution (Friedrich et al. 2017).\n''CASCADE: deep-network spike inference (Rupprecht et al. 2021).'),),
+        
+        oasis_label=dict(widget_type='Label',label='<div style="text-align:center;display:block;width:100%;">OASIS parameters</div>',),
+        oasis_tau=dict(widget_type='FloatSpinBox', label='Indicator decay τ',value=0.0, min=0.0, max=10.0, step=0.1,tooltip='Calcium indicator decay time constant in seconds.',),
+        oasis_imaging_interval=dict(widget_type='FloatSpinBox', label='Imaging interval (s)',value=0.0, min=0.0, max=60.0, step=0.001,tooltip=('Time between frames in seconds (e.g. 0.125 for 8 Hz).'),),
+        oasis_baseline=dict(widget_type='ComboBox', label='Baseline method', value='maximin',choices=['maximin', 'constant', 'prctile'],tooltip='Method used to estimate and subtract the fluorescence baseline.',),
+        oasis_win=dict(widget_type='FloatSpinBox', label='Baseline window (s)',value=60.0, min=0.1, max=300.0, step=1.0,tooltip='Rolling window size in seconds for maximin baseline.',),
+        oasis_sig=dict(widget_type='FloatSpinBox', label='Baseline σ (frames)',value=10.0, min=0.1, max=100.0, step=0.5,tooltip='Gaussian smoothing sigma applied before baseline estimation.',),
+        
+        cascade_label=dict(widget_type='Label',label='<div style="text-align:center;display:block;width:100%;">CASCADE parameters</div>',),
+        cascade_model=dict(widget_type='ComboBox', label='Model',value='Global_EXC_7.5Hz_smoothing200ms',choices=['Global_EXC_7.5Hz_smoothing200ms','Global_EXC_30Hz_smoothing200ms','Global_EXC_30Hz_smoothing50ms_causal','Global_EXC_7.5Hz_smoothing50ms_causal',],tooltip='Pre-trained CASCADE model. Downloaded automatically on first use.',),
+        cascade_imaging_interval=dict(widget_type='FloatSpinBox', label='Imaging interval (s)',value=0.0, min=0.0, max=60.0, step=0.001,tooltip=('Time between frames in seconds (e.g. 0.033 for 30 Hz). ''Must be set to match your recording — no meaningful default exists.'),),
+        cascade_thr=dict(widget_type='FloatSpinBox', label='Spike threshold',value=0.5, min=0.0, max=10.0, step=0.05,tooltip='Threshold on spike-rate output to produce a binary spike train (0 = no threshold).',),
 
-        # ── deconvolution ──────────────────────────────────────────────────
-        deconv_label=dict(
-            widget_type='Label',
-            label='<div style="text-align:center;display:block;width:100%;"><b>———Deconvolution settings———</b></div>',
-        ),
-        deconv_method=dict(
-            widget_type='ComboBox', label='Method', value='OASIS',
-            choices=['OASIS', 'CASCADE'],
-            tooltip=(
-                'OASIS: fast analytical deconvolution (Friedrich et al. 2017).\n'
-                'CASCADE: deep-network spike inference (Rupprecht et al. 2021).'
-            ),
-        ),
-        oasis_label=dict(
-            widget_type='Label',
-            label='<div style="text-align:center;display:block;width:100%;">OASIS parameters</div>',
-        ),
-        oasis_tau=dict(
-            widget_type='FloatSpinBox', label='Indicator decay τ',
-            value=0.0, min=0.0, max=10.0, step=0.1,
-            tooltip='Calcium indicator decay time constant in seconds.',
-        ),
-        oasis_imaging_interval=dict(
-            widget_type='FloatSpinBox', label='Imaging interval (s)',
-            value=0.0, min=0.0, max=60.0, step=0.001,
-            tooltip=(
-                'Time between frames in seconds (e.g. 0.125 for 8 Hz). '
-                'Must be set to match your recording — no meaningful default exists.'
-            ),
-        ),
-        oasis_baseline=dict(
-            widget_type='ComboBox', label='Baseline method', value='maximin',
-            choices=['maximin', 'constant', 'prctile'],
-            tooltip='Method used to estimate and subtract the fluorescence baseline.',
-        ),
-        oasis_win=dict(
-            widget_type='FloatSpinBox', label='Baseline window (s)',
-            value=60.0, min=0.1, max=300.0, step=1.0,
-            tooltip='Rolling window size in seconds for maximin baseline.',
-        ),
-        oasis_sig=dict(
-            widget_type='FloatSpinBox', label='Baseline σ (frames)',
-            value=10.0, min=0.1, max=100.0, step=0.5,
-            tooltip='Gaussian smoothing sigma applied before baseline estimation.',
-        ),
-        cascade_label=dict(
-            widget_type='Label',
-            label='<div style="text-align:center;display:block;width:100%;">CASCADE parameters</div>',
-        ),
-        cascade_model=dict(
-            widget_type='ComboBox', label='Model',
-            value='Global_EXC_7.5Hz_smoothing200ms',
-            choices=[
-                'Global_EXC_7.5Hz_smoothing200ms',
-                'Global_EXC_30Hz_smoothing200ms',
-                'Global_EXC_30Hz_smoothing50ms_causal',
-                'Global_EXC_7.5Hz_smoothing50ms_causal',
-            ],
-            tooltip='Pre-trained CASCADE model. Downloaded automatically on first use.',
-        ),
-        cascade_imaging_interval=dict(
-            widget_type='FloatSpinBox', label='Imaging interval (s)',
-            value=0.0, min=0.0, max=60.0, step=0.001,
-            tooltip=(
-                'Time between frames in seconds (e.g. 0.033 for 30 Hz). '
-                'Must be set to match your recording — no meaningful default exists.'
-            ),
-        ),
-        cascade_thr=dict(
-            widget_type='FloatSpinBox', label='Spike threshold',
-            value=0.5, min=0.0, max=10.0, step=0.05,
-            tooltip='Threshold on spike-rate output to produce a binary spike train (0 = no threshold).',
-        ),
+        optimize_label=dict(widget_type='Label',label='<div style="text-align:center;display:block;width:100%;"><b>———Parameter optimisation———</b></div>',),
+        optimize_button=dict(widget_type='PushButton',text='Test settings on random recording',tooltip='Run deconvolution on a randomly sampled recording to preview results.',enabled=False,),
+        optimize_button_previous=dict(widget_type='PushButton',text='Test settings on same recording',tooltip='Re-run deconvolution on the same recording as the previous test.',enabled=False,),
 
-        # ── parameter optimisation ─────────────────────────────────────────
-        optimize_label=dict(
-            widget_type='Label',
-            label='<div style="text-align:center;display:block;width:100%;"><b>———Parameter optimisation———</b></div>',
-        ),
-        optimize_button=dict(
-            widget_type='PushButton',
-            text='Test settings on random recording',
-            tooltip='Run deconvolution on a randomly sampled recording to preview results.',
-            enabled=False,
-        ),
-        optimize_button_previous=dict(
-            widget_type='PushButton',
-            text='Test settings on same recording',
-            tooltip='Re-run deconvolution on the same recording as the previous test.',
-            enabled=False,
-        ),
+        network_label=dict(widget_type='Label',label='<div style="text-align:center;display:block;width:100%;"><b>———Network analysis settings———</b></div>',),
+        network_participation_thr=dict(widget_type='FloatSpinBox', label='Network event threshold',value=0.50, min=0.01, max=1.0, step=0.01,tooltip=('Minimum fraction of co-active neurons required to classify a frame ''as a network event (population burst). E.g. 0.10 = 10 % of cells.'),),
+        network_min_peak_dist=dict(widget_type='FloatSpinBox', label='Min. event distance (s)',value=0.5, min=0.05, max=30.0, step=0.05,tooltip='Minimum time between two successive network events in seconds.',),
+        network_imaging_interval=dict(widget_type='FloatSpinBox', label='Imaging interval (s)',value=0.0, min=0.0, max=60.0, step=0.001,tooltip=('Time between frames in seconds. Only relevant in "Network analysis" ''mode when spike trains were pre-computed in a previous step. ''Must match the interval used during deconvolution.'),),
 
-        # ── network analysis ───────────────────────────────────────────────
-        network_label=dict(
-            widget_type='Label',
-            label='<div style="text-align:center;display:block;width:100%;"><b>———Network analysis settings———</b></div>',
-        ),
-        network_participation_thr=dict(
-            widget_type='FloatSpinBox', label='Network event threshold',
-            value=0.50, min=0.01, max=1.0, step=0.01,
-            tooltip=(
-                'Minimum fraction of co-active neurons required to classify a frame '
-                'as a network event (population burst). E.g. 0.10 = 10 % of cells.'
-            ),
-        ),
-        network_min_peak_dist=dict(
-            widget_type='FloatSpinBox', label='Min. event distance (s)',
-            value=0.5, min=0.05, max=30.0, step=0.05,
-            tooltip='Minimum time between two successive network events in seconds.',
-        ),
-        network_imaging_interval=dict(
-            widget_type='FloatSpinBox', label='Imaging interval (s)',
-            value=0.0, min=0.0, max=60.0, step=0.001,
-            tooltip=(
-                'Time between frames in seconds. Only relevant in "Network analysis" '
-                'mode when spike trains were pre-computed in a previous step. '
-                'Must match the interval used during deconvolution.'
-            ),
-        ),
-
-        # ── network preview ────────────────────────────────────────────────
-        network_preview_button=dict(
-            widget_type='PushButton',
-            text='Preview network events',
-            tooltip=(
-                'Preview detected network events using the current threshold and '
-                'distance settings — without running the full analysis. '
-                'Requires spike trains to be computed first.'
-            ),
-            enabled=False,
-        ),
+        network_preview_button=dict(widget_type='PushButton',text='Preview network events',tooltip=('Preview detected network events using the current threshold and ''distance settings — without running the full analysis. ''Requires spike trains to be computed first.'),enabled=False,),
 
     )
     def widget(
@@ -2685,7 +2632,7 @@ def network_activity_widget():
     def _deconvolve(F_subset, F_col, method, params):
         """Runs OASIS or CASCADE on F_subset. Call only from a worker thread."""
         if method == 'OASIS':
-            from lumin.Z_deconv_oasis import oasis, preprocess
+            from lumin.deconv_oasis import oasis, preprocess
             import torch
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             F = preprocess(
@@ -3024,6 +2971,7 @@ def network_activity_widget():
     class DeconvolutionWorker(QThread):
         finished = Signal(object)
         error    = Signal(str)
+        progress = Signal(int, int, str)
  
         def __init__(self, F, F_col, method, params, cell_properties_df):
             super().__init__()
@@ -3040,13 +2988,16 @@ def network_activity_widget():
                 # if recordings are labelled, deconvolve each separately
                 if df is not None and 'image_id' in df.columns:
                     S_out = np.zeros_like(self.F)
-                    for image_id, grp in df.groupby('image_id', sort=False):
+                    n = df['image_id'].nunique()
+                    for i, (image_id, grp) in enumerate(df.groupby('image_id', sort=False)):
+                        self.progress.emit(i, n,f"Deconvolving recording {i+1} / {n}")
                         idx      = grp.index.tolist()
                         F_rec    = self.F[idx]
                         S_rec    = _deconvolve(F_rec, self.F_col, self.method, self.params)
                         S_out[idx] = S_rec
                     self.finished.emit(S_out)
                 else:
+                    self.progress.emit(0, 1, "Deconvolving...")
                     # single recording — original behaviour
                     self.finished.emit(
                         _deconvolve(self.F, self.F_col, self.method, self.params)
@@ -3055,14 +3006,19 @@ def network_activity_widget():
                 self.error.emit(f'{type(e).__name__}: {e}\n\n{traceback.format_exc()}')
    
     def _run_network_analysis(S, method, fs):
-        from lumin.Z_network_metrics import compute_and_save_all
-        from lumin.Z_network_plots   import generate_all_plots
 
         project_dir       = str(widget.project_dir.value)
         participation_thr = widget.network_participation_thr.value
         min_peak_dist     = widget.network_min_peak_dist.value
         spike_thr         = widget.cascade_thr.value if method == 'CASCADE' else 0.0
 
+         # save run info and parameters
+        run_info_path = os.path.join(project_dir, "run_info.json")
+        with open(run_info_path, "r") as f:
+            run_info = json.load(f)
+        run = RunManager(project_dir, parent_run_id=run_info["run_id"], stage="network_activity")
+        run.log("--------------Network activity analysis pipeline started--------------")
+        
         print('Computing network metrics…')
         results = compute_and_save_all(
             S                   = S,
@@ -3088,6 +3044,38 @@ def network_activity_widget():
             min_peak_distance_s = min_peak_dist,
         )
 
+        run.log("Network activity analysis complete.")
+        run.save_json("parameters_network.json", {
+            "analysis": {
+                "mode": "network",
+                "method": method,
+            },
+            "deconvolution": {
+                "method": method,
+                "oasis": {
+                    "tau":          widget.oasis_tau.value,
+                    "imaging_interval": widget.oasis_imaging_interval.value,
+                    "baseline":     widget.oasis_baseline.value,
+                    "window_s":     widget.oasis_win.value,
+                    "sigma_frames": widget.oasis_sig.value,
+                } if method == 'OASIS' else None,
+                "cascade": {
+                    "model":            widget.cascade_model.value,
+                    "imaging_interval": widget.cascade_imaging_interval.value,
+                    "spike_threshold":  widget.cascade_thr.value,
+                } if method == 'CASCADE' else None,
+            },
+            "network": {
+                "participation_threshold": participation_thr,
+                "min_peak_distance_s":     min_peak_dist,
+                "imaging_interval":        widget.network_imaging_interval.value,
+                "spike_threshold":         spike_thr,
+            },
+            "provenance": {
+                "date_time": datetime.now().isoformat(),
+            },
+        })
+        
         table_dir = os.path.join(project_dir, 'Network_activity', 'Tables')
         plot_dir  = os.path.join(project_dir, 'Network_activity', 'Plots')
         QMessageBox.information(
@@ -3095,9 +3083,13 @@ def network_activity_widget():
             f'Metrics  → {table_dir}\nPlots    → {plot_dir}'
         )
 
-    # ── run button ────────────────────────────────────────────────────────────
     @widget.call_button.clicked.connect
     def _on_run():
+        run_info_path = os.path.join(str(widget.project_dir.value), "run_info.json")
+        with open(run_info_path, "r") as f:
+            run_info = json.load(f)
+        existing_run_id = run_info["run_id"]
+        
         mode = widget.analysis_mode.value
 
         # network-only path
@@ -3109,6 +3101,14 @@ def network_activity_widget():
                     'then switch to "Network analysis".',
                 )
                 return
+            progress = QProgressDialog("Computing network metrics...", None, 0, 0)
+            progress.setWindowTitle("Network activity")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.show()
+            QApplication.processEvents()
+            QApplication.processEvents()
+            
             try:
                 widget.call_button.enabled = False
                 interval = widget.network_imaging_interval.value
@@ -3120,6 +3120,7 @@ def network_activity_widget():
                     state.spike_trains, state.spike_trains_method or 'precomputed',
                     1.0 / interval,
                 )
+                progress.close()
             except Exception:
                 err = QMessageBox(QMessageBox.Critical, 'Error', 'Network analysis failed.')
                 err.setDetailedText(traceback.format_exc())
@@ -3173,7 +3174,26 @@ def network_activity_widget():
         worker = DeconvolutionWorker(state.F, state.F_col, method, params, state.cell_properties_df)
         _worker[0] = worker
 
+        # progress dialog
+        n_recordings = (state.cell_properties_df['image_id'].nunique()
+                        if state.cell_properties_df is not None and 'image_id' in state.cell_properties_df.columns
+                        else 1)
+        progress = QProgressDialog("Starting deconvolution...", None, 0, n_recordings)
+        progress.setWindowTitle("Network activity")
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.setValue(0)
+
+        def _on_progress(current, total, label):
+            progress.setRange(0, total)
+            progress.setValue(current)
+            progress.setLabelText(label)
+
+        worker.progress.connect(_on_progress)
+
         def _on_finished(S):
+            progress.setValue(n_recordings)
+            progress.close() 
             widget.call_button.enabled              = True
             widget.optimize_button.enabled          = True
             widget.optimize_button_previous.enabled = True
@@ -3201,6 +3221,36 @@ def network_activity_widget():
                     err.setDetailedText(traceback.format_exc())
                     err.exec_()
             else:
+                # save parameters andF run info for temporal-only runs
+                run_info_path = os.path.join(str(widget.project_dir.value), "run_info.json")
+                with open(run_info_path, "r") as f:
+                    run_info = json.load(f)
+                run = RunManager(str(widget.project_dir.value), parent_run_id=run_info["run_id"], stage="network_activity")
+                run.log("Temporal deconvolution complete.")
+                run.save_json("parameters_network.json", {
+                    "analysis": {
+                        "mode": "temporal",
+                        "method": method,
+                    },
+                    "deconvolution": {
+                        "method": method,
+                        "oasis": {
+                            "tau":              widget.oasis_tau.value,
+                            "imaging_interval": widget.oasis_imaging_interval.value,
+                            "baseline":         widget.oasis_baseline.value,
+                            "window_s":         widget.oasis_win.value,
+                            "sigma_frames":     widget.oasis_sig.value,
+                        } if method == 'OASIS' else None,
+                        "cascade": {
+                            "model":            widget.cascade_model.value,
+                            "imaging_interval": widget.cascade_imaging_interval.value,
+                            "spike_threshold":  widget.cascade_thr.value,
+                        } if method == 'CASCADE' else None,
+                    },
+                    "provenance": {
+                        "date_time": datetime.now().isoformat(),
+                    },
+                })
                 QMessageBox.information(
                     None, 'Deconvolution done',
                     f'{S.shape[0]} neurons × {S.shape[1]} frames.\n\n'

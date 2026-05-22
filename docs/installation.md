@@ -6,8 +6,8 @@ This page explains how to install LUMIN and run your first analysis.
 
 ## 1. Requirements
 
-- Python 3.10+ (via Anaconda)
-- pip
+Python 3.10+ via Anaconda ([Miniconda installation page](https://www.anaconda.com/docs/getting-started/miniconda/install).) 
+
 ---
 
 ## 2. Installation

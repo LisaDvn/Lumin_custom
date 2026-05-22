@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
-
 Helper functions for CASCADE:
 
   define_model():
@@ -20,13 +16,11 @@ Helper functions for CASCADE:
   preprocess_groundtruth_artificial_noise_balanced():
     converts the resampled ground truth in a format that can be used by the deep network for training
 
-
   Created in Aug 2019
   Modified in May 2020
   Updated in February 2021
 
   @authors: Peter Rupprecht (p.t.r.rupprecht+cascade@gmail.com) and Adrian Hoffmann
-
 
 """
 

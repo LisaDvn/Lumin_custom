@@ -61,7 +61,7 @@ def parse_input_output(input_file: str = None, metadata_file: str = None, projec
 
     return image_df, annotated_image_df
 
-# Create DF contining each ovelrlapping nuclei
+# Create DF contining each overlapping nuclei
 # Overlapping fraction
 # ID of cell
 # Size of cell
