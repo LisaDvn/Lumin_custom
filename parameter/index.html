@@ -612,16 +612,105 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#even-detection-parameters" class="md-nav__link">
+    <nav class="md-nav" aria-label="Segmentation parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#segmentation-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Even detection parameters
+        Segmentation model
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cell-diameter-px" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell diameter (px)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cell-probability-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell probability threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flow-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flow threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-detection-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event detection parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event detection parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#smoothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smoothing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prominence-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prominence threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#amplitudewidth-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Amplitude/width ratio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -930,16 +1019,105 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#even-detection-parameters" class="md-nav__link">
+    <nav class="md-nav" aria-label="Segmentation parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#segmentation-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Even detection parameters
+        Segmentation model
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cell-diameter-px" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell diameter (px)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cell-probability-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell probability threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flow-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flow threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-detection-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event detection parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event detection parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#smoothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smoothing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prominence-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prominence threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#amplitudewidth-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Amplitude/width ratio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1136,7 +1314,75 @@
 <hr>
 <h2 id="segmentation-parameters">Segmentation parameters</h2>
 <hr>
-<h2 id="even-detection-parameters">Even detection parameters</h2>
+<h3 id="segmentation-model">Segmentation model</h3>
+<p><strong>What it does:</strong> Selects the Cellpose model used to detect and outline individual cells (ROIs) in the mean fluorescence image. The model determines how cell boundaries are drawn before signal extraction begins.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>cyto3</strong></td>
+<td>General-purpose cytoplasm segmentation. Works well for most neuronal cell cultures with visible cell bodies.</td>
+</tr>
+<tr>
+<td><strong>cyto2</strong></td>
+<td>Older cytoplasm model. Use if cyto3 over-segments your data.</td>
+</tr>
+<tr>
+<td><strong>nuclei</strong></td>
+<td>Nuclear staining. Use when imaging a nuclear marker rather than cytoplasmic GCaMP.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Default:</strong> <code>cyto3</code> — recommended as the starting point for most calcium imaging datasets.</p>
+<hr>
+<h3 id="cell-diameter-px">Cell diameter (px)</h3>
+<p><strong>What it does:</strong> The expected diameter of a single cell in pixels. Cellpose uses this to set the scale of the segmentation. Getting this right is the single most important parameter for good segmentation results.</p>
+<p><strong>How to set it:</strong> Measure a representative cell in your image using the Napari measurement tool. Over- or underestimating by more than ~30% will cause missed cells or merged ROIs.</p>
+<ul>
+<li>Set too small → large cells are split into multiple ROIs</li>
+<li>Set too large → nearby cells are merged into a single ROI</li>
+</ul>
+<p><strong>Default:</strong> <code>30 px</code> — a reasonable starting point for 10× or 20× objectives with standard magnification. Always verify on your data.</p>
+<hr>
+<h3 id="cell-probability-threshold">Cell probability threshold</h3>
+<p><strong>What it does:</strong> Minimum predicted probability that a pixel belongs to a cell before it is included in an ROI mask. Raises or lowers the overall sensitivity of detection.</p>
+<ul>
+<li>Lower → larger ROIs, more background included</li>
+<li>Higher → smaller, tighter ROIs, some dim cells may be missed</li>
+</ul>
+<p><strong>Default:</strong> <code>0.0</code> — the Cellpose default. For noisy or low-contrast recordings, try values between <code>−1.0</code> and <code>−2.0</code> to recover more cells.</p>
+<hr>
+<h3 id="flow-threshold">Flow threshold</h3>
+<p><strong>What it does:</strong> Controls how strictly Cellpose enforces its internal cell boundary predictions. Lower values accept weaker boundaries and detect more cells; higher values are more conservative and reject ambiguous detections.</p>
+<p><strong>Rule of thumb:</strong> Increase if you see many spurious small detections; decrease if cells are being missed.</p>
+<p><strong>Default:</strong> <code>0.4</code> — the Cellpose default. Adjust in small steps (±0.1).</p>
+<hr>
+<h2 id="event-detection-parameters">Event detection parameters</h2>
+<hr>
+<h3 id="smoothing">Smoothing</h3>
+<p><strong>What it does:</strong> Applies a Savitzky–Golay filter (window = 3 frames, polynomial order = 1) to the ΔF/F₀ trace before peak detection. This reduces high-frequency noise and can improve peak detection on noisy recordings, at the cost of slightly reduced temporal precision.</p>
+<p><strong>When to use:</strong> Enable for low SNR recordings or high frame-rate data where noise causes peak splitting. Disable when temporal precision of spike timing matters (e.g. before OASIS or CASCADE deconvolution, which have their own smoothing).</p>
+<hr>
+<h3 id="prominence-threshold">Prominence threshold</h3>
+<p><strong>What it does:</strong> The minimum prominence of a peak to be counted as a calcium event. Prominence measures how much a peak stands out from the surrounding signal baseline — it is the height of the peak above the highest trough between it and any higher neighbouring peak. This makes it more robust than a simple height threshold because it accounts for the local signal context.</p>
+<ul>
+<li>Set too low → noise fluctuations and small artefacts are counted as events</li>
+<li>Set too high → real but small calcium transients are missed</li>
+</ul>
+<p><strong>How to set it:</strong> Inspect the ΔF/F₀ traces for a representative cell and identify the smallest real transient you want to detect, set the threshold just below that value. Or increase gradually while inspecting the cellwise trace plots.</p>
+<hr>
+<h3 id="amplitudewidth-ratio">Amplitude/width ratio</h3>
+<p><strong>What it does:</strong> A quality control filter that removes broad, slow artefacts (e.g. baseline drift bumps, photobleaching steps) that pass the prominence threshold. For each detected peak, the ratio of its amplitude to its width is computed; peaks below the threshold are classified as low quality and excluded.</p>
+<ul>
+<li>High ratio → sharp, fast transient (typical calcium spike)</li>
+<li>Low ratio → broad, slow event (likely artefact or drift)</li>
+</ul>
+<p><strong>How to set it:</strong> Set to <code>0</code> to disable filtering entirely. Increase gradually while inspecting the cellwise trace plots.</p>
 <hr>
 <h2 id="oasis-parameters">OASIS parameters</h2>
 <h3 id="indicator-decay-s">Indicator decay τ (s)</h3>
