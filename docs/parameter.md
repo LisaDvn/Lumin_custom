@@ -1,4 +1,3 @@
-
 # Parameter guide
 
 ---
@@ -7,7 +6,78 @@
 
 ---
 
-## Even detection parameters
+### Segmentation model
+**What it does:** Selects the Cellpose model used to detect and outline individual cells (ROIs) in the mean fluorescence image. The model determines how cell boundaries are drawn before signal extraction begins.
+
+| Model | Best for |
+|-------|---------|
+| **cyto3** | General-purpose cytoplasm segmentation. Works well for most neuronal cell cultures with visible cell bodies. |
+| **cyto2** | Older cytoplasm model. Use if cyto3 over-segments your data. |
+| **nuclei** | Nuclear staining. Use when imaging a nuclear marker rather than cytoplasmic GCaMP. |
+
+**Default:** `cyto3` — recommended as the starting point for most calcium imaging datasets.
+
+---
+
+### Cell diameter (px)
+**What it does:** The expected diameter of a single cell in pixels. Cellpose uses this to set the scale of the segmentation. Getting this right is the single most important parameter for good segmentation results.
+
+**How to set it:** Measure a representative cell in your image using the Napari measurement tool. Over- or underestimating by more than ~30% will cause missed cells or merged ROIs.
+
+* Set too small → large cells are split into multiple ROIs
+* Set too large → nearby cells are merged into a single ROI
+
+**Default:** `30 px` — a reasonable starting point for 10× or 20× objectives with standard magnification. Always verify on your data.
+
+---
+
+### Cell probability threshold
+**What it does:** Minimum predicted probability that a pixel belongs to a cell before it is included in an ROI mask. Raises or lowers the overall sensitivity of detection.
+
+* Lower → larger ROIs, more background included
+* Higher → smaller, tighter ROIs, some dim cells may be missed
+
+**Default:** `0.0` — the Cellpose default. For noisy or low-contrast recordings, try values between `−1.0` and `−2.0` to recover more cells.
+
+---
+
+### Flow threshold
+**What it does:** Controls how strictly Cellpose enforces its internal cell boundary predictions. Lower values accept weaker boundaries and detect more cells; higher values are more conservative and reject ambiguous detections.
+
+**Rule of thumb:** Increase if you see many spurious small detections; decrease if cells are being missed.
+
+**Default:** `0.4` — the Cellpose default. Adjust in small steps (±0.1).
+
+---
+
+## Event detection parameters
+
+---
+
+### Smoothing
+**What it does:** Applies a Savitzky–Golay filter (window = 3 frames, polynomial order = 1) to the ΔF/F₀ trace before peak detection. This reduces high-frequency noise and can improve peak detection on noisy recordings, at the cost of slightly reduced temporal precision.
+
+**When to use:** Enable for low SNR recordings or high frame-rate data where noise causes peak splitting. Disable when temporal precision of spike timing matters (e.g. before OASIS or CASCADE deconvolution, which have their own smoothing).
+
+---
+
+### Prominence threshold
+**What it does:** The minimum prominence of a peak to be counted as a calcium event. Prominence measures how much a peak stands out from the surrounding signal baseline — it is the height of the peak above the highest trough between it and any higher neighbouring peak. This makes it more robust than a simple height threshold because it accounts for the local signal context.
+
+* Set too low → noise fluctuations and small artefacts are counted as events
+* Set too high → real but small calcium transients are missed
+
+**How to set it:** Inspect the ΔF/F₀ traces for a representative cell and identify the smallest real transient you want to detect, set the threshold just below that value. Or increase gradually while inspecting the cellwise trace plots.
+
+---
+
+### Amplitude/width ratio
+**What it does:** A quality control filter that removes broad, slow artefacts (e.g. baseline drift bumps, photobleaching steps) that pass the prominence threshold. For each detected peak, the ratio of its amplitude to its width is computed; peaks below the threshold are classified as low quality and excluded.
+
+* High ratio → sharp, fast transient (typical calcium spike)
+* Low ratio → broad, slow event (likely artefact or drift)
+
+**How to set it:** Set to `0` to disable filtering entirely. Increase gradually while inspecting the cellwise trace plots.
 
 ---
 
@@ -38,6 +108,7 @@ The following commonly used defaults were summarised from published datasets (Ch
     In vitro vs in vivo: Temperature, intracellular calcium buffering, and indicator expression level all affect decay kinetics. 
     Published values are usually from in vivo mouse cortex at 37°C. For in vitro cell culture preparations, decay can be somewhat slower. 
     It is worth empirically checking τ by looking at isolated single-transient events in your test recordings and measuring how long the tail lasts.
+
 ---
 
 ### Imaging interval (s)

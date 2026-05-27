@@ -119,10 +119,16 @@ This allows rapid optimisation of spike inference and network detection paramete
 
 ## Demo
 
-<video controls style="width: 100%;">
-  <source src="../videos/demo_spikedetection.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe
+    src="https://www.youtube.com/embed/NWh1Gor_-WM"
+    title="Demo video"
+    frameborder="0"
+    allowfullscreen
+    style="position: absolute; top:0; left:0; width:100%; height:100%;">
+  </iframe>
+</div>
+
 
 ---
 

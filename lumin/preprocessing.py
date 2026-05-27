@@ -98,11 +98,43 @@ def _convert_nd2(fpath: str, out_path: str, ij, BF) -> np.ndarray:
     Raises on any failure.
     """
     img = BF.openImagePlus(fpath)
-    data = np.array(ij.py.from_java(img[0]))
+    imp = img[0]
+
+    # Read true dimensions from ImagePlus before conversion —
+    # Bio-Formats sometimes collapses spatial axes into a flat array.
+    n_slices   = imp.getNSlices()
+    n_frames   = imp.getNFrames()
+    n_channels = imp.getNChannels()
+    height     = imp.getHeight()
+    width      = imp.getWidth()
+
+    print(f"  ImagePlus dims → Z:{n_slices} T:{n_frames} C:{n_channels} "
+          f"Y:{height} X:{width}")
+
+    data = np.array(ij.py.from_java(imp))
+    print(f"  Raw numpy shape: {data.shape}, dtype: {data.dtype}")
+
+    # Reshape if Bio-Formats collapsed the stack.
+    # total_frames = all non-spatial planes (T * Z * C).
+    # data.size check ensures we never reshape into a wrong geometry.
+    total_frames = n_frames * n_slices * n_channels
+    if data.size == total_frames * height * width:
+        if total_frames == 1:
+            data = data.reshape(height, width)
+        else:
+            data = data.reshape(total_frames, height, width)
+    else:
+        raise ValueError(
+            f"Cannot reshape {data.shape} (size {data.size}) into "
+            f"({total_frames}, {height}, {width}) — "
+            f"Bio-Formats dimension mismatch for {fpath}"
+        )
+
+    print(f"  Final shape: {data.shape}")
 
     tiff.imwrite(out_path, data, imagej=True)
 
-    # ── verification ──────────────────────────────────
+    # Verification
     written = tiff.imread(out_path)
     if written.shape != data.shape:
         raise ValueError(
@@ -120,12 +152,22 @@ def extract_nd2_metadata(file_path: str) -> dict:
 
     try:
         with ND2Reader(file_path) as images:
-            metadata["X_pixels"]   = images.metadata.get("width")
-            metadata["Y_pixels"]   = images.metadata.get("height")
-            metadata["Z_planes"]   = images.metadata.get("z_levels", 1)
+            metadata["X_pixels"] = images.metadata.get("width")
+            metadata["Y_pixels"] = images.metadata.get("height")
+
+            # z_levels is a list; empty list means no Z stack → 1 plane
+            z = images.metadata.get("z_levels", [])
+            metadata["Z_planes"] = len(z) if z else 1
+
             metadata["Timepoints"] = images.metadata.get("num_frames", 1)
-            metadata["Channels"]   = images.metadata.get("num_channels", 1)
-            metadata["BitDepth"]   = images.metadata.get("bits_per_component")
+
+            # num_channels key is absent in nd2reader; derive from channels list
+            # fall back to sizes dict if channels list is also missing
+            channels = images.metadata.get("channels", [])
+            metadata["Channels"]      = len(channels) if channels else images.sizes.get("c", 1)
+            metadata["Channel_names"] = ", ".join(channels) if channels else ""
+
+            metadata["BitDepth"] = images.metadata.get("bits_per_component")
 
             try:
                 px = images.metadata["pixel_microns"]
@@ -143,7 +185,7 @@ def extract_nd2_metadata(file_path: str) -> dict:
     return metadata
 
 
-# tiff file reading and metadata extraction
+# TIFF file reading and metadata extraction
 
 def _read_tiff_shape(fpath: str) -> tuple | None:
     """Return the shape of the first TIFF series, or None on failure."""
@@ -185,7 +227,7 @@ def _parse_tiff_shape(shape: tuple) -> dict:
         }
 
 
-# build metadata row
+# Build metadata row
 
 def _build_row(base: dict, extra_metadata: dict) -> dict:
     """Merge a base row dict with optional user-supplied metadata."""
@@ -196,7 +238,7 @@ def _build_row(base: dict, extra_metadata: dict) -> dict:
     return row
 
 
-# main pipeline
+# Main pipeline
 
 def run_preprocessing_pipeline(
     input_dir,
@@ -222,19 +264,19 @@ def run_preprocessing_pipeline(
 
     extra_metadata = extra_metadata or {}
 
-    # ── paths ──────────────────────────────────────────────
+    # Paths
     timestamp  = datetime.now().strftime("%Y%m%d")
     safe_name  = f"{timestamp}_{plate_id}_{cell_line}".replace(" ", "_")
     csv_path   = os.path.join(project_dir, safe_name + "_input_data.csv")
     output_dir = os.path.join(project_dir, "Preprocessing", "TIFF")
     os.makedirs(output_dir, exist_ok=True)
 
-    # ── load what we already have ───────────────────────────
+    # Load what we already have
     existing_rows, already_processed = _load_existing_csv(csv_path)
     new_rows: list[dict] = []
     failed_files: list[str] = []
 
-    # ── discover input files ────────────────────────────────
+    # Discover input files
     try:
         all_files = os.listdir(input_dir)
     except FileNotFoundError:
@@ -248,7 +290,7 @@ def run_preprocessing_pipeline(
     print(f"ND2  files found : {len(nd2_files)}")
     print(f"TIFF files found : {len(tiff_files)}")
 
-    # ── ND2 conversion ──────────────────────────────────────
+    # ND2 conversion
     ij, BF = None, None
     try:
         nd2_to_process = [f for f in nd2_files
@@ -263,7 +305,7 @@ def run_preprocessing_pipeline(
             out_name = os.path.splitext(fname)[0] + ".tif"
             out_path = os.path.join(output_dir, out_name)
 
-            # avoid silent overwrite of a same-named converted file
+            # Avoid silent overwrite of a same-named converted file
             if os.path.exists(out_path):
                 stem     = os.path.splitext(out_name)[0]
                 out_name = f"{stem}_duplicate_{i}.tif"
@@ -275,8 +317,8 @@ def run_preprocessing_pipeline(
             try:
                 _convert_nd2(fpath, out_path, ij, BF)
                 import gc
-                gc.collect() # help release memory from large ND2 files before next iteration
-                
+                gc.collect()  # help release memory from large ND2 files before next iteration
+
                 nd2_meta = extract_nd2_metadata(fpath)
 
                 row = _build_row(
@@ -296,8 +338,8 @@ def run_preprocessing_pipeline(
                 new_rows.append(row)
                 try:
                     ij.py.run_macro('run("Collect Garbage");')
-                except:
-                    pass 
+                except Exception:
+                    pass
 
             except FileNotFoundError:
                 print(f"  ERROR: File not found – {fname}")
@@ -308,11 +350,11 @@ def run_preprocessing_pipeline(
             except Exception as e:
                 print(f"  ERROR: Unexpected error processing {fname}: {e}")
                 failed_files.append(fname)
-            
+
             done += 1
             if progress_callback:
                 progress_callback(done, total, f"ND2: {fname}")
-                
+
     finally:
         # Always release the JVM, even if an exception occurred mid-loop
         if ij is not None:
@@ -322,7 +364,7 @@ def run_preprocessing_pipeline(
             except Exception:
                 pass
 
-    # Tiff processing (metadata extraction only, no conversion)
+    # TIFF processing (metadata extraction only, no conversion)
     tiff_to_process = [f for f in tiff_files if f not in already_processed]
     skipped_tiff    = len(tiff_files) - len(tiff_to_process)
 
