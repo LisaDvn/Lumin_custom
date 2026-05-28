@@ -1,5 +1,10 @@
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "lumin"
+version = "0.0.1"
+
 [project.scripts]
 lumin = "lumin._launcher:main"

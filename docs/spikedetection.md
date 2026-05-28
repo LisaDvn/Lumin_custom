@@ -87,7 +87,6 @@ Depending on the selected workflow, LUMIN computes:
 * Temporal activity profiles
 * Network event statistics
 
-These metrics can be used for downstream phenotyping, pharmacology, or disease modelling experiments.
 ---
 
 ## Parameter optimisation
@@ -112,7 +111,7 @@ This allows rapid optimisation of spike inference and network detection paramete
 ## Notes
 
 - Network metrics depend on quality of prior segmentation and event detection  
-- Spike inference method strongly influences network structure (OASIS vs CASCADE)  
+- Spike inference method strongly influences network structure  
 - Recommended to keep parameters consistent across datasets for comparability  
 
 ---
