@@ -3,8 +3,9 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lumin"
+name = "LUMIN"
 version = "0.0.1"
+dynamic = ["requires-python", "dependencies", "classifiers", "entry-points"]
 
 [project.scripts]
 lumin = "lumin._launcher:main"
