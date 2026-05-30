@@ -5,7 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "LUMIN"
 version = "0.0.1"
-dynamic = ["requires-python", "dependencies", "classifiers", "entry-points"]
+dynamic = ["requires-python", "dependencies", "classifiers"]
+
+[project.entry-points."napari.manifest"]
+LUMIN = "lumin:napari.yaml"
 
 [project.scripts]
 lumin = "lumin._launcher:main"
