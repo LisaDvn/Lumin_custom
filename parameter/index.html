@@ -1313,7 +1313,6 @@
 <div><h1 id="parameter-guide">Parameter guide</h1>
 <hr>
 <h2 id="segmentation-parameters">Segmentation parameters</h2>
-<hr>
 <h3 id="segmentation-model">Segmentation model</h3>
 <p><strong>What it does:</strong> Selects the Cellpose model used to detect and outline individual cells (ROIs) in the mean fluorescence image. The model determines how cell boundaries are drawn before signal extraction begins.</p>
 <table>
@@ -1363,7 +1362,6 @@
 <p><strong>Default:</strong> <code>0.4</code> — the Cellpose default. Adjust in small steps (±0.1).</p>
 <hr>
 <h2 id="event-detection-parameters">Event detection parameters</h2>
-<hr>
 <h3 id="smoothing">Smoothing</h3>
 <p><strong>What it does:</strong> Applies a Savitzky–Golay filter (window = 3 frames, polynomial order = 1) to the ΔF/F₀ trace before peak detection. This reduces high-frequency noise and can improve peak detection on noisy recordings, at the cost of slightly reduced temporal precision.</p>
 <p><strong>When to use:</strong> Enable for low SNR recordings or high frame-rate data where noise causes peak splitting. Disable when temporal precision of spike timing matters (e.g. before OASIS or CASCADE deconvolution, which have their own smoothing).</p>
