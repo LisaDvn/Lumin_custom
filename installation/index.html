@@ -422,6 +422,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="2. Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-no-programming-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: No programming experience
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-git-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Git users
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -841,6 +869,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="2. Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-no-programming-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: No programming experience
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-git-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Git users
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -932,14 +988,29 @@
 
 
 
-<div><h1 id="installation-getting-started">Installation &amp; getting Started</h1>
+<div><h1 id="installation-getting-started">Installation &amp; getting started</h1>
 <p>This page explains how to install LUMIN and run your first analysis.</p>
 <hr>
 <h2 id="1-requirements">1. Requirements</h2>
 <p>Python 3.10+ via Anaconda (<a href="https://www.anaconda.com/docs/getting-started/miniconda/install">Miniconda installation page</a>.) </p>
 <hr>
 <h2 id="2-installation">2. Installation</h2>
-<p>Open <strong>Anaconda Prompt</strong> and run:</p>
+<h3 id="option-a-no-programming-experience">Option A: No programming experience</h3>
+<ol>
+<li><strong>Download the tool</strong>: <a href="https://github.com/LisaDvn/Lumin_custom/archive/refs/heads/lumin_edited.zip">⬇ Download ZIP</a></li>
+<li><strong>Unzip</strong> the downloaded file to a folder of your choice (e.g. <code>C:\Users\yourname\Lumin_custom</code>)</li>
+<li>Open <strong>Anaconda Prompt</strong> and run the following commands:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Lumin_custom
+conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>lumin_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.2<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.1.0<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y
+conda<span class="w"> </span>activate<span class="w"> </span>lumin_env
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</code></pre></div>
+<blockquote>
+<p>Replace <code>cd Lumin_custom</code> with the path to your unzipped folder.</p>
+</blockquote>
+<hr>
+<h3 id="option-b-git-users">Option B: Git users</h3>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/LisaDvn/Lumin_custom.git
 <span class="nb">cd</span><span class="w"> </span>Lumin_custom
 conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>lumin_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.2<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.1.0<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y
@@ -948,28 +1019,36 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </code></pre></div>
 <hr>
 <h2 id="3-launch-the-application">3. Launch the application</h2>
-<div class="highlight"><pre><span></span><code>napari
+<p>In <strong>Anaconda Prompt</strong>, activate the environment and launch napari:</p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>activate<span class="w"> </span>lumin_env
+napari
 </code></pre></div>
-<p>LUMIN is available as a Napari plugin.</p>
+<p>LUMIN is available as a napari plugin and will appear in the plugin menu after launch.</p>
+<blockquote>
+<p><strong>Troubleshooting</strong>: If napari does not open, make sure <code>lumin_env</code> is activated before running <code>napari</code>. If the plugin does not appear in napari, re-run <code>pip install -e .</code> with the environment active.</p>
+</blockquote>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p><strong>Shortcut (Windows)</strong>: After installation, you can create a desktop shortcut to avoid opening Anaconda Prompt each time:
+Run the following command to add a LUMIN shortcut to your desktop:
+</p><div class="highlight"><pre><span></span><code>python<span class="w"> </span>create_shortcut.py
+</code></pre></div>
+</div>
 <hr>
 <h2 id="4-first-analysis-workflow">4. First analysis workflow</h2>
 <p>Once installed, follow the full pipeline:</p>
 <h3 id="step-1-input">Step 1 — Input</h3>
 <p>Prepare your recordings and metadata.</p>
 <p>→ <a href="../input/">Go to Input module</a></p>
-<hr>
 <h3 id="step-2-segmentation-signal-extraction">Step 2 — Segmentation &amp; signal extraction</h3>
 <p>Detect cells and extract fluorescence traces.</p>
 <p>→ <a href="../segmentation/">Go to Segmentation module</a></p>
-<hr>
 <h3 id="step-3-event-detection-features">Step 3 — Event detection &amp; features</h3>
 <p>Detect calcium events and extract single-cell metrics.</p>
-<p>→ See: <a href="../eventdetection/">Go to Event detection module</a></p>
-<hr>
+<p>→ <a href="../eventdetection/">Go to Event detection module</a></p>
 <h3 id="step-4-network-analysis-optional">Step 4 — Network analysis (optional)</h3>
-<p>Infer spike trains and compute network metrics.</p>
-<p>→ See: <a href="../spikedetection/">Go to Spike detection module</a></p>
-<hr></div>
+<p>Infer spike trains and compute network-level metrics.</p>
+<p>→ <a href="../spikedetection/">Go to Spike detection module</a></p></div>
 
 
 
