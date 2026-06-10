@@ -561,6 +561,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="What happens during preprocessing?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-of-created-_inputcsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example of created _input.csv:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-input-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example input metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-metadata-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example metadata table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -891,6 +930,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="What happens during preprocessing?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-of-created-_inputcsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example of created _input.csv:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-input-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example input metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-metadata-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example metadata table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -993,6 +1071,73 @@
 <li>Generate a structured project directory  </li>
 <li>Create an <code>_input.csv</code> file used in downstream steps  </li>
 </ol>
+<h3 id="example-of-created-_inputcsv">Example of created _input.csv:</h3>
+<h3 id="example-input-metadata">Example input metadata</h3>
+<p>LUMIN expects a metadata table describing each recording and its experimental context. Below is an example of the automatically generated input structure.</p>
+<h3 id="example-metadata-table">Example metadata table</h3>
+<table>
+<thead>
+<tr>
+<th>plate_id</th>
+<th>filename</th>
+<th>filepath</th>
+<th>cell_line</th>
+<th>condition</th>
+<th>format</th>
+<th>converted</th>
+<th style="text-align: right;">X_pixels</th>
+<th style="text-align: right;">Y_pixels</th>
+<th style="text-align: right;">Timepoints</th>
+<th style="text-align: right;">Channels</th>
+<th style="text-align: right;">PixelSize_X</th>
+<th style="text-align: right;">PixelSize_Y</th>
+<th>Researcher</th>
+<th>Institute</th>
+<th style="text-align: right;">Replicate</th>
+<th style="text-align: right;">Maturation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plate_A01</td>
+<td>Control_DIV21.nd2</td>
+<td><code>D:\Exp01\Control_DIV21.nd2</code></td>
+<td>Control</td>
+<td>Untreated</td>
+<td>nd2</td>
+<td>True</td>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">1200</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">0.65</td>
+<td>J. Smith</td>
+<td>AMC</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">21</td>
+</tr>
+<tr>
+<td>Plate_A01</td>
+<td>HD_DIV21.nd2</td>
+<td><code>D:\Exp01\HD_DIV21.nd2</code></td>
+<td>HD-Q45</td>
+<td>Untreated</td>
+<td>nd2</td>
+<td>True</td>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">1200</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">0.65</td>
+<td>J. Smith</td>
+<td>AMC</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">21</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>You can process multiple input folders into the same project directory. Each run appends new entries to the existing _input.csv file, allowing metadata and datasets to accumulate across experiments without overwriting previous records.</p>

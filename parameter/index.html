@@ -1325,11 +1325,15 @@
 <tbody>
 <tr>
 <td><strong>cyto3</strong></td>
-<td>General-purpose cytoplasm segmentation. Works well for most neuronal cell cultures with visible cell bodies.</td>
+<td>Newest cytoplasm segmentation model of <a href="https://doi.org/10.1038/s41592-025-02595-5">Cellpose</a>.</td>
 </tr>
 <tr>
 <td><strong>cyto2</strong></td>
 <td>Older cytoplasm model. Use if cyto3 over-segments your data.</td>
+</tr>
+<tr>
+<td><strong>cyto1</strong></td>
+<td>Oldest cytoplasm model. Use if cyto2 over-segments your data.</td>
 </tr>
 <tr>
 <td><strong>nuclei</strong></td>
@@ -1340,13 +1344,20 @@
 <p><strong>Default:</strong> <code>cyto3</code> — recommended as the starting point for most calcium imaging datasets.</p>
 <hr>
 <h3 id="cell-diameter-px">Cell diameter (px)</h3>
-<p><strong>What it does:</strong> The expected diameter of a single cell in pixels. Cellpose uses this to set the scale of the segmentation. Getting this right is the single most important parameter for good segmentation results.</p>
-<p><strong>How to set it:</strong> Measure a representative cell in your image using the Napari measurement tool. Over- or underestimating by more than ~30% will cause missed cells or merged ROIs.</p>
+<p><strong>What it does:</strong> The expected diameter of a single cell in pixels. Cellpose uses this to set the scale of the segmentation. Getting this right is important for good segmentation results.</p>
+<p><strong>How to set it:</strong> Measure a representative cell in your image using the Napari:</p>
+<ol>
+<li>In Napari, open a (preprocessed) TIFF file (top left + Open File(s)...)</li>
+<li>Hold your cursor on one edge of a cell, read the coordinates from the status bar at the bottom 
+[t, y, x]</li>
+<li>Repeat on the opposite edge</li>
+<li>Calculate: diameter = |y2 - y1| (vertical) or |x2 - x1| (horizontal)</li>
+</ol>
+<p><strong>Default:</strong> <code>15 px</code> — a reasonable starting point for 10× or 20× objectives with standard magnification. Always verify on your data.</p>
 <ul>
 <li>Set too small → large cells are split into multiple ROIs</li>
 <li>Set too large → nearby cells are merged into a single ROI</li>
 </ul>
-<p><strong>Default:</strong> <code>30 px</code> — a reasonable starting point for 10× or 20× objectives with standard magnification. Always verify on your data.</p>
 <hr>
 <h3 id="cell-probability-threshold">Cell probability threshold</h3>
 <p><strong>What it does:</strong> Minimum predicted probability that a pixel belongs to a cell before it is included in an ROI mask. Raises or lowers the overall sensitivity of detection.</p>
@@ -1367,12 +1378,13 @@
 <p><strong>When to use:</strong> Enable for low SNR recordings or high frame-rate data where noise causes peak splitting. Disable when temporal precision of spike timing matters (e.g. before OASIS or CASCADE deconvolution, which have their own smoothing).</p>
 <hr>
 <h3 id="prominence-threshold">Prominence threshold</h3>
-<p><strong>What it does:</strong> The minimum prominence of a peak to be counted as a calcium event. Prominence measures how much a peak stands out from the surrounding signal baseline — it is the height of the peak above the highest trough between it and any higher neighbouring peak. This makes it more robust than a simple height threshold because it accounts for the local signal context.</p>
+<p><strong>What it does:</strong> Defines how much a peak must stand out from the surrounding signal to be counted as a calcium event. Unlike a simple height threshold, prominence considers the local baseline: it measures the vertical distance between the peak and the highest point of the surrounding valleys that separate it from neighbouring peaks. As a result, only peaks that are sufficiently distinct from the local signal are detected.</p>
 <ul>
-<li>Set too low → noise fluctuations and small artefacts are counted as events</li>
-<li>Set too high → real but small calcium transients are missed</li>
+<li><strong>Set too low:</strong> Noise fluctuations and small artefacts may be falsely identified as calcium events.</li>
+<li><strong>Set too high:</strong> Smaller but genuine calcium transients may be missed.</li>
 </ul>
-<p><strong>How to set it:</strong> Inspect the ΔF/F₀ traces for a representative cell and identify the smallest real transient you want to detect, set the threshold just below that value. Or increase gradually while inspecting the cellwise trace plots.</p>
+<p><strong>How to set it:</strong> Examine the ΔF/F₀ traces of a few representative cells and identify the smallest transient you would still consider a true event. Set the prominence threshold slightly below that value.</p>
+<p><strong>Default:</strong> <code>0.05</code> —  gradually increase it while checking the trace plots until noise peaks are excluded without losing real events (±0.05).</p>
 <hr>
 <h3 id="amplitudewidth-ratio">Amplitude/width ratio</h3>
 <p><strong>What it does:</strong> A quality control filter that removes broad, slow artefacts (e.g. baseline drift bumps, photobleaching steps) that pass the prominence threshold. For each detected peak, the ratio of its amplitude to its width is computed; peaks below the threshold are classified as low quality and excluded.</p>
