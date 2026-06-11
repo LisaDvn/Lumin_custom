@@ -1,14 +1,12 @@
 from pyshortcuts import make_shortcut
-import sys
 import os
 
 def create_shortcut():
-    # Get the path to the activated environment's napari
-    napari_path = os.path.join(os.path.dirname(sys.executable), 'napari')
+    bat_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'LUMIN.bat')
     make_shortcut(
-        f'{napari_path} -w lumin',
+        bat_path,
         name='LUMIN',
-        terminal=False,
+        terminal=True,
         desktop=True,
         startmenu=True
     )

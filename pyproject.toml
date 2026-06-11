@@ -1,14 +1,68 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "LUMIN"
 version = "0.0.1"
-dynamic = ["requires-python", "dependencies", "classifiers"]
+requires-python = ">=3.9, <3.13"    # Supported versions for TensorFlow
+classifiers = [
+    "Framework :: napari",
+]
+
+dependencies = [
+    # Scientific
+    "numpy",
+    "pandas",
+    "scipy",
+
+    # Plotting
+    "matplotlib",
+    "seaborn",
+    "rastermap",
+
+    # Image Processing
+    "nd2reader",
+    "opencv-python",
+    "scikit-image",
+    "tifffile",
+
+    # ML
+    "pca",
+    "scikit-learn",
+    "torch",
+    "tensorflow",
+
+    # Bioimage
+    "cellpose==3.1.1.2",
+    "csbdeep",
+    "stardist",
+    "napari-blob-detection",
+
+    # GUI
+    "magicgui",
+    "napari",
+    "pyqt5",
+    "qtpy",
+
+    # ImageJ
+    "pyimagej", 
+    "scyjava",
+
+    # Utilities
+    "numba",
+    "pyshortcuts",
+    "tqdm"
+]
+
+[project.scripts]
+lumin = "lumin._launcher:main"
 
 [project.entry-points."napari.manifest"]
 LUMIN = "lumin:napari.yaml"
 
-[project.scripts]
-lumin = "lumin._launcher:main"
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+namespaces = true

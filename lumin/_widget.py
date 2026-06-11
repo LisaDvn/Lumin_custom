@@ -47,11 +47,26 @@ from PyQt5.QtWidgets import (
     QFormLayout, QStackedWidget, QCheckBox, QProgressBar,
     QSizePolicy, QScrollArea
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl
+from PyQt5.QtGui import QFont, QDesktopServices
+
+def add_help_button(widget, url):
+    help_button = QPushButton("?")
+    help_button.setFixedSize(14, 14)
+    help_button.setToolTip("Open documentation")
+    help_button.setStyleSheet("""QPushButton { border-radius: 7px; background: #6b7280; color: white; font-weight: bold; font-size: 9px; padding: 0px;} QPushButton:hover { background: #4ade80; } """)
+    help_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(url)))
+    layout = widget.native.layout()
+    from qtpy.QtWidgets import QHBoxLayout, QWidget as QW
+    row = QW()
+    row.setFixedHeight(18)
+    hl = QHBoxLayout(row)
+    hl.setContentsMargins(0, 0, 4, 0)
+    hl.addStretch()
+    hl.addWidget(help_button)
+    layout.insertWidget(0, row)
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
 
 # List of pre-trained cellpose models
 CP_models = ['-- Select --', "cyto3", "cyto2", "cyto", "trained_model"]
@@ -196,13 +211,13 @@ def preprocessing_widget():
         if not os.path.isdir(str(widget.input_dir.value)):
             errors.append("• Input folder does not exist.")
         if not str(widget.project_dir.value).strip():
-            errors.append("• Project directory is required.")
+            errors.append("• Project directory is missing.")
         if not widget.plate_id.value.strip():
-            errors.append("• Plate ID is required.")
+            errors.append("• Plate ID is missing.")
         if not widget.cell_line.value.strip():
-            errors.append("• Cell line is required.")
+            errors.append("• Cell line is missing.")
         if not widget.condition.value.strip():
-            errors.append("• Condition is required.")
+            errors.append("• Condition is missing.")
         if errors:
             QMessageBox.warning(None, "Missing input", "\n".join(errors))
             return
@@ -253,6 +268,8 @@ def preprocessing_widget():
         worker.finished.connect(_done)
         worker.error.connect(_err)
         worker.start()
+    
+    add_help_button(widget, "https://lisadvn.github.io/Lumin_custom/input/")
 
     return widget
 
@@ -1333,9 +1350,8 @@ def segmentation_widget():
 
         else:
             apply_intensity_area_filters()
-
+    add_help_button(widget, "https://lisadvn.github.io/Lumin_custom/segmentation/")
     return widget
-
 
 class PlotViewer(QWidget):
     def __init__(self, figures):
@@ -1466,7 +1482,7 @@ def reset_settings_sc_analysis(widget):
     widget.kcl_frame.value = -1
     widget.sliding_window_size.value = 75
     widget.percentile_threshold.value = 15
-    widget.spike_prominence_threshold.value = 0
+    widget.spike_prominence_threshold.value = 0.05
     widget.spike_amplitude_width_ratio.value = 0
     widget.analysis_window_start.value = 0
     widget.analysis_window_end.value = 0
@@ -1508,7 +1524,7 @@ def single_cell_widget():
         project_dir=dict(widget_type='FileEdit',value='', label='Project directory:', mode='d', tooltip='Specify project directory for pipeline output'),
         analysis_mode = dict(widget_type='ComboBox', name = 'analysis_mode', label='Analysis mode', value='-- Select --', choices=['-- Select --','Compound-evoked activity', 'Spontaneous activity'],  tooltip='Experimental type.'),
         activity_type = dict(widget_type='ComboBox', name = 'activity_type', label='Activity type', value='-- Select --', choices=['-- Select --','Spontaneous', 'Baseline shift'],  tooltip='Type of anticipated cellular activity.'),
-        control_condition = dict(widget_type='LineEdit',name = 'control_condition', label='Control condition', value='',  tooltip='Name of condition to be used as control'),
+        control_condition = dict(widget_type='ComboBox', name='control_condition', label='Control condition', value='-- Select --', choices=['-- Select --'], tooltip='Select the control condition'),
         norm_label=dict(widget_type='Label', label='<div style="text-align: center; display: block; width: 100%;"><b>———Normalization settings———</b></div>'),
         normalization_mode = dict(widget_type='ComboBox',name = 'normalization_mode', label='Normalization', value='-- Select --', choices=['-- Select --','Sliding window', 'Pre-stimulus window'],  tooltip='Normalization method (use pre-stimulus window only when recording contains a stable baseline signal).'),
         stimulation_frame = dict(widget_type="SpinBox",label="stimulation frame",value=0, step = 1, tooltip='Image frame for stimulation administration.'),
@@ -1539,13 +1555,34 @@ def single_cell_widget():
    
     @widget.call_button.clicked.connect
     def _run_analysis():
+        
+        # Validate required inputs
+        errors = []
+        if not os.path.isdir(str(widget.project_dir.value)):
+            errors.append("• Project directory is missing.")
+        if widget.analysis_mode.value == '-- Select --':
+            errors.append("• Analysis mode is missing.")
+        if widget.analysis_mode.value == 'Compound-evoked activity' and widget.activity_type.value == '-- Select --':
+            errors.append("• Activity type is missing.")
+        if widget.control_condition.value == '-- Select --':
+            errors.append("• Control condition is missing.")
+        if widget.normalization_mode.value == '-- Select --':
+            errors.append("• Normalization mode is missing.")
+        if not widget.imaging_interval.value > 0:
+            errors.append("• Imaging interval must be above 0.")
+        if widget.smoothing_cb.visible and widget.smoothing_cb.value == '-- Select --':
+            errors.append("• Smoothing selection is missing.")
+        if errors:
+            QMessageBox.warning(None, "Missing required input", "\n".join(errors))
+            return
+
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Confirm Action")
         msg_box.setText("Are you sure you want to proceed?")
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg_box.setDefaultButton(QMessageBox.No)
-        
         result = msg_box.exec_()
+
         try: 
             if result == QMessageBox.Yes:
                 start_time = perf_counter()
@@ -1579,8 +1616,8 @@ def single_cell_widget():
                 widget_state.cell_properties_df = get_cell_properties_df(project_dir)
                 cell_properties_df = widget_state.cell_properties_df.copy()
 
-                if control_condition not in cell_properties_df.condition.tolist():
-                    raise ValueError(f"Condition '{control_condition}' not in input data")
+                if control_condition == '-- Select --' or control_condition not in cell_properties_df.stimulation.tolist():
+                    raise ValueError("Please select a valid control condition from the dropdown.")
                 
                 if not imaging_interval > 0:
                     raise ValueError(f"Imaging interval needs to be above 0")
@@ -2103,7 +2140,7 @@ def single_cell_widget():
                 #widget.project_dir.value = ''
                 widget.analysis_mode.value = '-- Select --'
                 widget.activity_type.value = '-- Select --'
-                widget.control_condition.value = ''
+                widget.control_condition.value = '-- Select --'
                 widget.normalization_mode.value = '-- Select --'
                 reset_settings_sc_analysis(widget)
 
@@ -2138,11 +2175,18 @@ def single_cell_widget():
 
     @widget.project_dir.changed.connect
     def _project_dir_changed():
-
         widget.analysis_mode.value = '-- Select --'
         disable_enable_value(widget.analysis_mode, 'disable', '-- Select --')
-        widget_state.sampled_stimulation.extend(get_cell_properties_df(widget.project_dir.value).stimulation.unique().tolist())
-        widget.stimulation_selection.choices = widget_state.sampled_stimulation
+        try:
+            df = get_cell_properties_df(widget.project_dir.value)
+            conditions = sorted(df.stimulation.unique().tolist())
+            widget_state.sampled_stimulation.clear()
+            widget_state.sampled_stimulation.extend(['All'] + conditions)
+            widget.stimulation_selection.choices = widget_state.sampled_stimulation
+            widget.control_condition.choices = ['-- Select --'] + conditions
+            widget.control_condition.value = '-- Select --'
+        except Exception:
+            widget.control_condition.choices = ['-- Select --']
 
 
     @widget.analysis_mode.changed.connect
@@ -2243,6 +2287,26 @@ def single_cell_widget():
     def _optimize_quantification(sample_to_use):
 
         remove_layers(viewer)
+
+    # Validate required inputs
+        errors = []
+        if not os.path.isdir(str(widget.project_dir.value)):
+            errors.append("• Project directory is required.")
+        if widget.analysis_mode.value == '-- Select --':
+            errors.append("• Analysis mode is required.")
+        if widget.analysis_mode.value == 'Compound-evoked activity' and widget.activity_type.value == '-- Select --':
+            errors.append("• Activity type is required.")
+        if widget.control_condition.value == '-- Select --':
+            errors.append("• Control condition is required.")
+        if widget.normalization_mode.value == '-- Select --':
+            errors.append("• Normalization mode is required.")
+        if not widget.imaging_interval.value > 0:
+            errors.append("• Imaging interval must be above 0.")
+        if widget.smoothing_cb.visible and widget.smoothing_cb.value == '-- Select --':
+            errors.append("• Smoothing selection is required.")
+        if errors:
+            QMessageBox.warning(None, "Missing required input", "\n".join(errors))
+            return
 
 
         try:
@@ -2439,7 +2503,7 @@ def single_cell_widget():
     # Function allowing user to optimize segmentation
     widget.optimize_button.clicked.connect(lambda: _optimize_quantification('random'))
     widget.optimize_button_previous.clicked.connect(lambda: _optimize_quantification('previous'))
-
+    add_help_button(widget, "https://lisadvn.github.io/Lumin_custom/eventdetection/")
     return widget
 
 def network_activity_widget():
@@ -2814,8 +2878,25 @@ def network_activity_widget():
         viewer.window._qt_window.tabifyDockWidget(dw_main, dw_spikes)
         dw_spikes.raise_()
 
-    # test run function for deconvolution settings — runs on a single recording to preview the inferred spike trains in the trace viewers
+    # test run for deconvolution settings 
     def _run_test(sample_mode):
+
+        # Validate required inputs
+        errors = []
+        method = widget.deconv_method.value
+        if widget.deconv_method.value == '-- Select --':
+            errors.append("• Spike inference method is required.")
+        if method == 'OASIS' and not widget.oasis_imaging_interval.value > 0:
+            errors.append("• Imaging interval must be above 0.")
+        if method == 'OASIS' and not widget.oasis_tau.value > 0:
+            errors.append("• Indicator decay (τ) must be above 0.")
+        if method == 'CASCADE' and widget.cascade_model.value == '-- Select --':
+            errors.append("• CASCADE model is required.")
+        if method == 'CASCADE' and not widget.cascade_imaging_interval.value > 0:
+            errors.append("• Imaging interval must be above 0.")
+        if errors:
+            QMessageBox.warning(None, "Missing required input", "\n".join(errors))
+            return
         if state.cell_properties_df is None or state.F is None:
             QMessageBox.warning(None, 'No data', 'Load a project directory first.')
             return
@@ -2885,19 +2966,14 @@ def network_activity_widget():
             widget.optimize_button_previous.enabled = True
             print(f'Test done — {S.shape[0]} cells.')
 
-            # ── load mask + label overlay into napari ──────────────────────
+            # load mask and label overlay into napari
             try:
                 remove_layers(viewer)
                 if 'mask_path' in sdf.columns:
                     mask_path = sdf['mask_path'].iloc[0]
                     if os.path.isfile(str(mask_path)):
                         mask = io.imread(str(mask_path))
-                        viewer.add_labels(
-                            mask,
-                            name     = 'Labels',
-                            colormap = {lbl: [0.0, 1.0, 1.0, 1.0]
-                                        for lbl in np.unique(mask) if lbl != 0},
-                        )
+                        viewer.add_labels(mask, name = 'Labels', colormap = {lbl: [0.0, 1.0, 1.0, 1.0] for lbl in np.unique(mask) if lbl != 0},)
                         viewer.layers['Labels'].contour = 3
                         viewer.layers['Labels'].visible = True
 
@@ -2905,13 +2981,7 @@ def network_activity_widget():
                             filepath = sdf['filepath'].iloc[0]
                             if os.path.isfile(str(filepath)):
                                 try:
-                                    _, image_stack = utils.read_and_project_image(
-                                        filepath    = filepath,
-                                        first_frame = 1 if (
-                                            'nuclear_stain' in sdf.columns and
-                                            sdf['nuclear_stain'].iloc[0] != 'None'
-                                        ) else 0,
-                                    )
+                                    _, image_stack = utils.read_and_project_image(filepath    = filepath, first_frame = 1 if ('nuclear_stain' in sdf.columns and sdf['nuclear_stain'].iloc[0] != 'None') else 0,)
                                     viewer.add_image(image_stack, name='CA video')
                                     viewer.dims.current_step = (0,)
                                 except Exception:
@@ -2946,7 +3016,7 @@ def network_activity_widget():
                 print('Warning: mask loading failed.')
                 traceback.print_exc()
 
-            # ── trace viewers only (no network preview here) ───────────────
+            # trace viewers only (no network preview)
             try:
                 _show_trace_viewers(sdf, S, recording_label=label)
             except Exception:
@@ -3007,6 +3077,20 @@ def network_activity_widget():
    
     def _run_network_analysis(S, method, fs):
 
+        # Validate required inputs
+        errors = []
+        if not os.path.isdir(str(widget.project_dir.value)):
+            errors.append("• Project directory is required.")
+        if not widget.network_participation_thr.value > 0:
+            errors.append("• Network event threshold must be above 0.")
+        if not widget.network_min_peak_dist.value > 0:
+            errors.append("• Minimum event distance must be above 0.")
+        if fs <= 0:
+            errors.append("• Imaging interval must be above 0.")
+        if errors:
+            QMessageBox.warning(None, "Missing required input", "\n".join(errors))
+            return
+        
         project_dir       = str(widget.project_dir.value)
         participation_thr = widget.network_participation_thr.value
         min_peak_dist     = widget.network_min_peak_dist.value
@@ -3270,7 +3354,7 @@ def network_activity_widget():
         worker.finished.connect(_on_finished)
         worker.error.connect(_on_error)
         worker.start()
-
+    add_help_button(widget, "https://lisadvn.github.io/Lumin_custom/spikedetection/")
     return widget
 
 
