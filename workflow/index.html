@@ -375,17 +375,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pipeline-overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pipeline overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#pipeline-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -740,6 +729,67 @@
 
               
             
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Other
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
               
                 
   
@@ -754,7 +804,7 @@
   <span class="md-ellipsis">
     
   
-    Parameters
+    Parameter guide
   
 
     
@@ -782,7 +832,7 @@
   <span class="md-ellipsis">
     
   
-    Features
+    Output features
   
 
     
@@ -796,28 +846,21 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../gui/" class="md-nav__link">
+      <a href="../troubleshooting/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GUI Usage
+    Troubleshooting
   
 
     
@@ -829,9 +872,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -853,6 +897,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -882,17 +934,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pipeline-overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pipeline overview
-      
-    </span>
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#pipeline-steps" class="md-nav__link">
@@ -1058,10 +1099,11 @@
 
 <div><h1 id="workflow-overview">Workflow Overview</h1>
 <p>This pipeline provides an end-to-end workflow for calcium imaging analysis, from raw recordings to single-cell and network-level insights. Each step generates structured outputs, allowing inspection and flexible re-analysis.</p>
-<div class="highlight"><pre><span></span><code>Input → Segmentation + signal extraction → Activity detection → Features
-</code></pre></div>
+<div style="text-align:center;">
+    <img src="../images/pipeline.png" alt="Widgets of LUMIN" width="600">
+</div>
+
 <hr>
-<h2 id="pipeline-overview">Pipeline overview</h2>
 <table>
 <thead>
 <tr>
